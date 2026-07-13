@@ -5,6 +5,7 @@
 import type {
   Project,
   Milestone,
+  EscrowContract,
   Notification,
   ActivityEvent,
   BlockchainTransaction,
@@ -329,6 +330,68 @@ export const MOCK_MILESTONES: Milestone[] = [
     deliverables: [],
     createdAt: "2026-07-01T09:00:00Z",
     updatedAt: "2026-07-01T09:00:00Z",
+  },
+];
+
+// ─────────────────────────────────────────
+// ESCROW CONTRACTS
+// ─────────────────────────────────────────
+export const MOCK_ESCROWS: EscrowContract[] = [
+  {
+    id: "01923esc-0001",
+    contractAddress: "CCV7Q3W4Z6F4G6R7P5H2T8Y9U1I3O5P7L9K2J4H6G8F0D2S4A6C8E0",
+    escrowStatus: "RELEASED",
+    lockedAmountXlm: "100.0000000",
+    assetCode: "XLM",
+    clientWalletAddress: "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAKL",
+    freelancerWalletAddress: "GCXKG6RN4ONIEPCMNFB732A436Z5PBD5TOVG3OJ4PTPIZDLZALE7LAWD",
+    fundedAt: "2026-07-02T10:00:00Z",
+    releasedAt: "2026-07-10T14:30:00Z",
+    refundedAt: null,
+    createdAt: "2026-07-01T09:00:00Z",
+    updatedAt: "2026-07-10T14:30:00Z",
+  },
+  {
+    id: "01923esc-0002",
+    contractAddress: "CDL9X2Y4Z6F4G6R7P5H2T8Y9U1I3O5P7L9K2J4H6G8F0D2S4A6C8E1",
+    escrowStatus: "ACTIVE",
+    lockedAmountXlm: "150.0000000",
+    assetCode: "XLM",
+    clientWalletAddress: "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAKL",
+    freelancerWalletAddress: "GCXKG6RN4ONIEPCMNFB732A436Z5PBD5TOVG3OJ4PTPIZDLZALE7LAWD",
+    fundedAt: "2026-07-05T11:00:00Z",
+    releasedAt: null,
+    refundedAt: null,
+    createdAt: "2026-07-05T09:00:00Z",
+    updatedAt: "2026-07-05T11:00:00Z",
+  },
+  {
+    id: "01923esc-0003",
+    contractAddress: "CBA4Z2Y4Z6F4G6R7P5H2T8Y9U1I3O5P7L9K2J4H6G8F0D2S4A6C8E2",
+    escrowStatus: "PENDING_DEPLOYMENT",
+    lockedAmountXlm: "200.0000000",
+    assetCode: "XLM",
+    clientWalletAddress: "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAKL",
+    freelancerWalletAddress: "GCXKG6RN4ONIEPCMNFB732A436Z5PBD5TOVG3OJ4PTPIZDLZALE7LAWD",
+    fundedAt: null,
+    releasedAt: null,
+    refundedAt: null,
+    createdAt: "2026-07-12T08:00:00Z",
+    updatedAt: "2026-07-12T08:00:00Z",
+  },
+  {
+    id: "01923esc-0004",
+    contractAddress: "CFE8K1Y4Z6F4G6R7P5H2T8Y9U1I3O5P7L9K2J4H6G8F0D2S4A6C8E3",
+    escrowStatus: "REFUNDED",
+    lockedAmountXlm: "75.0000000",
+    assetCode: "XLM",
+    clientWalletAddress: "GA3D5KRYM6CB7OWQ6TWYRR3Z4T7GNZLKERYNZGGA5SOAOPIFY6YQGAKL",
+    freelancerWalletAddress: "GCXKG6RN4ONIEPCMNFB732A436Z5PBD5TOVG3OJ4PTPIZDLZALE7LAWD",
+    fundedAt: "2026-06-15T10:00:00Z",
+    releasedAt: null,
+    refundedAt: "2026-06-25T16:00:00Z",
+    createdAt: "2026-06-15T09:00:00Z",
+    updatedAt: "2026-06-25T16:00:00Z",
   },
 ];
 

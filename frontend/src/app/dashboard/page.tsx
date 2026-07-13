@@ -23,6 +23,7 @@ import { StatCard } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MilestoneStatusBadge, ProjectStatusBadge } from "@/components/ui/typography";
 import { EmptyState } from "@/components/ui/empty-state";
+import { ActivityTimeline } from "@/components/pactflow";
 import {
   MOCK_PROJECTS,
   MOCK_MILESTONES,
@@ -221,33 +222,7 @@ function ActivityFeed() {
     );
   }
 
-  return (
-    <div className="space-y-3">
-      {MOCK_ACTIVITY.map((event, i) => (
-        <motion.div
-          key={event.id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: i * 0.05 }}
-          className="flex items-start gap-3"
-        >
-          {/* Avatar */}
-          <div className="w-7 h-7 rounded-lg bg-surface-2 border border-border-subtle flex items-center justify-center shrink-0 text-[10px] font-semibold text-text-tertiary">
-            {getInitials(event.actor.displayName)}
-          </div>
-          <div className="flex-1 min-w-0 pt-0.5">
-            <p className="text-xs text-text-secondary leading-snug">
-              {event.summary}
-            </p>
-            <p className="text-[10px] text-text-disabled mt-0.5">
-              {timeAgo(event.occurredAt)}
-            </p>
-          </div>
-          <div className="w-1.5 h-1.5 rounded-full bg-border-default mt-2 shrink-0" />
-        </motion.div>
-      ))}
-    </div>
-  );
+  return <ActivityTimeline events={MOCK_ACTIVITY} />;
 }
 
 // ── Welcome Banner ──

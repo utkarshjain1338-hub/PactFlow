@@ -67,9 +67,9 @@ export function Sidebar() {
           badgeVariant: "brand",
         },
         {
-          id: "milestones",
-          label: "Soroban Escrow",
-          href: "/milestones",
+          id: "escrows",
+          label: "Escrows & Vaults",
+          href: "/escrows",
           icon: Milestone,
         },
         { id: "transactions", label: "Transactions", href: "/transactions", icon: Clock },

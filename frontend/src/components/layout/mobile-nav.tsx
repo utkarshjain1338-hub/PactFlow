@@ -35,9 +35,9 @@ export function MobileNav() {
   const { activeRole, currentUser } = useAppStore();
 
   const coreMobileItems = [
-    { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+    { id: "dashboard", label: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { id: "projects", label: "Projects", href: "/projects", icon: FolderKanban },
-    { id: "milestones", label: "Milestones", href: "/milestones", icon: Milestone },
+    { id: "escrows", label: "Escrows", href: "/escrows", icon: Milestone },
     { id: "wallet", label: "Wallet", href: "/wallet", icon: Wallet },
   ];
 
@@ -45,9 +45,9 @@ export function MobileNav() {
     {
       groupName: "Core Platform",
       items: [
-        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { label: "Overview / Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { label: "Projects", href: "/projects", icon: FolderKanban, badge: "3 Active" },
-        { label: "Milestones & Escrow", href: "/milestones", icon: Milestone },
+        { label: "Escrows & Vaults", href: "/escrows", icon: Milestone },
         { label: "Transactions", href: "/transactions", icon: Clock },
       ],
     },
