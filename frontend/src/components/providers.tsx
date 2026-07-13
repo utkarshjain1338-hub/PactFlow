@@ -11,7 +11,7 @@ import React from "react";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/toast";
 
 // ── QueryClient configuration ──
 function makeQueryClient() {
@@ -69,30 +69,7 @@ export function Providers({ children }: ProvidersProps) {
         {children}
 
         {/* Toast notification system */}
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: "hsl(222, 40%, 10%)",
-              color: "hsl(210, 40%, 98%)",
-              border: "1px solid hsl(220, 22%, 22%)",
-              borderRadius: "12px",
-              fontSize: "14px",
-              boxShadow: "0 20px 25px -5px hsl(0 0% 0% / 0.6), 0 8px 10px -6px hsl(0 0% 0% / 0.4)",
-            },
-            classNames: {
-              title: "font-semibold",
-              description: "text-text-secondary",
-              success: "border-accent-400/30",
-              error: "border-red-500/30",
-              warning: "border-yellow-500/30",
-              info: "border-brand-500/30",
-            },
-          }}
-          expand
-          richColors
-        />
+        <Toaster />
 
         {/* TanStack Query Devtools (development only) */}
         {process.env.NODE_ENV === "development" && (

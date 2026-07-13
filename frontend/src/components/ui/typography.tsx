@@ -189,76 +189,28 @@ function Label({ className, children, required, ...props }: LabelProps) {
 }
 
 // ─────────────────────────────────────────
-// BADGE / STATUS CHIP
+// BADGE / STATUS CHIP (Imported from ./badge)
 // ─────────────────────────────────────────
-const badgeVariants = cva(
-  "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide border",
-  {
-    variants: {
-      variant: {
-        default: "bg-surface-2 text-text-secondary border-border-default",
-        brand: "bg-brand-500/15 text-brand-300 border-brand-500/30",
-        success: "bg-accent-400/15 text-accent-400 border-accent-400/30",
-        warning: "bg-yellow-500/15 text-yellow-400 border-yellow-500/30",
-        error: "bg-red-500/15 text-red-400 border-red-500/30",
-        info: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-        purple: "bg-purple-500/15 text-purple-400 border-purple-500/30",
-      },
-    },
-    defaultVariants: { variant: "default" },
-  }
-);
-
-interface BadgeProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof badgeVariants> {
-  dot?: boolean;
-}
-
-function Badge({ className, variant, dot = false, children, ...props }: BadgeProps) {
-  return (
-    <span className={cn(badgeVariants({ variant }), className)} {...props}>
-      {dot && (
-        <span
-          className={cn(
-            "w-1.5 h-1.5 rounded-full",
-            variant === "success" ? "bg-accent-400" :
-            variant === "warning" ? "bg-yellow-400" :
-            variant === "error" ? "bg-red-400" :
-            variant === "brand" ? "bg-brand-400" :
-            variant === "info" ? "bg-blue-400" :
-            variant === "purple" ? "bg-purple-400" :
-            "bg-text-tertiary"
-          )}
-        />
-      )}
-      {children}
-    </span>
-  );
-}
-
-// ─────────────────────────────────────────
-// MILESTONE STATUS BADGE
-// ─────────────────────────────────────────
+import { Badge, badgeVariants, type BadgeProps } from "./badge";
 import type { MilestoneStatus, ProjectStatus } from "@/types/domain";
 
 const milestoneStatusConfig: Record<
   MilestoneStatus,
   { label: string; variant: BadgeProps["variant"] }
 > = {
-  DRAFT: { label: "Draft", variant: "default" },
-  FUNDED: { label: "Funded", variant: "info" },
-  IN_PROGRESS: { label: "In Progress", variant: "warning" },
-  SUBMITTED: { label: "Submitted", variant: "purple" },
-  PAID: { label: "Paid", variant: "success" },
-  REFUNDED: { label: "Refunded", variant: "error" },
+  DRAFT: { label: "Draft", variant: "draft" },
+  FUNDED: { label: "Funded", variant: "funded" },
+  IN_PROGRESS: { label: "In Progress", variant: "in-progress" },
+  SUBMITTED: { label: "Submitted", variant: "submitted" },
+  PAID: { label: "Paid", variant: "paid" },
+  REFUNDED: { label: "Refunded", variant: "refunded" },
 };
 
-function MilestoneStatusBadge({ status }: { status: MilestoneStatus }) {
+function MilestoneStatusBadge({ status, className }: { status: MilestoneStatus; className?: string }) {
   const config = milestoneStatusConfig[status];
   return (
-    <Badge variant={config.variant} dot>
-      {config.label}
+    <Badge variant={config?.variant || "default"} showDot className={className}>
+      {config?.label || status}
     </Badge>
   );
 }
@@ -270,14 +222,14 @@ const projectStatusConfig: Record<
   DRAFT: { label: "Draft", variant: "default" },
   IN_PROGRESS: { label: "In Progress", variant: "warning" },
   COMPLETED: { label: "Completed", variant: "success" },
-  CANCELLED: { label: "Cancelled", variant: "error" },
+  CANCELLED: { label: "Cancelled", variant: "destructive" },
 };
 
-function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
+function ProjectStatusBadge({ status, className }: { status: ProjectStatus; className?: string }) {
   const config = projectStatusConfig[status];
   return (
-    <Badge variant={config.variant} dot>
-      {config.label}
+    <Badge variant={config?.variant || "default"} showDot className={className}>
+      {config?.label || status}
     </Badge>
   );
 }

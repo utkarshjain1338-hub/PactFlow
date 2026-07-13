@@ -36,8 +36,11 @@ interface SessionState {
   // Mocked for now — will be replaced by JWT auth
   userId: string | null;
   accountType: "COMPANY" | "FREELANCER" | "ADMIN" | null;
+  activeRole: "COMPANY" | "FREELANCER" | "ADMIN" | null;
+  currentUser: { displayName: string; email: string; avatarUrl?: string | null } | null;
   isAuthenticated: boolean;
   setSession: (userId: string, accountType: SessionState["accountType"]) => void;
+  setRole: (role: SessionState["activeRole"]) => void;
   clearSession: () => void;
 }
 
@@ -78,11 +81,26 @@ export const useAppStore = create<StoreState>()(
       // ── Session (placeholder — real auth in Milestone 2) ──
       userId: "01923abc-1234-7000-8000-000000000001",
       accountType: "COMPANY",
+      activeRole: "COMPANY",
+      currentUser: {
+        displayName: "Stellar Ventures",
+        email: "alex@stellarventures.io",
+        avatarUrl: null,
+      },
       isAuthenticated: true, // Mocked as true for UI dev
       setSession: (userId, accountType) =>
-        set({ userId, accountType, isAuthenticated: true }),
+        set({ userId, accountType, activeRole: accountType, isAuthenticated: true }),
+      setRole: (role) =>
+        set({
+          activeRole: role,
+          accountType: role,
+          currentUser:
+            role === "FREELANCER"
+              ? { displayName: "Alice Chen", email: "alice@chen.dev", avatarUrl: null }
+              : { displayName: "Stellar Ventures", email: "alex@stellarventures.io", avatarUrl: null },
+        }),
       clearSession: () =>
-        set({ userId: null, accountType: null, isAuthenticated: false }),
+        set({ userId: null, accountType: null, activeRole: null, currentUser: null, isAuthenticated: false }),
 
       // ── Wallet (placeholder — real connection in Milestone 3) ──
       connectedPublicKey: null,

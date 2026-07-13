@@ -64,6 +64,74 @@ export const MOCK_FREELANCER_USER: UserProfile = {
   updatedAt: "2026-07-12T05:00:00Z",
 };
 
+export interface MockFreelancerSummary {
+  id: string;
+  displayName: string;
+  title: string;
+  reputationScore: string;
+  completedProjectsCount: number;
+  skills: string[];
+}
+
+export interface MockCompanySummary {
+  id: string;
+  name: string;
+  industry: string;
+  projectsCount: number;
+  verified: boolean;
+}
+
+export const MOCK_FREELANCERS: MockFreelancerSummary[] = [
+  {
+    id: "01923abc-1234-7000-8000-000000000002",
+    displayName: "Alice Chen",
+    title: "Senior Soroban Smart Contract Engineer",
+    reputationScore: "4.98",
+    completedProjectsCount: 24,
+    skills: ["Rust", "Soroban", "Next.js", "TypeScript", "Stellar SDK"],
+  },
+  {
+    id: "01923abc-1234-7000-8000-000000000003",
+    displayName: "Marcus Vance",
+    title: "DeFi Systems Architect & Security Auditor",
+    reputationScore: "4.95",
+    completedProjectsCount: 18,
+    skills: ["Rust", "Security Audit", "Solidity", "Soroban", "Cryptography"],
+  },
+  {
+    id: "01923abc-1234-7000-8000-000000000004",
+    displayName: "Elena Rostova",
+    title: "Full-Stack Web3 UI/UX Specialist",
+    reputationScore: "4.92",
+    completedProjectsCount: 31,
+    skills: ["React", "Tailwind CSS", "Framer Motion", "Stellar Wallet Connect", "Figma"],
+  },
+];
+
+export const MOCK_COMPANIES: MockCompanySummary[] = [
+  {
+    id: "01923abc-1234-7000-8000-000000000001",
+    name: "Stellar Ventures",
+    industry: "DeFi Infrastructure",
+    projectsCount: 12,
+    verified: true,
+  },
+  {
+    id: "01923abc-1234-7000-8000-000000000005",
+    name: "Soroban Labs",
+    industry: "Smart Contract Tooling",
+    projectsCount: 8,
+    verified: true,
+  },
+  {
+    id: "01923abc-1234-7000-8000-000000000006",
+    name: "Nova Pay",
+    industry: "Cross-Border Payments",
+    projectsCount: 5,
+    verified: true,
+  },
+];
+
 // ─────────────────────────────────────────
 // PROJECTS
 // ─────────────────────────────────────────

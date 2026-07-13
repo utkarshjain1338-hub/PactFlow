@@ -26,6 +26,16 @@ export function formatXlmCompact(amount: string | number): string {
   return `${num.toFixed(2)} XLM`;
 }
 
+/** Format numbers with optional currency/unit code (e.g. "12,500 XLM" or "$1,200") */
+export function formatCurrency(amount: string | number, currency = "XLM"): string {
+  const num = typeof amount === "string" ? parseFloat(amount) : amount;
+  if (isNaN(num)) return `0 ${currency}`;
+  const formatted = new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 2,
+  }).format(num);
+  return currency === "$" ? `$${formatted}` : `${formatted} ${currency}`;
+}
+
 /** Truncate a Stellar public key for display */
 export function truncateAddress(address: string, start = 6, end = 4): string {
   if (!address || address.length < start + end) return address;
