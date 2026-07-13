@@ -1,0 +1,435 @@
+/**
+ * PactFlow — Constellation of Trust Design System
+ * Master Design Tokens (CSS Custom Properties)
+ *
+ * Requirements: Next.js 15 / 16, Tailwind CSS v4, shadcn/ui
+ *
+ * This document defines the exact visual tokens for the "Constellation of Trust" language:
+ * - Color Palette (Space Dark Mode, Brand Indigo, Accent Emerald, Status, shadcn/ui variables)
+ * - Typography Scale & Font Configuration
+ * - Border Radius
+ * - Shadows & Glow Effects
+ * - Spacing Scale
+ * - Motion Tokens & Transition Tokens
+ * - Z-index Scale
+ * - Theme Variables (Dark / Light)
+ */
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 1. THEME VARIABLES & CSS VARIABLES (Dark Theme Default & shadcn/ui Bridge)
+ * ───────────────────────────────────────────────────────────────────────────── */
+:root,
+.dark {
+  /* ── Color Palette: Brand Primary — Electric Indigo ── */
+  --color-brand-50: hsl(239 100% 96%);
+  --color-brand-100: hsl(238 96% 91%);
+  --color-brand-200: hsl(239 94% 84%);
+  --color-brand-300: hsl(239 90% 74%);
+  --color-brand-400: hsl(240 87% 66%);
+  --color-brand-500: hsl(240 84% 60%);   /* Core Brand Primary */
+  --color-brand-600: hsl(241 76% 52%);
+  --color-brand-700: hsl(243 72% 44%);
+  --color-brand-800: hsl(244 67% 36%);
+  --color-brand-900: hsl(246 62% 29%);
+  --color-brand-950: hsl(246 70% 18%);
+
+  /* ── Color Palette: Accent — Stellar Emerald (Trust / Escrow Secured) ── */
+  --color-accent-50: hsl(152 81% 96%);
+  --color-accent-100: hsl(150 80% 88%);
+  --color-accent-200: hsl(152 76% 76%);
+  --color-accent-300: hsl(156 72% 61%);
+  --color-accent-400: hsl(158 64% 52%);  /* Core Accent Emerald */
+  --color-accent-500: hsl(160 84% 39%);
+  --color-accent-600: hsl(161 94% 30%);
+  --color-accent-700: hsl(163 94% 24%);
+  --color-accent-800: hsl(163 88% 20%);
+  --color-accent-900: hsl(164 86% 16%);
+  --color-accent-950: hsl(164 90% 10%);
+
+  /* ── Color Palette: Surfaces — Space Dark Mode (Void & Nebula) ── */
+  --color-surface-ground: hsl(222 84% 4%);     /* Deep space background */
+  --color-surface-0: hsl(222 47% 7%);          /* Base surface */
+  --color-surface-1: hsl(222 40% 10%);         /* Card / container level 1 */
+  --color-surface-2: hsl(220 33% 14%);         /* Elevated card / hover state */
+  --color-surface-3: hsl(218 28% 18%);         /* Popover / top elevation */
+  --color-surface-overlay: hsl(222 47% 7% / 0.85); /* Backdrop overlay */
+
+  /* ── Color Palette: Text Scale ── */
+  --color-text-primary: hsl(210 40% 98%);      /* Starlight high emphasis */
+  --color-text-secondary: hsl(215 20% 70%);    /* Nebula medium emphasis */
+  --color-text-tertiary: hsl(215 15% 50%);     /* Cosmic dust low emphasis */
+  --color-text-disabled: hsl(215 10% 35%);     /* Disabled / inactive text */
+  --color-text-inverse: hsl(222 84% 5%);       /* Text on bright badges/buttons */
+
+  /* ── Color Palette: Borders ── */
+  --color-border-subtle: hsl(220 25% 16%);     /* Hairline structural border */
+  --color-border-default: hsl(220 22% 22%);    /* Standard component border */
+  --color-border-strong: hsl(220 20% 32%);     /* Emphasized / active border */
+  --color-border-brand: hsl(240 84% 60%);      /* Brand focus border */
+  --color-border-focus: hsl(240 84% 70%);      /* Keyboard navigation outline */
+
+  /* ── Color Palette: Status & Feedback ── */
+  --color-status-success: hsl(158 64% 52%);
+  --color-status-success-bg: hsl(158 64% 10%);
+  --color-status-success-border: hsl(158 64% 25%);
+
+  --color-status-warning: hsl(38 92% 50%);
+  --color-status-warning-bg: hsl(38 92% 8%);
+  --color-status-warning-border: hsl(38 92% 22%);
+
+  --color-status-error: hsl(0 84% 60%);
+  --color-status-error-bg: hsl(0 84% 9%);
+  --color-status-error-border: hsl(0 84% 22%);
+
+  --color-status-info: hsl(210 90% 62%);
+  --color-status-info-bg: hsl(210 90% 9%);
+  --color-status-info-border: hsl(210 90% 22%);
+
+  /* ── Color Palette: Domain Milestone States ── */
+  --color-ms-draft: hsl(215 20% 65%);
+  --color-ms-funded: hsl(210 90% 62%);
+  --color-ms-in-progress: hsl(38 92% 50%);
+  --color-ms-submitted: hsl(270 70% 62%);
+  --color-ms-paid: hsl(158 64% 52%);
+  --color-ms-refunded: hsl(0 84% 60%);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * shadcn/ui Semantic Variables Bridge (Dark Mode)
+   * ───────────────────────────────────────────────────────────────────────── */
+  --background: 222 84% 4%;
+  --foreground: 210 40% 98%;
+  --card: 222 40% 10%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222 40% 10%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 240 84% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 33% 14%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 220 33% 14%;
+  --muted-foreground: 215 20% 70%;
+  --accent: 158 64% 52%;
+  --accent-foreground: 222 84% 4%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 220 22% 22%;
+  --input: 220 22% 22%;
+  --ring: 240 84% 60%;
+  --radius: 0.75rem;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 2. TYPOGRAPHY SCALE & FONT CONFIGURATION
+   * ───────────────────────────────────────────────────────────────────────── */
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --text-xs: 0.75rem;       /* 12px */
+  --text-sm: 0.875rem;      /* 14px */
+  --text-base: 1rem;        /* 16px */
+  --text-lg: 1.125rem;      /* 18px */
+  --text-xl: 1.25rem;       /* 20px */
+  --text-2xl: 1.5rem;       /* 24px */
+  --text-3xl: 1.875rem;     /* 30px */
+  --text-4xl: 2.25rem;      /* 36px */
+  --text-5xl: 3rem;         /* 48px */
+  --text-6xl: 3.75rem;      /* 60px */
+
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
+
+  --tracking-tighter: -0.05em;
+  --tracking-tight: -0.025em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 3. SPACING SCALE
+   * ───────────────────────────────────────────────────────────────────────── */
+  --space-0: 0px;
+  --space-0-5: 0.125rem;    /* 2px */
+  --space-1: 0.25rem;       /* 4px */
+  --space-1-5: 0.375rem;    /* 6px */
+  --space-2: 0.5rem;        /* 8px */
+  --space-2-5: 0.625rem;    /* 10px */
+  --space-3: 0.75rem;       /* 12px */
+  --space-3-5: 0.875rem;    /* 14px */
+  --space-4: 1rem;          /* 16px */
+  --space-5: 1.25rem;       /* 20px */
+  --space-6: 1.5rem;        /* 24px */
+  --space-7: 1.75rem;       /* 28px */
+  --space-8: 2rem;          /* 32px */
+  --space-9: 2.25rem;       /* 36px */
+  --space-10: 2.5rem;       /* 40px */
+  --space-12: 3rem;         /* 48px */
+  --space-14: 3.5rem;       /* 56px */
+  --space-16: 4rem;         /* 64px */
+  --space-20: 5rem;         /* 80px */
+  --space-24: 6rem;         /* 96px */
+  --space-28: 7rem;         /* 112px */
+  --space-32: 8rem;         /* 128px */
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 4. BORDER RADIUS
+   * ───────────────────────────────────────────────────────────────────────── */
+  --radius-none: 0px;
+  --radius-xs: 0.25rem;     /* 4px */
+  --radius-sm: 0.375rem;    /* 6px */
+  --radius-md: 0.5rem;      /* 8px */
+  --radius-lg: 0.75rem;     /* 12px */
+  --radius-xl: 1rem;        /* 16px */
+  --radius-2xl: 1.25rem;    /* 20px */
+  --radius-3xl: 1.5rem;     /* 24px */
+  --radius-full: 9999px;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 5. SHADOWS & GLOW EFFECTS
+   * ───────────────────────────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+  --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.3), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
+  --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+  --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.3);
+  --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6), 0 8px 10px -6px hsl(0 0% 0% / 0.4);
+  --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.8);
+  --shadow-inner: inset 0 2px 4px 0 hsl(0 0% 0% / 0.4);
+  --shadow-brand: 0 0 20px hsl(240 84% 60% / 0.25);
+  --shadow-brand-lg: 0 0 40px hsl(240 84% 60% / 0.4);
+  --shadow-accent: 0 0 20px hsl(158 64% 52% / 0.25);
+  --shadow-glow: 0 0 60px hsl(240 84% 60% / 0.15), 0 0 20px hsl(240 84% 60% / 0.1);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 6. MOTION TOKENS & TRANSITION TOKENS
+   * ───────────────────────────────────────────────────────────────────────── */
+  --duration-instant: 0ms;
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+  --duration-slowest: 800ms;
+
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --transition-all: all var(--duration-normal) var(--ease-default);
+  --transition-colors: color var(--duration-normal) var(--ease-default),
+                       background-color var(--duration-normal) var(--ease-default),
+                       border-color var(--duration-normal) var(--ease-default),
+                       text-decoration-color var(--duration-normal) var(--ease-default),
+                       fill var(--duration-normal) var(--ease-default),
+                       stroke var(--duration-normal) var(--ease-default);
+  --transition-opacity: opacity var(--duration-normal) var(--ease-default);
+  --transition-shadow: box-shadow var(--duration-normal) var(--ease-default);
+  --transition-transform: transform var(--duration-normal) var(--ease-default);
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 7. Z-INDEX SCALE
+   * ───────────────────────────────────────────────────────────────────────── */
+  --z-base: 0;
+  --z-raised: 10;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 8. GLASSMORPHISM & CONSTELLATION DECORATIONS
+   * ───────────────────────────────────────────────────────────────────────── */
+  --glass-bg: hsl(222 47% 7% / 0.6);
+  --glass-border: hsl(220 25% 16% / 0.8);
+  --glass-blur: blur(12px);
+  --glass-blur-heavy: blur(24px);
+
+  --constellation-dot-color: hsl(240 84% 60% / 0.15);
+  --constellation-grid-size: 30px;
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   * 9. LAYOUT BOUNDARIES
+   * ───────────────────────────────────────────────────────────────────────── */
+  --sidebar-width: 260px;
+  --sidebar-width-collapsed: 68px;
+  --topnav-height: 64px;
+  --content-max-width: 1280px;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 10. LIGHT THEME OVERRIDES (Optional Fallback / Contrast Mode)
+ * ───────────────────────────────────────────────────────────────────────────── */
+.light {
+  --color-surface-ground: hsl(210 40% 98%);
+  --color-surface-0: hsl(0 0% 100%);
+  --color-surface-1: hsl(210 30% 96%);
+  --color-surface-2: hsl(210 25% 92%);
+  --color-surface-3: hsl(210 20% 86%);
+  --color-surface-overlay: hsl(222 47% 7% / 0.5);
+
+  --color-text-primary: hsl(222 84% 5%);
+  --color-text-secondary: hsl(215 25% 30%);
+  --color-text-tertiary: hsl(215 20% 45%);
+  --color-text-disabled: hsl(215 15% 65%);
+  --color-text-inverse: hsl(0 0% 100%);
+
+  --color-border-subtle: hsl(220 15% 88%);
+  --color-border-default: hsl(220 15% 82%);
+  --color-border-strong: hsl(220 15% 70%);
+
+  /* shadcn/ui Light Theme Bridge */
+  --background: 0 0% 100%;
+  --foreground: 222 84% 5%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 84% 5%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222 84% 5%;
+  --primary: 240 84% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 30% 96%;
+  --secondary-foreground: 222 84% 5%;
+  --muted: 210 30% 96%;
+  --muted-foreground: 215 20% 45%;
+  --accent: 158 64% 52%;
+  --accent-foreground: 222 84% 5%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 15% 82%;
+  --input: 220 15% 82%;
+  --ring: 240 84% 60%;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * 11. TAILWIND V4 @theme INLINE MAPPING
+ * Bridges CSS custom properties directly into Tailwind utilities (`bg-brand-500`)
+ * ───────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-brand-50: var(--color-brand-50);
+  --color-brand-100: var(--color-brand-100);
+  --color-brand-200: var(--color-brand-200);
+  --color-brand-300: var(--color-brand-300);
+  --color-brand-400: var(--color-brand-400);
+  --color-brand-500: var(--color-brand-500);
+  --color-brand-600: var(--color-brand-600);
+  --color-brand-700: var(--color-brand-700);
+  --color-brand-800: var(--color-brand-800);
+  --color-brand-900: var(--color-brand-900);
+  --color-brand-950: var(--color-brand-950);
+
+  --color-accent-50: var(--color-accent-50);
+  --color-accent-100: var(--color-accent-100);
+  --color-accent-200: var(--color-accent-200);
+  --color-accent-300: var(--color-accent-300);
+  --color-accent-400: var(--color-accent-400);
+  --color-accent-500: var(--color-accent-500);
+  --color-accent-600: var(--color-accent-600);
+  --color-accent-700: var(--color-accent-700);
+  --color-accent-800: var(--color-accent-800);
+  --color-accent-900: var(--color-accent-900);
+  --color-accent-950: var(--color-accent-950);
+
+  --color-surface-ground: var(--color-surface-ground);
+  --color-surface-0: var(--color-surface-0);
+  --color-surface-1: var(--color-surface-1);
+  --color-surface-2: var(--color-surface-2);
+  --color-surface-3: var(--color-surface-3);
+  --color-surface-overlay: var(--color-surface-overlay);
+
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-tertiary: var(--color-text-tertiary);
+  --color-text-disabled: var(--color-text-disabled);
+  --color-text-inverse: var(--color-text-inverse);
+
+  --color-border-subtle: var(--color-border-subtle);
+  --color-border-default: var(--color-border-default);
+  --color-border-strong: var(--color-border-strong);
+  --color-border-brand: var(--color-border-brand);
+  --color-border-focus: var(--color-border-focus);
+
+  --color-status-success: var(--color-status-success);
+  --color-status-success-bg: var(--color-status-success-bg);
+  --color-status-success-border: var(--color-status-success-border);
+  --color-status-warning: var(--color-status-warning);
+  --color-status-warning-bg: var(--color-status-warning-bg);
+  --color-status-warning-border: var(--color-status-warning-border);
+  --color-status-error: var(--color-status-error);
+  --color-status-error-bg: var(--color-status-error-bg);
+  --color-status-error-border: var(--color-status-error-border);
+  --color-status-info: var(--color-status-info);
+  --color-status-info-bg: var(--color-status-info-bg);
+  --color-status-info-border: var(--color-status-info-border);
+
+  --color-ms-draft: var(--color-ms-draft);
+  --color-ms-funded: var(--color-ms-funded);
+  --color-ms-in-progress: var(--color-ms-in-progress);
+  --color-ms-submitted: var(--color-ms-submitted);
+  --color-ms-paid: var(--color-ms-paid);
+  --color-ms-refunded: var(--color-ms-refunded);
+
+  /* shadcn/ui Utility Mapping */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Font Families */
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Spacing */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-68: 17rem;
+
+  /* Border Radius */
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-3xl: var(--radius-3xl);
+  --radius-4xl: 2rem;
+
+  /* Shadows */
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+  --shadow-brand: var(--shadow-brand);
+  --shadow-brand-lg: var(--shadow-brand-lg);
+  --shadow-accent: var(--shadow-accent);
+  --shadow-glow: var(--shadow-glow);
+}
