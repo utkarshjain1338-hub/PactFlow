@@ -1,0 +1,183 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.3.2'
+    id 'io.spring.dependency-management' version '1.1.6'
+    id 'checkstyle'
+    id 'jacoco'
+}
+
+group = 'com.pactflow'
+version = '1.0.0-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+    // Separate source set for integration tests
+    integrationTestImplementation.extendsFrom testImplementation
+    integrationTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    mapstructVersion = '1.5.5.Final'
+    lombokVersion = '1.18.34'
+    bucket4jVersion = '8.10.1'
+    springdocVersion = '2.6.0'
+    testcontainersVersion = '1.20.1'
+    sentryVersion = '7.14.0'
+}
+
+dependencies {
+    // ─── Spring Boot Starters ───────────────────────────────────────────────
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // ─── Database ───────────────────────────────────────────────────────────
+    runtimeOnly 'org.postgresql:postgresql'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-database-postgresql'
+
+    // ─── Jackson (JSON serialization) ───────────────────────────────────────
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+    // ─── API Documentation ───────────────────────────────────────────────────
+    implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:${springdocVersion}"
+
+    // ─── Rate Limiting ───────────────────────────────────────────────────────
+    implementation "com.bucket4j:bucket4j-core:${bucket4jVersion}"
+    implementation "com.bucket4j:bucket4j-redis:${bucket4jVersion}"
+
+    // ─── Metrics ────────────────────────────────────────────────────────────
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+
+    // ─── Lombok (DTOs and config classes only) ──────────────────────────────
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    // ─── MapStruct (compile-time DTO mapping) ───────────────────────────────
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    // Lombok must come before MapStruct in annotation processor order
+    annotationProcessor "org.projectlombok:lombok-mapstruct-binding:0.2.0"
+
+    // ─── UUID v7 generation ─────────────────────────────────────────────────
+    implementation 'com.fasterxml.uuid:java-uuid-generator:5.1.0'
+
+    // ─── Sentry (error monitoring) ───────────────────────────────────────────
+    implementation "io.sentry:sentry-spring-boot-starter-jakarta:${sentryVersion}"
+
+    // ─── Testing ────────────────────────────────────────────────────────────
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation "org.testcontainers:junit-jupiter:${testcontainersVersion}"
+    testImplementation "org.testcontainers:postgresql:${testcontainersVersion}"
+    testImplementation 'org.mockito:mockito-core'
+}
+
+// ─── Source Sets ─────────────────────────────────────────────────────────────
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integrationTest/java')
+        }
+        resources.srcDir file('src/integrationTest/resources')
+    }
+}
+
+// ─── Virtual Threads ─────────────────────────────────────────────────────────
+// Enabled in application.yml via spring.threads.virtual.enabled=true
+
+// ─── Checkstyle ──────────────────────────────────────────────────────────────
+checkstyle {
+    toolVersion = '10.17.0'
+    configFile = file('checkstyle/checkstyle.xml')
+    ignoreFailures = false
+    maxWarnings = 0
+}
+
+checkstyleTest {
+    enabled = false
+}
+
+// ─── JaCoCo Coverage ─────────────────────────────────────────────────────────
+jacoco {
+    toolVersion = '0.8.12'
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+// ─── Integration Test Task ────────────────────────────────────────────────────
+tasks.register('integrationTest', Test) {
+    description = 'Runs integration tests with Testcontainers.'
+    group = 'verification'
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    shouldRunAfter test
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+}
+
+// ─── Test Configuration ───────────────────────────────────────────────────────
+tasks.named('test') {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+    }
+}
+
+tasks.named('check') {
+    dependsOn integrationTest
+}
+
+// ─── Jar Configuration ───────────────────────────────────────────────────────
+tasks.named('bootJar') {
+    archiveFileName = 'pactflow-backend.jar'
+}
+
+// ─── Annotation Processor Order ──────────────────────────────────────────────
+// Ensures Lombok processes before MapStruct during compilation
+compileJava {
+    options.compilerArgs += [
+        '-Amapstruct.defaultComponentModel=spring',
+        '-Amapstruct.suppressGeneratorTimestamp=true'
+    ]
+}
