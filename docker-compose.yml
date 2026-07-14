@@ -1,0 +1,136 @@
+# =============================================================================
+# PactFlow Local Development — Docker Compose
+# Authority: SYSTEM_ARCHITECTURE.md §13.2 (Docker Architecture)
+#
+# Services:
+#   postgres    — PostgreSQL 16 (port 5432)
+#   redis       — Redis 7 (port 6379)
+#   mailhog     — Local email capture UI (port 8025, SMTP 1025)
+#   pactflow-api — Spring Boot API (port 8080, management 8081)
+#
+# Usage:
+#   docker-compose up -d postgres redis mailhog
+#   ./gradlew bootRun --args='--spring.profiles.active=dev'
+#
+# Or start everything:
+#   docker-compose up
+# =============================================================================
+
+services:
+
+  # ─── PostgreSQL 16 ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: pactflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: pactflow_dev
+      POSTGRES_USER: pactflow_app
+      POSTGRES_PASSWORD: pactflow_dev_secret
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --lc-collate=C --lc-ctype=C"
+      # Performance tuning for development
+      POSTGRES_HOST_AUTH_METHOD: md5
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Init script creates additional DB roles for RLS simulation
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pactflow_app -d pactflow_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - pactflow-net
+
+  # ─── Redis 7 ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: pactflow-redis
+    restart: unless-stopped
+    command: redis-server --save 20 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - pactflow-net
+
+  # ─── MailHog (local email capture) ───────────────────────────────────────
+  # SYSTEM_ARCHITECTURE.md §13.2: mailhog — Local email capture (port 8025)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: pactflow-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - pactflow-net
+
+  # ─── Spring Boot API ──────────────────────────────────────────────────────
+  # NOTE: For development, prefer running `./gradlew bootRun` directly
+  # and only starting postgres/redis/mailhog via docker-compose.
+  # This service is provided for full-stack integration testing.
+  pactflow-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pactflow-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://postgres:5432/pactflow_dev
+      DB_USERNAME: pactflow_app
+      DB_PASSWORD: pactflow_dev_secret
+      REDIS_URL: redis://redis:6379
+      REDIS_PASSWORD: ""
+      EMAIL_SMTP_HOST: mailhog
+      EMAIL_SMTP_PORT: "1025"
+      JWT_SECRET_KEY: dev-only-key-do-not-use-in-production-256bit-minimum-length-required
+      CORS_ALLOWED_ORIGINS: "http://localhost:3000"
+      STELLAR_NETWORK: testnet
+      HORIZON_URL: "https://horizon-testnet.stellar.org"
+      SOROBAN_RPC_URL: "https://soroban-testnet.stellar.org"
+      OPENAPI_ENABLED: "true"
+      MANAGEMENT_PORT: "8081"
+    ports:
+      - "8080:8080"   # API
+      - "8081:8081"   # Actuator management
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health/liveness || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - pactflow-net
+    profiles:
+      # Only start the API container when --profile full is specified.
+      # Default: only infrastructure services start.
+      - full
+
+# ─── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ─── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  pactflow-net:
+    driver: bridge
+    name: pactflow-network
