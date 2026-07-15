@@ -93,4 +93,32 @@ class RateLimitFilterTest {
         assertThat(blockedRes.getHeader("X-RateLimit-Limit")).isEqualTo("3");
         assertThat(blockedRes.getHeader("X-RateLimit-Remaining")).isEqualTo("0");
     }
+
+    @Test
+    @DisplayName("Should enforce mutation rate limits (60/min) on /api/v1/users/me PATCH")
+    void shouldEnforceUserMutationRateLimit() throws Exception {
+        final MockHttpServletRequest req = new MockHttpServletRequest("PATCH", "/api/v1/users/me");
+        req.setRemoteAddr("10.1.1.1");
+        final MockHttpServletResponse res = new MockHttpServletResponse();
+
+        filter.doFilter(req, res, new MockFilterChain());
+
+        assertThat(res.getStatus()).isEqualTo(200);
+        assertThat(res.getHeader("X-RateLimit-Limit")).isEqualTo("60");
+        assertThat(res.getHeader("X-RateLimit-Remaining")).isEqualTo("59");
+    }
+
+    @Test
+    @DisplayName("Should enforce global read rate limits (300/min) on /api/v1/users/me GET")
+    void shouldEnforceUserReadRateLimit() throws Exception {
+        final MockHttpServletRequest req = new MockHttpServletRequest("GET", "/api/v1/users/me");
+        req.setRemoteAddr("10.1.1.2");
+        final MockHttpServletResponse res = new MockHttpServletResponse();
+
+        filter.doFilter(req, res, new MockFilterChain());
+
+        assertThat(res.getStatus()).isEqualTo(200);
+        assertThat(res.getHeader("X-RateLimit-Limit")).isEqualTo("300");
+        assertThat(res.getHeader("X-RateLimit-Remaining")).isEqualTo("299");
+    }
 }

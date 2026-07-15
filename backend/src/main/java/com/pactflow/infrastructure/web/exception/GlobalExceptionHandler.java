@@ -1,5 +1,6 @@
 package com.pactflow.infrastructure.web.exception;
 
+import com.pactflow.application.user.exception.ActiveMilestonesPreventErasureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -90,6 +91,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         LOG.warn("Invalid state transition: {}", ex.getMessage());
         final ProblemDetail detail = buildProblemDetail(
                 HttpStatus.CONFLICT, "INVALID_STATE_TRANSITION", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(detail);
+    }
+
+    /** Handles active milestones blocking erasure (409). */
+    @ExceptionHandler(ActiveMilestonesPreventErasureException.class)
+    public ResponseEntity<ProblemDetail> handleActiveMilestonesPreventErasure(
+            final ActiveMilestonesPreventErasureException ex,
+            final HttpServletRequest request) {
+        LOG.warn("Erasure rejected: {}", ex.getMessage());
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.CONFLICT, "ACTIVE_MILESTONES_PREVENT_ERASURE", ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(detail);
     }
 

@@ -42,6 +42,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger LOG = LoggerFactory.getLogger(RateLimitFilter.class);
     private static final String AUTH_PREFIX = "/api/v1/auth";
+    private static final String USERS_PREFIX = "/api/v1/users";
     private static final String FORGOT_PASSWORD_PATH = "/api/v1/auth/forgot-password";
 
     private final PactFlowProperties properties;
@@ -56,22 +57,43 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         final String path = request.getRequestURI();
 
-        // Scope filter strictly to auth endpoints for M1
-        if (path == null || !path.startsWith(AUTH_PREFIX)) {
+        if (path == null || (!path.startsWith(AUTH_PREFIX) && !path.startsWith(USERS_PREFIX))) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String ip = extractIpAddress(request);
+        final String method = request.getMethod();
+        final boolean isAuth = path.startsWith(AUTH_PREFIX);
         final boolean isForgotPassword = FORGOT_PASSWORD_PATH.equals(path);
-        final String bucketKey = (isForgotPassword ? "forgot:" : "auth:") + ip;
+        final boolean isMutation = !isAuth && ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method)
+                || "PATCH".equalsIgnoreCase(method) || "DELETE".equalsIgnoreCase(method));
 
-        final Bucket bucket = cache.computeIfAbsent(bucketKey, key -> createBucket(isForgotPassword));
+        final String bucketPrefix;
+        if (isForgotPassword) {
+            bucketPrefix = "forgot:";
+        } else if (isAuth) {
+            bucketPrefix = "auth:";
+        } else if (isMutation) {
+            bucketPrefix = "mutation:";
+        } else {
+            bucketPrefix = "user_read:";
+        }
+        final String bucketKey = bucketPrefix + ip;
+
+        final Bucket bucket = cache.computeIfAbsent(bucketKey, key -> createBucket(isForgotPassword, isAuth, isMutation));
         final ConsumptionProbe probe = bucket.tryConsumeAndReturnRemaining(1);
 
-        final long limit = isForgotPassword
-                ? properties.getSecurity().getRateLimit().getForgotPasswordRph()
-                : properties.getSecurity().getRateLimit().getAuthEndpointsRpm();
+        final long limit;
+        if (isForgotPassword) {
+            limit = properties.getSecurity().getRateLimit().getForgotPasswordRph();
+        } else if (isAuth) {
+            limit = properties.getSecurity().getRateLimit().getAuthEndpointsRpm();
+        } else if (isMutation) {
+            limit = properties.getSecurity().getRateLimit().getMutationEndpointsRpm();
+        } else {
+            limit = properties.getSecurity().getRateLimit().getGlobalAuthenticatedRpm();
+        }
 
         response.setHeader("X-RateLimit-Limit", String.valueOf(limit));
         response.setHeader("X-RateLimit-Remaining", String.valueOf(Math.max(0, probe.getRemainingTokens())));
@@ -99,14 +121,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
-    private Bucket createBucket(final boolean isForgotPassword) {
+    private Bucket createBucket(final boolean isForgotPassword, final boolean isAuth, final boolean isMutation) {
         if (isForgotPassword) {
             final long rph = properties.getSecurity().getRateLimit().getForgotPasswordRph();
             return Bucket.builder()
                     .addLimit(Bandwidth.builder().capacity(rph).refillGreedy(rph, Duration.ofHours(1)).build())
                     .build();
-        } else {
+        } else if (isAuth) {
             final long rpm = properties.getSecurity().getRateLimit().getAuthEndpointsRpm();
+            return Bucket.builder()
+                    .addLimit(Bandwidth.builder().capacity(rpm).refillGreedy(rpm, Duration.ofMinutes(1)).build())
+                    .build();
+        } else if (isMutation) {
+            final long rpm = properties.getSecurity().getRateLimit().getMutationEndpointsRpm();
+            return Bucket.builder()
+                    .addLimit(Bandwidth.builder().capacity(rpm).refillGreedy(rpm, Duration.ofMinutes(1)).build())
+                    .build();
+        } else {
+            final long rpm = properties.getSecurity().getRateLimit().getGlobalAuthenticatedRpm();
             return Bucket.builder()
                     .addLimit(Bandwidth.builder().capacity(rpm).refillGreedy(rpm, Duration.ofMinutes(1)).build())
                     .build();

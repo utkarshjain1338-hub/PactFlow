@@ -119,11 +119,11 @@ public class SecurityConfig {
 
                 // ─── Authorization Rules ──────────────────────────────────────
                 .authorizeHttpRequests(auth -> auth
-                        // Actuator health probes — public for Railway health checks
+                        // Public health checks on primary API port (8080) and management port (8081)
                         .requestMatchers(
+                                "/api/v1/health/**",
                                 "/actuator/health",
-                                "/actuator/health/liveness",
-                                "/actuator/health/readiness",
+                                "/actuator/health/**",
                                 "/actuator/info")
                                 .permitAll()
 

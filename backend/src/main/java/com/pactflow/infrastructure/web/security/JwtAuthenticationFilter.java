@@ -60,6 +60,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    @Override
+    protected boolean shouldNotFilter(@NonNull final HttpServletRequest request) {
+        final String path = request.getRequestURI();
+        return path != null && (
+                path.startsWith("/api/v1/health") ||
+                path.startsWith("/actuator") ||
+                path.startsWith("/api-docs") ||
+                path.startsWith("/swagger-ui")
+        );
+    }
+
     private void processAuthentication(final Claims claims, final HttpServletRequest request) {
         final String sessionIdStr = claims.get("sessionId", String.class);
         if (sessionIdStr == null) {
