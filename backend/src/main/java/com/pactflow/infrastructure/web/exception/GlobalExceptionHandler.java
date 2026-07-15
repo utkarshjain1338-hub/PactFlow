@@ -161,6 +161,53 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(detail);
     }
 
+    // ─── Auth & Identity Exceptions ────────────────────────────────────────
+
+    /** Handles invalid credentials or token replay (401). */
+    @ExceptionHandler({InvalidCredentialsException.class, TokenReplayException.class})
+    public ResponseEntity<ProblemDetail> handleUnauthorizedAuth(
+            final PactFlowException ex,
+            final HttpServletRequest request) {
+        LOG.warn("Auth failure (401): {} — uri={}", ex.getMessage(), request.getRequestURI());
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(detail);
+    }
+
+    /** Handles deactivated or locked accounts (403). */
+    @ExceptionHandler({AccountDeactivatedException.class, AccountLockedException.class})
+    public ResponseEntity<ProblemDetail> handleForbiddenAuth(
+            final PactFlowException ex,
+            final HttpServletRequest request) {
+        LOG.warn("Auth forbidden (403): {} — uri={}", ex.getMessage(), request.getRequestURI());
+        final String errorCode = ex instanceof AccountLockedException ? "ACCOUNT_LOCKED" : "ACCOUNT_DEACTIVATED";
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.FORBIDDEN, errorCode, ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(detail);
+    }
+
+    /** Handles expired or consumed tokens (410). */
+    @ExceptionHandler(TokenExpiredException.class)
+    public ResponseEntity<ProblemDetail> handleTokenExpired(
+            final TokenExpiredException ex,
+            final HttpServletRequest request) {
+        LOG.debug("Token expired or consumed (410): {} — uri={}", ex.getMessage(), request.getRequestURI());
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.GONE, "TOKEN_EXPIRED", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.GONE).body(detail);
+    }
+
+    /** Handles weak passwords (422). */
+    @ExceptionHandler(WeakPasswordException.class)
+    public ResponseEntity<ProblemDetail> handleWeakPassword(
+            final WeakPasswordException ex,
+            final HttpServletRequest request) {
+        LOG.debug("Weak password (422): {} — uri={}", ex.getMessage(), request.getRequestURI());
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, "WEAK_PASSWORD", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(detail);
+    }
+
     // ─── Spring Security Exceptions ────────────────────────────────────────
 
     /** Handles Spring Security authentication failures (401). */

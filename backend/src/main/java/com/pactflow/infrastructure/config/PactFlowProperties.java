@@ -103,6 +103,9 @@ public class PactFlowProperties {
             private int authEndpointsRpm = 10;
 
             @Min(1)
+            private int forgotPasswordRph = 3;
+
+            @Min(1)
             private int walletChallengeRpm = 5;
 
             @Min(1)

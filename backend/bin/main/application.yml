@@ -231,7 +231,6 @@ pactflow:
       global-unauthenticated-rpm: 60
       global-authenticated-rpm: 300
       auth-endpoints-rpm: 10
-      forgot-password-rph: 3
       wallet-challenge-rpm: 5
       mutation-endpoints-rpm: 60
   admin:

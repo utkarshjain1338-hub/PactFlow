@@ -13,10 +13,16 @@ import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.net.URI;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,33 +50,21 @@ import java.util.List;
 public class SecurityConfig {
 
     private final PactFlowProperties properties;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitFilter rateLimitFilter;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper;
 
-    /**
-     * Constructs the security configuration with injected properties.
-     *
-     * @param properties PactFlow application properties
-     */
-    public SecurityConfig(final PactFlowProperties properties) {
+    public SecurityConfig(
+            final PactFlowProperties properties,
+            final JwtAuthenticationFilter jwtAuthenticationFilter,
+            final RateLimitFilter rateLimitFilter,
+            final com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
         this.properties = properties;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.rateLimitFilter = rateLimitFilter;
+        this.objectMapper = objectMapper;
     }
 
-    /**
-     * Primary security filter chain.
-     *
-     * <p>Configures:
-     * <ul>
-     *   <li>STATELESS session management (JWT-based)</li>
-     *   <li>CSRF disabled (API is stateless — no session cookies for state)</li>
-     *   <li>CORS from {@link #corsConfigurationSource()}</li>
-     *   <li>Security response headers per SECURITY_THREAT_MODEL.md §9</li>
-     *   <li>Public paths (actuator health, OpenAPI, auth endpoints)</li>
-     *   <li>All other paths require authentication</li>
-     * </ul>
-     *
-     * @param http the Spring Security HTTP builder
-     * @return configured SecurityFilterChain
-     * @throws Exception on configuration error
-     */
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         http
@@ -79,15 +73,12 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // ─── CSRF — Disabled for REST API ────────────────────────────
-                // SECURITY NOTE: Safe because we are STATELESS (no session cookies carrying auth state).
-                // SameSite=Strict on refresh token cookie provides equivalent protection.
                 .csrf(AbstractHttpConfigurer::disable)
 
                 // ─── CORS ─────────────────────────────────────────────────────
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // ─── Security Response Headers ────────────────────────────────
-                // Per API_SPECIFICATION.md §1.10 and SECURITY_THREAT_MODEL.md §9
                 .headers(headers -> headers
                         .httpStrictTransportSecurity(hsts -> hsts
                                 .includeSubDomains(true)
@@ -101,10 +92,34 @@ public class SecurityConfig {
                         .permissionsPolicy(permissions ->
                                 permissions.policy("geolocation=(), microphone=(), camera=()")))
 
+                // ─── Exception Handling — RFC 7807 ────────────────────────────
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, ex) -> {
+                            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                            response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+                            final ProblemDetail detail = ProblemDetail.forStatusAndDetail(
+                                    HttpStatus.UNAUTHORIZED, "Authentication required or token invalid/revoked.");
+                            detail.setTitle("UNAUTHORIZED");
+                            detail.setType(URI.create("https://pactflow.io/errors/UNAUTHORIZED"));
+                            detail.setInstance(URI.create(request.getRequestURI()));
+                            detail.setProperty("timestamp", Instant.now().toString());
+                            objectMapper.writeValue(response.getOutputStream(), detail);
+                        })
+                        .accessDeniedHandler((request, response, ex) -> {
+                            response.setStatus(HttpStatus.FORBIDDEN.value());
+                            response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+                            final ProblemDetail detail = ProblemDetail.forStatusAndDetail(
+                                    HttpStatus.FORBIDDEN, "You do not have permission to perform this action.");
+                            detail.setTitle("FORBIDDEN");
+                            detail.setType(URI.create("https://pactflow.io/errors/FORBIDDEN"));
+                            detail.setInstance(URI.create(request.getRequestURI()));
+                            detail.setProperty("timestamp", Instant.now().toString());
+                            objectMapper.writeValue(response.getOutputStream(), detail);
+                        }))
+
                 // ─── Authorization Rules ──────────────────────────────────────
                 .authorizeHttpRequests(auth -> auth
                         // Actuator health probes — public for Railway health checks
-                        // SYSTEM_ARCHITECTURE.md §12.3: /actuator/health/liveness + readiness
                         .requestMatchers(
                                 "/actuator/health",
                                 "/actuator/health/liveness",
@@ -113,18 +128,19 @@ public class SecurityConfig {
                                 .permitAll()
 
                         // Authentication endpoints — public
-                        // API_SPECIFICATION.md §1.6: Auth flow
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
-                                "/api/v1/auth/refresh")
+                                "/api/v1/auth/refresh",
+                                "/api/v1/auth/verify-email",
+                                "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password")
                                 .permitAll()
 
-                        // Wallet challenge — public (but rate-limited)
-                        // SYSTEM_ARCHITECTURE.md §8.5: wallet challenge flow
+                        // Wallet challenge — public
                         .requestMatchers(HttpMethod.GET, "/api/v1/wallets/challenge").permitAll()
 
-                        // OpenAPI — permitted (disabled in prod via springdoc properties)
+                        // OpenAPI — permitted
                         .requestMatchers(
                                 "/api-docs/**",
                                 "/api-docs.yaml",
@@ -133,8 +149,11 @@ public class SecurityConfig {
                                 .permitAll()
 
                         // All other endpoints require authentication
-                        // NOTE: JWT enforcement added in Authentication milestone
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated())
+
+                // ─── Security Filter Chain Order ─────────────────────────────
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -189,7 +208,7 @@ public class SecurityConfig {
      * <p>Parameters tuned for security vs. performance:
      * - saltLength: 16 bytes (128-bit)
      * - hashLength: 32 bytes (256-bit)
-     * - parallelism: 1 (single-threaded for Railway single-core instances)
+     * - parallelism: 2 (tuned per Section 8 security rules)
      * - memory: 65536 KB (64 MB — OWASP recommendation)
      * - iterations: 3 (OWASP minimum)
      *
@@ -197,6 +216,6 @@ public class SecurityConfig {
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new Argon2PasswordEncoder(16, 32, 1, 65536, 3);
+        return new Argon2PasswordEncoder(16, 32, 2, 65536, 3);
     }
 }
