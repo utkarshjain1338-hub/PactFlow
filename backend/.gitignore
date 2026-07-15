@@ -23,3 +23,7 @@ logs/
 # Secrets and environment files
 *.env
 *.secret
+
+# IDE binaries and settings
+bin/
+.vscode/
