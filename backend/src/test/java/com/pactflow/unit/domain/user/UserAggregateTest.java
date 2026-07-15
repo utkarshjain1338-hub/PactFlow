@@ -102,4 +102,42 @@ class UserAggregateTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("format constraints");
     }
+
+    @Test
+    @DisplayName("Should update profile fields and validate invariants")
+    void shouldUpdateProfileAndValidate() {
+        final User user = new User(UUID.randomUUID(), new Email("test@pactflow.io"), "hash", AccountType.COMPANY, "Old Name", "UTC");
+        
+        user.updateProfile("New Name", "https://cdn.pactflow.io/avatars/new.png", "Europe/London", "Hello Bio");
+        assertThat(user.getDisplayName()).isEqualTo("New Name");
+        assertThat(user.getAvatarUrl()).isEqualTo("https://cdn.pactflow.io/avatars/new.png");
+        assertThat(user.getTimezone()).isEqualTo("Europe/London");
+        assertThat(user.getBio()).isEqualTo("Hello Bio");
+
+        assertThatThrownBy(() -> user.updateProfile("A", null, null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Display name");
+
+        assertThatThrownBy(() -> user.updateProfile(null, "http://insecure.png", null, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("valid HTTPS URL");
+    }
+
+    @Test
+    @DisplayName("Should anonymize PII fields while preserving ID and setting soft-delete flags")
+    void shouldAnonymizeUser() {
+        final UUID id = UUID.randomUUID();
+        final User user = new User(id, new Email("test@pactflow.io"), "hash", AccountType.FREELANCER, "Test Name", "UTC");
+        
+        user.anonymize();
+        assertThat(user.getId()).isEqualTo(id);
+        assertThat(user.getEmail()).isNull();
+        assertThat(user.getDisplayName()).isNull();
+        assertThat(user.getAvatarUrl()).isNull();
+        assertThat(user.getBio()).isNull();
+        assertThat(user.getPasswordHash()).isNull();
+        assertThat(user.isActive()).isFalse();
+        assertThat(user.isDeleted()).isTrue();
+        assertThat(user.getDeletedAt()).isNotNull();
+    }
 }

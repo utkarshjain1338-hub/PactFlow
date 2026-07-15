@@ -44,4 +44,28 @@ public interface UserRepository {
      * @return persisted user aggregate with updated version
      */
     User save(User user);
+
+    /**
+     * Finds a user by their UUID primary key regardless of soft-delete status.
+     * Needed for public profile or audit verification.
+     *
+     * @param id user UUID v7
+     * @return optional containing user if found
+     */
+    Optional<User> findByIdIncludingDeleted(UUID id);
+
+    /**
+     * Retrieves soft-deleted accounts that have not yet had their PII nulled out.
+     *
+     * @param limit maximum batch size to fetch
+     * @return list of pending soft-deleted users
+     */
+    java.util.List<User> findSoftDeletedPendingAnonymization(int limit);
+
+    /**
+     * Invokes the database-level anonymize_user procedure/function on the specified account.
+     *
+     * @param userId UUID v7 of the account to anonymize
+     */
+    void anonymizeUser(UUID userId);
 }

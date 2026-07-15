@@ -17,7 +17,7 @@ import java.util.UUID;
  */
 public class User extends AuditableEntity implements SoftDeletable {
 
-    private final Email email;
+    private Email email;
     private String passwordHash;
     private final AccountType accountType;
     private String displayName;
@@ -94,10 +94,10 @@ public class User extends AuditableEntity implements SoftDeletable {
             final boolean isDeleted,
             final Instant deletedAt) {
         super(id, createdAt, updatedAt, version);
-        this.email = Objects.requireNonNull(email, "email must not be null");
-        this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash must not be null");
+        this.email = email;
+        this.passwordHash = passwordHash;
         this.accountType = Objects.requireNonNull(accountType, "accountType must not be null");
-        this.displayName = Objects.requireNonNull(displayName, "displayName must not be null");
+        this.displayName = displayName;
         this.avatarUrl = avatarUrl;
         this.timezone = timezone != null && !timezone.isBlank() ? timezone : "UTC";
         this.bio = bio;
@@ -155,6 +155,90 @@ public class User extends AuditableEntity implements SoftDeletable {
             this.isActive = false;
             touch();
         }
+    }
+
+    /**
+     * Updates the user's profile fields.
+     *
+     * <p>Authority: API_SPECIFICATION.md Domain 2 (PATCH /users/me), DOMAIN_MODEL.md §6.
+     *
+     * @param displayName new display name (2-100 characters if not null)
+     * @param avatarUrl   new avatar URL (valid HTTPS URL up to 2048 characters if not null)
+     * @param timezone    new IANA timezone (non-blank up to 50 characters if not null)
+     * @param bio         new user biography (up to 1000 characters if not null)
+     */
+    public void updateProfile(
+            final String displayName,
+            final String avatarUrl,
+            final String timezone,
+            final String bio) {
+        boolean changed = false;
+
+        if (displayName != null) {
+            final String trimmedName = displayName.trim();
+            if (trimmedName.length() < 2 || trimmedName.length() > 100) {
+                throw new IllegalArgumentException("Display name must be between 2 and 100 characters.");
+            }
+            if (!Objects.equals(this.displayName, trimmedName)) {
+                this.displayName = trimmedName;
+                changed = true;
+            }
+        }
+
+        if (avatarUrl != null) {
+            final String trimmedUrl = avatarUrl.trim();
+            if (!trimmedUrl.isEmpty() && (!trimmedUrl.startsWith("https://") || trimmedUrl.length() > 2048)) {
+                throw new IllegalArgumentException("Avatar URL must be a valid HTTPS URL up to 2048 characters.");
+            }
+            if (!Objects.equals(this.avatarUrl, trimmedUrl)) {
+                this.avatarUrl = trimmedUrl.isEmpty() ? null : trimmedUrl;
+                changed = true;
+            }
+        }
+
+        if (timezone != null) {
+            final String trimmedZone = timezone.trim();
+            if (trimmedZone.isEmpty() || trimmedZone.length() > 50) {
+                throw new IllegalArgumentException("Timezone must be a valid non-blank IANA zone.");
+            }
+            if (!Objects.equals(this.timezone, trimmedZone)) {
+                this.timezone = trimmedZone;
+                changed = true;
+            }
+        }
+
+        if (bio != null) {
+            if (bio.length() > 1000) {
+                throw new IllegalArgumentException("Bio must not exceed 1000 characters.");
+            }
+            if (!Objects.equals(this.bio, bio)) {
+                this.bio = bio;
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            touch();
+        }
+    }
+
+    /**
+     * Anonymizes PII fields per GDPR erasure requirements while preserving entity id.
+     *
+     * <p>Authority: DOMAIN_MODEL.md §8 (GDPR Erasure), API_SPECIFICATION.md Domain 2.
+     */
+    public void anonymize() {
+        this.email = null;
+        this.displayName = null;
+        this.avatarUrl = null;
+        this.bio = null;
+        this.passwordHash = null;
+        this.isActive = false;
+        if (!this.isDeleted) {
+            this.isDeleted = true;
+            this.deletedAt = Instant.now();
+        }
+        touch();
     }
 
     public Email getEmail() {
