@@ -35,6 +35,7 @@ public class MetricsConfig {
     private final AtomicLong ingestionLagLedgers = new AtomicLong(0L);
     private final AtomicLong outboxPendingCount = new AtomicLong(0L);
     private final AtomicLong paymentReleasedTotalXlmMillionths = new AtomicLong(0L);
+    private final AtomicLong accountErasureBacklogCount = new AtomicLong(0L);
 
     /**
      * Constructs the metrics configuration with the Micrometer registry.
@@ -63,6 +64,21 @@ public class MetricsConfig {
                 .description("Number of invalid milestone state transition attempts")
                 .register(meterRegistry);
 
+        // Profile updates count
+        Counter.builder("pactflow.profile.updated.count")
+                .description("Total number of user profile updates")
+                .register(meterRegistry);
+
+        // Erasure requests count
+        Counter.builder("pactflow.account.erasure.requested.count")
+                .description("Total number of account erasure requests initiated by users")
+                .register(meterRegistry);
+
+        // Erasure completions count
+        Counter.builder("pactflow.account.erasure.completed.count")
+                .description("Total number of accounts fully anonymized by scheduled job")
+                .register(meterRegistry);
+
         // ─── Gauges ──────────────────────────────────────────────────────
 
         // Ingestion daemon ledger lag — distance behind current network tip
@@ -82,6 +98,11 @@ public class MetricsConfig {
                         v -> v.doubleValue() / 10_000_000.0)
                 .description("Total XLM released to freelancers via milestone approvals (cumulative)")
                 .baseUnit("XLM")
+                .register(meterRegistry);
+
+        // Account erasure backlog gauge
+        Gauge.builder("pactflow.account.erasure.backlog.count", accountErasureBacklogCount, AtomicLong::doubleValue)
+                .description("Number of soft-deleted accounts awaiting full PII anonymization")
                 .register(meterRegistry);
     }
 
@@ -113,5 +134,21 @@ public class MetricsConfig {
      */
     public void addPaymentReleased(final long amountXlmMillionths) {
         paymentReleasedTotalXlmMillionths.addAndGet(amountXlmMillionths);
+    }
+
+    public void incrementProfileUpdatedCount() {
+        meterRegistry.counter("pactflow.profile.updated.count").increment();
+    }
+
+    public void incrementErasureRequestedCount() {
+        meterRegistry.counter("pactflow.account.erasure.requested.count").increment();
+    }
+
+    public void incrementErasureCompletedCount() {
+        meterRegistry.counter("pactflow.account.erasure.completed.count").increment();
+    }
+
+    public void updateAccountErasureBacklogCount(final long backlogCount) {
+        accountErasureBacklogCount.set(backlogCount);
     }
 }
