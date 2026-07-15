@@ -13,6 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -47,7 +50,8 @@ public class UserSessionEntity {
     @Column(name = "refresh_token_hash", unique = true, length = 128)
     private String refreshTokenHash;
 
-    @Column(name = "ip_address")
+    @Column(name = "ip_address", columnDefinition = "inet")
+    @JdbcTypeCode(SqlTypes.INET)
     private String ipAddress;
 
     @Column(name = "user_agent", length = 512)

@@ -7,8 +7,10 @@ import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.persistence.entity.UserJpaEntity;
 import com.pactflow.infrastructure.persistence.jpa.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -31,6 +33,12 @@ public class UserPersistenceAdapter implements UserRepository {
     }
 
     @Override
+    public Optional<User> findByIdIncludingDeleted(final UUID id) {
+        return userJpaRepository.findById(id)
+                .map(this::toDomain);
+    }
+
+    @Override
     public Optional<User> findByEmail(final Email email) {
         return userJpaRepository.findByEmailIgnoreCaseAndIsDeletedFalse(email.getValue())
                 .map(this::toDomain);
@@ -48,13 +56,26 @@ public class UserPersistenceAdapter implements UserRepository {
         return toDomain(saved);
     }
 
+    @Override
+    public List<User> findSoftDeletedPendingAnonymization(final int limit) {
+        return userJpaRepository.findSoftDeletedPendingAnonymization(PageRequest.of(0, limit))
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void anonymizeUser(final UUID userId) {
+        userJpaRepository.anonymizeUser(userId);
+    }
+
     private User toDomain(final UserJpaEntity entity) {
         return new User(
                 entity.getId(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
                 entity.getVersion(),
-                new Email(entity.getEmail()),
+                entity.getEmail() != null ? new Email(entity.getEmail()) : null,
                 entity.getPasswordHash(),
                 AccountType.valueOf(entity.getAccountType()),
                 entity.getDisplayName(),
@@ -71,7 +92,7 @@ public class UserPersistenceAdapter implements UserRepository {
     private UserJpaEntity toEntity(final User domain) {
         return UserJpaEntity.builder()
                 .id(domain.getId())
-                .email(domain.getEmail().getValue())
+                .email(domain.getEmail() != null ? domain.getEmail().getValue() : null)
                 .passwordHash(domain.getPasswordHash())
                 .accountType(domain.getAccountType().name())
                 .displayName(domain.getDisplayName())
