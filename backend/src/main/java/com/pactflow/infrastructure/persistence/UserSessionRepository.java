@@ -1,6 +1,7 @@
 package com.pactflow.infrastructure.persistence;
 
 import com.pactflow.infrastructure.persistence.entity.UserSessionEntity;
+import com.pactflow.infrastructure.persistence.jpa.UserJpaRepository;
 import com.pactflow.infrastructure.persistence.jpa.UserSessionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class UserSessionRepository {
     private static final String SESSION_KEY_PREFIX = "auth:session:";
 
     private final UserSessionJpaRepository sessionJpaRepository;
+    private final UserJpaRepository userJpaRepository;
     private final StringRedisTemplate redisTemplate;
 
     /**
@@ -80,6 +82,7 @@ public class UserSessionRepository {
         final UserSessionEntity entity = UserSessionEntity.builder()
                 .id(sessionId)
                 .userId(userId)
+                .user(userJpaRepository.getReferenceById(userId))
                 .tokenHash(tokenHash)
                 .refreshTokenHash(refreshHash)
                 .ipAddress(ipAddress)

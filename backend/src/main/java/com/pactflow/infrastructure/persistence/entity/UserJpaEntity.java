@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Persistable;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -28,7 +29,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserJpaEntity {
+public class UserJpaEntity implements Persistable<UUID> {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)
@@ -76,4 +77,9 @@ public class UserJpaEntity {
     @Version
     @Column(name = "version", nullable = false)
     private long version;
+
+    @Override
+    public boolean isNew() {
+        return version == 0L || (createdAt != null && updatedAt != null && createdAt.equals(updatedAt) && version <= 1L);
+    }
 }

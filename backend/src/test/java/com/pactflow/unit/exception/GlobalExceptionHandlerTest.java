@@ -158,6 +158,19 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    @DisplayName("IllegalArgumentException should return 422 UNPROCESSABLE_ENTITY")
+    void handleIllegalArgumentExceptionShouldReturn422() {
+        final var ex = new IllegalArgumentException("Email address does not conform to required format constraints.");
+        final ResponseEntity<ProblemDetail> response = handler.handleIllegalArgumentException(ex, request);
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getStatus()).isEqualTo(422);
+        assertThat(response.getBody().getType().toString()).contains("VALIDATION_FAILED");
+        assertThat(response.getBody().getDetail()).isEqualTo("Email address does not conform to required format constraints.");
+    }
+
+    @Test
     @DisplayName("Unhandled exception should return 500 INTERNAL_SERVER_ERROR")
     void handleUnexpectedShouldReturn500() {
         final var ex = new RuntimeException("Null pointer occurred.");

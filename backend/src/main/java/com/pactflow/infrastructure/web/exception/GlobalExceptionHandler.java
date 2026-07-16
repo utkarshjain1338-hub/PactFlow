@@ -149,6 +149,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(detail);
     }
 
+    /** Handles value object and argument validation failures (422). */
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalArgumentException(
+            final IllegalArgumentException ex,
+            final HttpServletRequest request) {
+        LOG.debug("Argument validation failure: {}", ex.getMessage());
+        final ProblemDetail detail = buildProblemDetail(
+                HttpStatus.UNPROCESSABLE_ENTITY, "VALIDATION_FAILED", ex.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(detail);
+    }
+
     /** Handles blockchain communication failures (503). */
     @ExceptionHandler(BlockchainCommunicationException.class)
     public ResponseEntity<ProblemDetail> handleBlockchainCommunication(
