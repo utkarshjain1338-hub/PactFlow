@@ -9,6 +9,7 @@
  */
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -19,14 +20,8 @@ import {
   Bell,
   BarChart3,
   Settings,
-  Shield,
   ChevronLeft,
   ChevronRight,
-  Zap,
-  HelpCircle,
-  Clock,
-  UserCheck,
-  Award,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -71,31 +66,25 @@ export function Sidebar() {
           label: "Escrows & Vaults",
           href: "/escrows",
           icon: Milestone,
+          badge: "2-of-3",
+          badgeVariant: "secondary",
         },
-        { id: "transactions", label: "Transactions", href: "/transactions", icon: Clock },
+        {
+          id: "wallet",
+          label: "Soroban Wallet",
+          href: "/wallet",
+          icon: Wallet,
+          badge: "Connected",
+          badgeVariant: "success",
+        },
       ],
     },
     {
-      group: "Financial Trust",
-      items: [
-        { id: "wallet", label: "Stellar Wallet", href: "/wallet", icon: Wallet },
-        { id: "analytics", label: "Analytics & ROI", href: "/analytics", icon: BarChart3 },
-        ...(activeRole === "FREELANCER"
-          ? [
-              {
-                id: "reputation",
-                label: "On-Chain Reputation",
-                href: "/freelancers/me",
-                icon: Award,
-                badge: "⭐ 4.98",
-                badgeVariant: "success" as const,
-              },
-            ]
-          : []),
-      ],
+      group: "Analytics & Reports",
+      items: [{ id: "analytics", label: "Analytics & ROI", href: "/analytics", icon: BarChart3 }],
     },
     {
-      group: "System & Governance",
+      group: "System & Profile",
       items: [
         {
           id: "notifications",
@@ -122,28 +111,33 @@ export function Sidebar() {
       aria-label="Sidebar navigation"
     >
       {/* Brand Logo Header */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-border-subtle shrink-0 h-16">
-        <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center shrink-0 shadow-brand text-white font-bold">
-          <Shield size={16} />
-        </div>
-        <AnimatePresence>
-          {!collapsed && (
-            <motion.div
-              initial={{ opacity: 0, width: 0 }}
-              animate={{ opacity: 1, width: "auto" }}
-              exit={{ opacity: 0, width: 0 }}
-              transition={{ duration: 0.15 }}
-              className="overflow-hidden flex items-center justify-between flex-1 gap-2 whitespace-nowrap min-w-0"
-            >
-              <span className="font-bold text-sm text-text-primary tracking-tight">
-                PactFlow
-              </span>
-              <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-brand-500/15 text-brand-300 border border-brand-500/30">
-                Level 4
-              </span>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border-subtle shrink-0 h-16 overflow-hidden">
+        {collapsed ? (
+          <Link href="/" className="flex items-center justify-center mx-auto" aria-label="PactFlow Home">
+            <Image
+              src="/pactflow-icon.svg"
+              alt="PactFlow Icon"
+              width={34}
+              height={34}
+              className="w-8 h-8 shrink-0"
+              priority
+            />
+          </Link>
+        ) : (
+          <Link href="/" className="flex items-center justify-between w-full min-w-0 group" aria-label="PactFlow Home">
+            <Image
+              src="/pactflow-logo-horizontal.svg"
+              alt="PactFlow"
+              width={140}
+              height={36}
+              className="h-8 w-auto shrink-0 group-hover:scale-[1.01] transition-transform"
+              priority
+            />
+            <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-brand-500/15 text-brand-300 border border-brand-500/30 shrink-0">
+              Level 4
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Navigation Groups */}

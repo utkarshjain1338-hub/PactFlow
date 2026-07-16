@@ -6,8 +6,9 @@
  */
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Menu, X, ArrowRight, ShieldCheck } from "lucide-react";
+import { Menu, X, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -42,22 +43,17 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 via-brand-600 to-amber-600 p-0.5 shadow-brand-xs flex items-center justify-center group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-surface-0 rounded-[10px] flex items-center justify-center">
-              <Sparkles size={18} className="text-brand-400 group-hover:rotate-12 transition-transform" />
-            </div>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-base font-bold tracking-tight text-text-primary flex items-center gap-1.5 font-sans">
-              PactFlow
-              <span className="text-[10px] font-mono bg-brand-500/15 text-brand-300 px-1.5 py-0.5 rounded border border-brand-500/30">
-                Soroban v2.1
-              </span>
-            </span>
-            <span className="text-[10px] text-text-tertiary font-mono tracking-wider uppercase">
-              Constellation of Trust
-            </span>
-          </div>
+          <Image
+            src="/pactflow-logo-horizontal.svg"
+            alt="PactFlow Logo"
+            width={160}
+            height={42}
+            className="h-10 w-auto group-hover:scale-[1.02] transition-transform"
+            priority
+          />
+          <span className="text-[10px] font-mono bg-brand-500/15 text-brand-300 px-1.5 py-0.5 rounded border border-brand-500/30 hidden sm:inline-block">
+            Soroban v2.1
+          </span>
         </Link>
 
         {/* Desktop Nav Links */}

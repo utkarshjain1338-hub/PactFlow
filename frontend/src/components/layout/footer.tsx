@@ -9,7 +9,8 @@
  */
 import React from "react";
 import Link from "next/link";
-import { Shield, ExternalLink, Zap } from "lucide-react";
+import Image from "next/image";
+import { ExternalLink, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Footer({ className }: { className?: string }) {
@@ -24,17 +25,18 @@ export function Footer({ className }: { className?: string }) {
       <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-xs text-text-tertiary">
         {/* Left: Brand logo and copyright */}
         <div className="flex flex-col items-center md:items-start gap-1.5 text-center md:text-left">
-          <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-lg bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400">
-              <Shield size={13} />
-            </div>
-            <span className="font-bold text-sm text-text-primary tracking-tight">
-              PactFlow
-            </span>
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/pactflow-logo-horizontal.svg"
+              alt="PactFlow Logo"
+              width={140}
+              height={36}
+              className="h-7 w-auto group-hover:scale-[1.01] transition-transform"
+            />
             <span className="text-[10px] uppercase font-semibold tracking-wider text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded border border-brand-500/20">
               Level 4
             </span>
-          </div>
+          </Link>
           <p className="text-[11px] text-text-secondary">
             Constellation of Trust • Decentralized Escrow Platform on Stellar &amp; Soroban.
           </p>

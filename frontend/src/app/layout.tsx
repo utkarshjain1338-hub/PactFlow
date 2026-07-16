@@ -57,6 +57,11 @@ export const metadata: Metadata = {
       follow: true,
     },
   },
+  icons: {
+    icon: "/pactflow-icon.svg",
+    shortcut: "/pactflow-icon.svg",
+    apple: "/pactflow-icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
