@@ -7,7 +7,7 @@ import java.util.UUID;
  * Maps to HTTP 404 Not Found.
  * Authority: SYSTEM_ARCHITECTURE.md §5.5
  */
-public class EntityNotFoundException extends DomainException {
+public class EntityNotFoundException extends PactFlowException {
 
     public EntityNotFoundException(final String entityType, final UUID id) {
         super(entityType + " with id '" + id + "' was not found.");

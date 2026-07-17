@@ -48,14 +48,13 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
     @Transactional
     public ProfileResponse updateProfile(final UUID userId, final UpdateProfileRequest request) {
         LOG.info("Updating profile for user: {}", userId);
-        final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        final User user = findUserOrThrow(userId);
 
         user.updateProfile(
-                request.getDisplayName(),
-                request.getAvatarUrl(),
-                request.getTimezone(),
-                request.getBio()
+                request.displayName(),
+                request.avatarUrl(),
+                request.timezone(),
+                request.bio()
         );
 
         final User saved = userRepository.save(user);
@@ -75,8 +74,7 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
             throw new ActiveMilestonesPreventErasureException();
         }
 
-        final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+        final User user = findUserOrThrow(userId);
 
         user.softDelete();
         userRepository.save(user);
@@ -94,5 +92,10 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
                 .orElseThrow(() -> new EntityNotFoundException("User profile not found (or account has been deleted)."));
 
         return PublicProfileResponse.from(user);
+    }
+
+    private User findUserOrThrow(final UUID userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
     }
 }

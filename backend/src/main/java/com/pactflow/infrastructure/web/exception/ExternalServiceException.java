@@ -5,7 +5,7 @@ package com.pactflow.infrastructure.web.exception;
  * Maps to HTTP 503 Service Unavailable.
  * Authority: SYSTEM_ARCHITECTURE.md §5.5
  */
-public class ExternalServiceException extends InfrastructureException {
+public class ExternalServiceException extends PactFlowException {
 
     public ExternalServiceException(final String message) {
         super(message);

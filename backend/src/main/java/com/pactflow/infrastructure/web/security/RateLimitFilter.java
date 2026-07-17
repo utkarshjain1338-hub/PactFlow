@@ -62,7 +62,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        final String ip = extractIpAddress(request);
+        final String ip = ClientIpExtractor.from(request);
         final String method = request.getMethod();
         final boolean isAuth = path.startsWith(AUTH_PREFIX);
         final boolean isForgotPassword = FORGOT_PASSWORD_PATH.equals(path);
@@ -143,13 +143,5 @@ public class RateLimitFilter extends OncePerRequestFilter {
                     .addLimit(Bandwidth.builder().capacity(rpm).refillGreedy(rpm, Duration.ofMinutes(1)).build())
                     .build();
         }
-    }
-
-    private String extractIpAddress(final HttpServletRequest request) {
-        final String xForwardedFor = request.getHeader("X-Forwarded-For");
-        if (xForwardedFor != null && !xForwardedFor.isBlank()) {
-            return xForwardedFor.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

@@ -10,8 +10,8 @@ import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
 import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
-import com.pactflow.infrastructure.web.exception.AuthorizationException;
 import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
+import com.pactflow.infrastructure.web.security.PrincipalExtractor;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -48,7 +48,7 @@ public class UserController {
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal final Object principal) {
-        final UUID userId = extractUserIdFromPrincipal(principal);
+        final UUID userId = PrincipalExtractor.extractUserId(principal);
         final User user = userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
         return ResponseEntity.ok(ProfileResponse.from(user));
@@ -59,7 +59,7 @@ public class UserController {
     public ResponseEntity<ProfileResponse> updateProfile(
             @AuthenticationPrincipal final Object principal,
             @Valid @RequestBody final UpdateProfileRequest request) {
-        final UUID userId = extractUserIdFromPrincipal(principal);
+        final UUID userId = PrincipalExtractor.extractUserId(principal);
         final ProfileResponse response = updateProfileUseCase.updateProfile(userId, request);
         return ResponseEntity.ok(response);
     }
@@ -67,7 +67,7 @@ public class UserController {
     @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse> requestAccountErasure(@AuthenticationPrincipal final Object principal) {
-        final UUID userId = extractUserIdFromPrincipal(principal);
+        final UUID userId = PrincipalExtractor.extractUserId(principal);
         final MessageResponse response = requestAccountErasureUseCase.requestAccountErasure(userId);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
@@ -77,20 +77,5 @@ public class UserController {
     public ResponseEntity<PublicProfileResponse> getPublicProfile(@PathVariable("id") final UUID id) {
         final PublicProfileResponse response = getPublicProfileUseCase.getPublicProfile(id);
         return ResponseEntity.ok(response);
-    }
-
-    private UUID extractUserIdFromPrincipal(final Object principal) {
-        if (principal instanceof UUID uuid) {
-            return uuid;
-        } else if (principal instanceof UserSummaryDto summary) {
-            return summary.getId();
-        } else if (principal instanceof String str) {
-            try {
-                return UUID.fromString(str);
-            } catch (final IllegalArgumentException e) {
-                // fall through
-            }
-        }
-        throw new AuthorizationException("Valid user authentication principal is required.");
     }
 }

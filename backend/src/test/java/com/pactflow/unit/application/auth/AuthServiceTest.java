@@ -112,11 +112,11 @@ class AuthServiceTest {
 
         final RegisterResponse response = authService.register(req, "127.0.0.1", "Mozilla/5.0");
 
-        assertThat(response.getEmail()).isEqualTo("alice@pactflow.io");
-        assertThat(response.getAccountType()).isEqualTo(AccountType.FREELANCER);
+        assertThat(response.email()).isEqualTo("alice@pactflow.io");
+        assertThat(response.accountType()).isEqualTo(AccountType.FREELANCER);
         assertThat(response.isEmailVerified()).isFalse();
 
-        verify(valueOperations).set(anyString(), eq(response.getId().toString()), eq(Duration.ofHours(24)));
+        verify(valueOperations).set(anyString(), eq(response.id().toString()), eq(Duration.ofHours(24)));
         verify(emailService).sendVerificationEmail(eq("alice@pactflow.io"), eq("Alice Mercer"), anyString());
     }
 
@@ -208,9 +208,9 @@ class AuthServiceTest {
 
         final AuthResponse res = authService.login(req, "127.0.0.1", "Agent");
 
-        assertThat(res.getAccessToken()).isEqualTo("jwtAccessToken");
-        assertThat(res.getRefreshToken()).isEqualTo("opaqueRefreshToken");
-        assertThat(res.getTokenType()).isEqualTo("Bearer");
+        assertThat(res.accessToken()).isEqualTo("jwtAccessToken");
+        assertThat(res.refreshToken()).isEqualTo("opaqueRefreshToken");
+        assertThat(res.tokenType()).isEqualTo("Bearer");
         verify(redisTemplate).delete("auth:login:attempts:alice@pactflow.io");
     }
 
@@ -243,8 +243,8 @@ class AuthServiceTest {
 
         final AuthResponse res = authService.refresh(new RefreshTokenRequest("oldRefresh"), "127.0.0.1", "Agent");
 
-        assertThat(res.getAccessToken()).isEqualTo("newAccess");
-        assertThat(res.getRefreshToken()).isEqualTo("newRefresh");
+        assertThat(res.accessToken()).isEqualTo("newAccess");
+        assertThat(res.refreshToken()).isEqualTo("newRefresh");
         verify(sessionRepository).rotateSession(eq(session), eq("newAccess"), eq("newRefresh"), any(Instant.class));
     }
 
@@ -259,7 +259,7 @@ class AuthServiceTest {
 
         final MessageResponse res = authService.verifyEmail(new VerifyEmailRequest("token123"));
 
-        assertThat(res.getMessage()).contains("verified");
+        assertThat(res.message()).contains("verified");
         assertThat(user.isEmailVerified()).isTrue();
         verify(redisTemplate).delete("auth:verify:token123");
         verify(userRepository).save(user);
@@ -271,7 +271,7 @@ class AuthServiceTest {
         when(userRepository.findByEmail(any(Email.class))).thenReturn(Optional.empty());
 
         final MessageResponse res = authService.forgotPassword(new ForgotPasswordRequest("nonexistent@pactflow.io"));
-        assertThat(res.getMessage()).contains("password reset link will be sent");
+        assertThat(res.message()).contains("password reset link will be sent");
         verify(emailService, never()).sendPasswordResetEmail(anyString(), anyString(), anyString());
     }
 
@@ -302,7 +302,7 @@ class AuthServiceTest {
 
         final MessageResponse res = authService.resetPassword(new ResetPasswordRequest("validToken", "NewStrongPass123!"));
 
-        assertThat(res.getMessage()).contains("Password successfully reset");
+        assertThat(res.message()).contains("Password successfully reset");
         assertThat(user.getPasswordHash()).contains("NewStrongPass123!");
         verify(redisTemplate).delete("auth:reset:validToken");
         verify(redisTemplate).delete("auth:reset:user:" + userId);
@@ -320,10 +320,10 @@ class AuthServiceTest {
 
         final UserMeResponse res = authService.getMe(userId);
 
-        assertThat(res.getId()).isEqualTo(userId);
-        assertThat(res.getEmail()).isEqualTo("alice@pactflow.io");
-        assertThat(res.getDisplayName()).isEqualTo("Alice Mercer");
-        assertThat(res.getTimezone()).isEqualTo("America/New_York");
+        assertThat(res.id()).isEqualTo(userId);
+        assertThat(res.email()).isEqualTo("alice@pactflow.io");
+        assertThat(res.displayName()).isEqualTo("Alice Mercer");
+        assertThat(res.timezone()).isEqualTo("America/New_York");
     }
 
     @Test

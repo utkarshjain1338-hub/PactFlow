@@ -5,7 +5,7 @@ package com.pactflow.infrastructure.web.exception;
  * Maps to HTTP 503 Service Unavailable.
  * Authority: SYSTEM_ARCHITECTURE.md §5.5, §6.6 (Retry and Failure Recovery)
  */
-public class BlockchainCommunicationException extends InfrastructureException {
+public class BlockchainCommunicationException extends PactFlowException {
 
     public BlockchainCommunicationException(final String message) {
         super(message);

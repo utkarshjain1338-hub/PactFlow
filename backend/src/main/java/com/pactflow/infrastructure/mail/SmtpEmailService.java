@@ -27,49 +27,45 @@ public class SmtpEmailService implements EmailService {
     @Override
     public void sendVerificationEmail(final String toEmail, final String displayName, final String token) {
         LOG.info("Dispatching verification email to {} [token={}]", toEmail, token);
-        try {
-            final SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(properties.getMail().getFromAddress());
-            message.setTo(toEmail);
-            message.setSubject("Verify your PactFlow account email");
-            message.setText(String.format(
-                    "Hello %s,\n\n"
-                    + "Welcome to PactFlow! Please verify your email address by using the verification token below:\n\n"
-                    + "Verification Token: %s\n\n"
-                    + "Or click this link: %s/auth/verify?token=%s\n\n"
-                    + "This link will expire in 24 hours.\n\n"
-                    + "Best regards,\nThe PactFlow Team",
-                    displayName, token, APP_URL, token
-            ));
-            mailSender.send(message);
-            LOG.info("Verification email successfully delivered to {}", toEmail);
-        } catch (final Exception e) {
-            LOG.error("Failed to deliver verification email to {}: {}", toEmail, e.getMessage(), e);
-        }
+        final String body = String.format(
+                "Hello %s,\n\n"
+                + "Welcome to PactFlow! Please verify your email address by using the verification token below:\n\n"
+                + "Verification Token: %s\n\n"
+                + "Or click this link: %s/auth/verify?token=%s\n\n"
+                + "This link will expire in 24 hours.\n\n"
+                + "Best regards,\nThe PactFlow Team",
+                displayName, token, APP_URL, token
+        );
+        sendEmail(toEmail, "Verify your PactFlow account email", body, "verification");
     }
 
     @Override
     public void sendPasswordResetEmail(final String toEmail, final String displayName, final String token) {
         LOG.info("Dispatching password reset email to {} [token={}]", toEmail, token);
+        final String body = String.format(
+                "Hello %s,\n\n"
+                + "We received a request to reset your PactFlow account password.\n\n"
+                + "Reset Token: %s\n\n"
+                + "Or click this link: %s/auth/reset?token=%s\n\n"
+                + "This link will expire in 1 hour. "
+                + "If you did not request this reset, please ignore this email.\n\n"
+                + "Best regards,\nThe PactFlow Team",
+                displayName, token, APP_URL, token
+        );
+        sendEmail(toEmail, "Reset your PactFlow password", body, "password reset");
+    }
+
+    private void sendEmail(final String toEmail, final String subject, final String text, final String type) {
         try {
             final SimpleMailMessage message = new SimpleMailMessage();
             message.setFrom(properties.getMail().getFromAddress());
             message.setTo(toEmail);
-            message.setSubject("Reset your PactFlow password");
-            message.setText(String.format(
-                    "Hello %s,\n\n"
-                    + "We received a request to reset your PactFlow account password.\n\n"
-                    + "Reset Token: %s\n\n"
-                    + "Or click this link: %s/auth/reset?token=%s\n\n"
-                    + "This link will expire in 1 hour. "
-                    + "If you did not request this reset, please ignore this email.\n\n"
-                    + "Best regards,\nThe PactFlow Team",
-                    displayName, token, APP_URL, token
-            ));
+            message.setSubject(subject);
+            message.setText(text);
             mailSender.send(message);
-            LOG.info("Password reset email successfully delivered to {}", toEmail);
+            LOG.info("{} email successfully delivered to {}", type, toEmail);
         } catch (final Exception e) {
-            LOG.error("Failed to deliver password reset email to {}: {}", toEmail, e.getMessage(), e);
+            LOG.error("Failed to deliver {} email to {}: {}", type, toEmail, e.getMessage(), e);
         }
     }
 }

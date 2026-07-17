@@ -5,7 +5,7 @@ package com.pactflow.infrastructure.web.exception;
  * Maps to HTTP 409 Conflict.
  * Authority: SYSTEM_ARCHITECTURE.md §5.5
  */
-public class DuplicateResourceException extends ApplicationException {
+public class DuplicateResourceException extends PactFlowException {
 
     public DuplicateResourceException(final String message) {
         super(message);

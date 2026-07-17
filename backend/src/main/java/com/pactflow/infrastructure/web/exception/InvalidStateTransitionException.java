@@ -5,7 +5,7 @@ package com.pactflow.infrastructure.web.exception;
  * Maps to HTTP 409 Conflict.
  * Authority: SYSTEM_ARCHITECTURE.md §5.5, DOMAIN_MODEL.md §4 (State Machines).
  */
-public class InvalidStateTransitionException extends DomainException {
+public class InvalidStateTransitionException extends PactFlowException {
 
     public InvalidStateTransitionException(
             final String entityType,

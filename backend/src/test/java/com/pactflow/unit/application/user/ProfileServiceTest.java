@@ -70,10 +70,10 @@ class ProfileServiceTest {
 
         final ProfileResponse response = profileService.updateProfile(userId, request);
 
-        assertThat(response.getDisplayName()).isEqualTo("New Display Name");
-        assertThat(response.getAvatarUrl()).isEqualTo("https://cdn.pactflow.io/avatars/new.jpg");
-        assertThat(response.getTimezone()).isEqualTo("Europe/Paris");
-        assertThat(response.getBio()).isEqualTo("New bio description.");
+        assertThat(response.displayName()).isEqualTo("New Display Name");
+        assertThat(response.avatarUrl()).isEqualTo("https://cdn.pactflow.io/avatars/new.jpg");
+        assertThat(response.timezone()).isEqualTo("Europe/Paris");
+        assertThat(response.bio()).isEqualTo("New bio description.");
 
         verify(metricsConfig).incrementProfileUpdatedCount();
         final ArgumentCaptor<UserProfileUpdatedEvent> eventCaptor = ArgumentCaptor.forClass(UserProfileUpdatedEvent.class);
@@ -105,7 +105,7 @@ class ProfileServiceTest {
 
         final MessageResponse response = profileService.requestAccountErasure(userId);
 
-        assertThat(response.getMessage()).isEqualTo("Account deletion scheduled. You will be logged out and your data will be anonymised within 30 days.");
+        assertThat(response.message()).isEqualTo("Account deletion scheduled. You will be logged out and your data will be anonymised within 30 days.");
         assertThat(user.isDeleted()).isTrue();
         assertThat(user.isActive()).isFalse();
         verify(userRepository).save(user);
@@ -122,11 +122,11 @@ class ProfileServiceTest {
 
         final PublicProfileResponse response = profileService.getPublicProfile(userId);
 
-        assertThat(response.getId()).isEqualTo(userId);
-        assertThat(response.getDisplayName()).isEqualTo("Public Name");
-        assertThat(response.getAvatarUrl()).isEqualTo("https://cdn.pactflow.io/avatar.png");
-        assertThat(response.getBio()).isEqualTo("Public Bio");
-        assertThat(response.getAccountType()).isEqualTo(AccountType.FREELANCER);
+        assertThat(response.id()).isEqualTo(userId);
+        assertThat(response.displayName()).isEqualTo("Public Name");
+        assertThat(response.avatarUrl()).isEqualTo("https://cdn.pactflow.io/avatar.png");
+        assertThat(response.bio()).isEqualTo("Public Bio");
+        assertThat(response.accountType()).isEqualTo(AccountType.FREELANCER);
     }
 
     @Test

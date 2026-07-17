@@ -52,7 +52,7 @@ public class UserPersistenceAdapter implements UserRepository {
     @Override
     public User save(final User user) {
         final UserJpaEntity entity = toEntity(user);
-        final UserJpaEntity saved = userJpaRepository.saveAndFlush(entity);
+        final UserJpaEntity saved = userJpaRepository.save(entity);
         return toDomain(saved);
     }
 
