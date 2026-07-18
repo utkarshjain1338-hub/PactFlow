@@ -1,7 +1,17 @@
 package com.pactflow.infrastructure.web.controller;
 
 import com.pactflow.application.auth.AuthService;
-import com.pactflow.application.auth.dto.*;
+import com.pactflow.application.auth.dto.AuthResponse;
+import com.pactflow.application.auth.dto.ForgotPasswordRequest;
+import com.pactflow.application.auth.dto.LoginRequest;
+import com.pactflow.application.auth.dto.LogoutRequest;
+import com.pactflow.application.auth.dto.MessageResponse;
+import com.pactflow.application.auth.dto.RefreshTokenRequest;
+import com.pactflow.application.auth.dto.RegisterRequest;
+import com.pactflow.application.auth.dto.RegisterResponse;
+import com.pactflow.application.auth.dto.ResetPasswordRequest;
+import com.pactflow.application.auth.dto.UserMeResponse;
+import com.pactflow.application.auth.dto.VerifyEmailRequest;
 import com.pactflow.infrastructure.web.security.ClientIpExtractor;
 import com.pactflow.infrastructure.web.security.PrincipalExtractor;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,9 +21,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * REST Controller providing Domain 1 (Authentication) endpoints.
@@ -30,21 +42,24 @@ public class AuthController {
             @Valid @RequestBody final RegisterRequest request,
             final HttpServletRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(authService.register(request, ClientIpExtractor.from(req), req.getHeader("User-Agent")));
+                .body(authService.register(request, ClientIpExtractor.from(req),
+                        req.getHeader("User-Agent")));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
             @Valid @RequestBody final LoginRequest request,
             final HttpServletRequest req) {
-        return ResponseEntity.ok(authService.login(request, ClientIpExtractor.from(req), req.getHeader("User-Agent")));
+        return ResponseEntity.ok(authService.login(request, ClientIpExtractor.from(req),
+                req.getHeader("User-Agent")));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(
             @Valid @RequestBody final RefreshTokenRequest request,
             final HttpServletRequest req) {
-        return ResponseEntity.ok(authService.refresh(request, ClientIpExtractor.from(req), req.getHeader("User-Agent")));
+        return ResponseEntity.ok(authService.refresh(request, ClientIpExtractor.from(req),
+                req.getHeader("User-Agent")));
     }
 
     @PostMapping("/logout")
