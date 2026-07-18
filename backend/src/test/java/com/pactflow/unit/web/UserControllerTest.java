@@ -9,8 +9,6 @@ import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
 import com.pactflow.application.user.exception.ActiveMilestonesPreventErasureException;
 import com.pactflow.domain.user.AccountType;
-import com.pactflow.domain.user.User;
-import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.web.controller.UserController;
 import com.pactflow.infrastructure.web.exception.GlobalExceptionHandler;
 import com.pactflow.infrastructure.web.security.JwtAuthenticationFilter;
@@ -60,9 +58,6 @@ class UserControllerTest {
 
     @MockBean
     private ProfileService profileService;
-
-    @MockBean
-    private UserRepository userRepository;
 
     @MockBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -122,11 +117,29 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/users/me should return 422 Unprocessable Entity on validation failure")
+    @DisplayName("PATCH /api/v1/users/me should return 422 Unprocessable Entity on validation failure (display name & avatar)")
     void shouldReturn422OnInvalidProfileRequest() throws Exception {
         final UpdateProfileRequest request = UpdateProfileRequest.builder()
                 .displayName("X") // min size is 2
                 .avatarUrl("ftp://bad.url/image.png") // must be HTTPS
+                .build();
+
+        mockMvc.perform(patch("/api/v1/users/me")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.title").value("Validation Failed"));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/users/me should return 422 on oversized bio and invalid timezone")
+    void shouldReturn422OnOversizedBioAndTimezone() throws Exception {
+        final String largeBio = "A".repeat(1001); // max size is 1000
+        final String largeTimezone = "A".repeat(51); // max size is 50
+
+        final UpdateProfileRequest request = UpdateProfileRequest.builder()
+                .bio(largeBio)
+                .timezone(largeTimezone)
                 .build();
 
         mockMvc.perform(patch("/api/v1/users/me")
@@ -183,13 +196,33 @@ class UserControllerTest {
     @Test
     @DisplayName("GET /api/v1/users/me should return 200 OK with current user profile")
     void shouldGetMyProfile() throws Exception {
-        final User user = new User(userId, new com.pactflow.domain.user.Email("test@pactflow.io"), "hash", AccountType.FREELANCER, "Test User", "UTC");
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        final ProfileResponse response = ProfileResponse.builder()
+                .id(userId)
+                .email("test@pactflow.io")
+                .displayName("Test User")
+                .accountType(AccountType.FREELANCER)
+                .isEmailVerified(true)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
+                
+        when(profileService.getMyProfile(userId)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(userId.toString()))
                 .andExpect(jsonPath("$.email").value("test@pactflow.io"))
                 .andExpect(jsonPath("$.displayName").value("Test User"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/users/me should return 404 Not Found for soft-deleted user")
+    void shouldReturn404ForDeletedUser() throws Exception {
+        when(profileService.getMyProfile(userId))
+                .thenThrow(new com.pactflow.infrastructure.web.exception.EntityNotFoundException("User not found"));
+
+        mockMvc.perform(get("/api/v1/users/me"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.type").value("https://api.pactflow.io/errors/NOT_FOUND"));
     }
 }

@@ -104,6 +104,19 @@ public class ProfileService {
         return PublicProfileResponse.from(user);
     }
 
+    /**
+     * Retrieves the authenticated user's profile.
+     *
+     * @param userId UUID of the authenticated user
+     * @return 200 OK with profile data
+     */
+    @Transactional(readOnly = true)
+    public ProfileResponse getMyProfile(final UUID userId) {
+        LOG.debug("Fetching profile for authenticated user: {}", userId);
+        final User user = findUserOrThrow(userId);
+        return ProfileResponse.from(user);
+    }
+
     private User findUserOrThrow(final UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));

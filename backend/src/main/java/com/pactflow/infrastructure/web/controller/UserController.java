@@ -5,8 +5,6 @@ import com.pactflow.application.user.ProfileService;
 import com.pactflow.application.user.dto.ProfileResponse;
 import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
-import com.pactflow.domain.user.User;
-import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
 import com.pactflow.infrastructure.web.security.PrincipalExtractor;
 import jakarta.validation.Valid;
@@ -38,7 +36,6 @@ import java.util.UUID;
 public class UserController {
 
     private final ProfileService profileService;
-    private final UserRepository userRepository;
 
     /**
      * Retrieves the authenticated user's profile.
@@ -50,9 +47,8 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal final Object principal) {
         final UUID userId = PrincipalExtractor.extractUserId(principal);
-        final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
-        return ResponseEntity.ok(ProfileResponse.from(user));
+        final ProfileResponse response = profileService.getMyProfile(userId);
+        return ResponseEntity.ok(response);
     }
 
     /**
