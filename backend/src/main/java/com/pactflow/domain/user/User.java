@@ -172,54 +172,78 @@ public class User extends AuditableEntity implements SoftDeletable {
             final String avatarUrl,
             final String timezone,
             final String bio) {
-        boolean changed = false;
-
-        if (displayName != null) {
-            final String trimmedName = displayName.trim();
-            if (trimmedName.length() < 2 || trimmedName.length() > 100) {
-                throw new IllegalArgumentException("Display name must be between 2 and 100 characters.");
-            }
-            if (!Objects.equals(this.displayName, trimmedName)) {
-                this.displayName = trimmedName;
-                changed = true;
-            }
+        boolean changed = updateDisplayNameField(displayName);
+        if (updateAvatarUrlField(avatarUrl)) {
+            changed = true;
         }
-
-        if (avatarUrl != null) {
-            final String trimmedUrl = avatarUrl.trim();
-            if (!trimmedUrl.isEmpty() && (!trimmedUrl.startsWith("https://") || trimmedUrl.length() > 2048)) {
-                throw new IllegalArgumentException("Avatar URL must be a valid HTTPS URL up to 2048 characters.");
-            }
-            if (!Objects.equals(this.avatarUrl, trimmedUrl)) {
-                this.avatarUrl = trimmedUrl.isEmpty() ? null : trimmedUrl;
-                changed = true;
-            }
+        if (updateTimezoneField(timezone)) {
+            changed = true;
         }
-
-        if (timezone != null) {
-            final String trimmedZone = timezone.trim();
-            if (trimmedZone.isEmpty() || trimmedZone.length() > 50) {
-                throw new IllegalArgumentException("Timezone must be a valid non-blank IANA zone.");
-            }
-            if (!Objects.equals(this.timezone, trimmedZone)) {
-                this.timezone = trimmedZone;
-                changed = true;
-            }
+        if (updateBioField(bio)) {
+            changed = true;
         }
-
-        if (bio != null) {
-            if (bio.length() > 1000) {
-                throw new IllegalArgumentException("Bio must not exceed 1000 characters.");
-            }
-            if (!Objects.equals(this.bio, bio)) {
-                this.bio = bio;
-                changed = true;
-            }
-        }
-
         if (changed) {
             touch();
         }
+    }
+
+    private boolean updateDisplayNameField(final String displayName) {
+        if (displayName == null) {
+            return false;
+        }
+        final String trimmedName = displayName.trim();
+        if (trimmedName.length() < 2 || trimmedName.length() > 100) {
+            throw new IllegalArgumentException("Display name must be between 2 and 100 characters.");
+        }
+        if (!Objects.equals(this.displayName, trimmedName)) {
+            this.displayName = trimmedName;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateAvatarUrlField(final String avatarUrl) {
+        if (avatarUrl == null) {
+            return false;
+        }
+        final String trimmedUrl = avatarUrl.trim();
+        if (!trimmedUrl.isEmpty() && (!trimmedUrl.startsWith("https://") || trimmedUrl.length() > 2048)) {
+            throw new IllegalArgumentException("Avatar URL must be a valid HTTPS URL up to 2048 characters.");
+        }
+        if (!Objects.equals(this.avatarUrl, trimmedUrl)) {
+            this.avatarUrl = trimmedUrl.isEmpty() ? null : trimmedUrl;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateTimezoneField(final String timezone) {
+        if (timezone == null) {
+            return false;
+        }
+        final String trimmedZone = timezone.trim();
+        if (trimmedZone.isEmpty() || trimmedZone.length() > 50) {
+            throw new IllegalArgumentException("Timezone must be a valid non-blank IANA zone.");
+        }
+        if (!Objects.equals(this.timezone, trimmedZone)) {
+            this.timezone = trimmedZone;
+            return true;
+        }
+        return false;
+    }
+
+    private boolean updateBioField(final String bio) {
+        if (bio == null) {
+            return false;
+        }
+        if (bio.length() > 1000) {
+            throw new IllegalArgumentException("Bio must not exceed 1000 characters.");
+        }
+        if (!Objects.equals(this.bio, bio)) {
+            this.bio = bio;
+            return true;
+        }
+        return false;
     }
 
     /**
