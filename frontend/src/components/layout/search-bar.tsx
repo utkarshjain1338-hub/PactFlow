@@ -110,11 +110,6 @@ export function SearchBar() {
     return [...projectMatches, ...freelancerMatches, ...companyMatches];
   }, [query, activeCategory]);
 
-  // Reset selected index when results change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [results, activeCategory]);
-
   // Handle up/down/enter inside search modal
   const handleModalKeyDown = (e: React.KeyboardEvent) => {
     if (results.length === 0) return;
@@ -189,7 +184,7 @@ export function SearchBar() {
                 <input
                   autoFocus
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
                   placeholder="Search across projects, milestones, freelancers, or escrow ID…"
                   className="flex-1 bg-transparent text-sm text-text-primary placeholder:text-text-disabled focus:outline-none"
                 />
@@ -208,7 +203,7 @@ export function SearchBar() {
                 {(["all", "projects", "freelancers", "companies"] as SearchCategory[]).map((cat) => (
                   <button
                     key={cat}
-                    onClick={() => setActiveCategory(cat)}
+                    onClick={() => { setActiveCategory(cat); setSelectedIndex(0); }}
                     className={cn(
                       "px-2.5 py-1 rounded-md font-medium transition-colors capitalize",
                       activeCategory === cat

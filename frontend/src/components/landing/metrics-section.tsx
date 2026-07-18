@@ -27,7 +27,7 @@ function MetricCounter({ label, valueString, subValue, icon, delay = 0 }: Metric
     // Extract numeric base and prefix/suffix
     const match = valueString.match(/^([^0-9]*)([0-9,.]+)(.*)$/);
     if (!match) {
-      setDisplayValue(valueString);
+      setTimeout(() => setDisplayValue(valueString), 0);
       return;
     }
 

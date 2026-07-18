@@ -43,7 +43,7 @@ function SkeletonText({ lines = 3, className }: { lines?: number; className?: st
         <Skeleton
           key={i}
           height={14}
-          width={i === lines - 1 ? `${60 + Math.random() * 20}%` : "100%"}
+          width={i === lines - 1 ? "80%" : "100%"}
         />
       ))}
     </div>
