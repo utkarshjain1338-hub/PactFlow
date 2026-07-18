@@ -16,6 +16,12 @@ public record UserSummaryDto(
         AccountType accountType,
         String displayName
 ) {
+    /**
+     * Converts a User domain entity to a UserSummaryDto.
+     *
+     * @param user domain entity
+     * @return summary DTO
+     */
     public static UserSummaryDto from(final User user) {
         return new UserSummaryDto(
                 user.getId(),

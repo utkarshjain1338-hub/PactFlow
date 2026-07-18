@@ -13,6 +13,9 @@ public record AuthResponse(
         long expiresIn,
         UserSummaryDto user
 ) {
+    /**
+     * Compact constructor enforcing default values for tokenType and expiresIn.
+     */
     public AuthResponse {
         if (tokenType == null) {
             tokenType = "Bearer";

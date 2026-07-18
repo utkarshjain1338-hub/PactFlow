@@ -20,6 +20,12 @@ public record RegisterResponse(
         @JsonProperty("isEmailVerified") boolean isEmailVerified,
         Instant createdAt
 ) {
+    /**
+     * Converts a User domain entity to a RegisterResponse DTO.
+     *
+     * @param user domain entity
+     * @return registration DTO response
+     */
     public static RegisterResponse from(final User user) {
         return new RegisterResponse(
                 user.getId(),

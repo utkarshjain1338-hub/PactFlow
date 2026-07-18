@@ -19,6 +19,12 @@ public record PublicProfileResponse(
         AccountType accountType,
         Instant createdAt
 ) {
+    /**
+     * Converts a User domain entity to a safe PublicProfileResponse DTO.
+     *
+     * @param user domain entity
+     * @return public DTO response
+     */
     public static PublicProfileResponse from(final User user) {
         return new PublicProfileResponse(
                 user.getId(),

@@ -24,6 +24,12 @@ public record ProfileResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
+    /**
+     * Converts a User domain entity to a ProfileResponse DTO.
+     *
+     * @param user domain entity
+     * @return DTO response
+     */
     public static ProfileResponse from(final User user) {
         return new ProfileResponse(
                 user.getId(),

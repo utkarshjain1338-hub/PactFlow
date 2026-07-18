@@ -28,12 +28,21 @@ public record UserMeResponse(
         Instant createdAt,
         Instant updatedAt
 ) {
+    /**
+     * Compact constructor guaranteeing non-null wallet list.
+     */
     public UserMeResponse {
         if (wallets == null) {
             wallets = new ArrayList<>();
         }
     }
 
+    /**
+     * Converts a User domain entity to a UserMeResponse DTO.
+     *
+     * @param user domain entity
+     * @return current user DTO
+     */
     public static UserMeResponse from(final User user) {
         return new UserMeResponse(
                 user.getId(),

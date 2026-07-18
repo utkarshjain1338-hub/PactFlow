@@ -61,18 +61,26 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.deny())
                         .contentTypeOptions(contentType -> {})
                         .xssProtection(xss -> {})
-                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .referrerPolicy(referrer -> referrer.policy(
+                                ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
                         .permissionsPolicy(p -> p.policy("geolocation=(), microphone=(), camera=()")))
                 .exceptionHandling(e -> e
-                        .authenticationEntryPoint((req, res, ex) -> writeProblemDetail(res, req, HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Authentication required or token invalid/revoked."))
-                        .accessDeniedHandler((req, res, ex) -> writeProblemDetail(res, req, HttpStatus.FORBIDDEN, "FORBIDDEN", "You do not have permission to perform this action.")))
+                        .authenticationEntryPoint((req, res, ex) -> writeProblemDetail(res, req,
+                                HttpStatus.UNAUTHORIZED, "UNAUTHORIZED",
+                                "Authentication required or token invalid/revoked."))
+                        .accessDeniedHandler((req, res, ex) -> writeProblemDetail(res, req,
+                                HttpStatus.FORBIDDEN, "FORBIDDEN",
+                                "You do not have permission to perform this action.")))
                 .authorizeHttpRequests(a -> a
-                        .requestMatchers("/api/v1/health/**", "/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
+                        .requestMatchers("/api/v1/health/**", "/actuator/health",
+                                "/actuator/health/**", "/actuator/info").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/auth/refresh",
-                                "/api/v1/auth/verify-email", "/api/v1/auth/forgot-password", "/api/v1/auth/reset-password").permitAll()
+                                "/api/v1/auth/verify-email", "/api/v1/auth/forgot-password",
+                                "/api/v1/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/wallets/challenge").permitAll()
-                        .requestMatchers("/api-docs/**", "/api-docs.yaml", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api-docs/**", "/api-docs.yaml",
+                                "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -86,8 +94,10 @@ public class SecurityConfig {
         final String[] origins = properties.getSecurity().getCors().getAllowedOrigins().split(",");
         config.setAllowedOrigins(Arrays.asList(origins));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With", "Idempotency-Key", "X-RateLimit-Limit", "X-RateLimit-Remaining"));
-        config.setExposedHeaders(List.of("X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset", "Retry-After", "Deprecation", "Sunset"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "X-Requested-With",
+                "Idempotency-Key", "X-RateLimit-Limit", "X-RateLimit-Remaining"));
+        config.setExposedHeaders(List.of("X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset",
+                "Retry-After", "Deprecation", "Sunset"));
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

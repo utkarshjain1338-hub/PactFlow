@@ -101,7 +101,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final UUID userId = UUID.fromString(userIdStr);
                 final AccountType accountType = AccountType.valueOf(accountTypeStr);
 
-                final UserSummaryDto principal = new UserSummaryDto(userId, email != null ? email : "", accountType, "");
+                final UserSummaryDto principal = new UserSummaryDto(
+                        userId, email != null ? email : "", accountType, "");
 
                 final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         principal,
