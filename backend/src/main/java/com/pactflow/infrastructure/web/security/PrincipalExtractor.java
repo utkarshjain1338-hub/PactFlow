@@ -1,7 +1,7 @@
 package com.pactflow.infrastructure.web.security;
 
 import com.pactflow.application.auth.dto.UserSummaryDto;
-import com.pactflow.infrastructure.web.exception.AuthorizationException;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ public final class PrincipalExtractor {
      *
      * @param principal security principal from context
      * @return extracted UUID v7
-     * @throws AuthorizationException if principal cannot be resolved to a valid UUID
+     * @throws AuthenticationCredentialsNotFoundException if principal cannot be resolved to a valid UUID
      */
     public static UUID extractUserId(final Object principal) {
         if (principal instanceof UUID uuid) {
@@ -31,6 +31,7 @@ public final class PrincipalExtractor {
                 // fall through to exception throw below
             }
         }
-        throw new AuthorizationException("Valid user authentication principal is required.");
+        throw new AuthenticationCredentialsNotFoundException(
+                "Valid user authentication principal is required.");
     }
 }

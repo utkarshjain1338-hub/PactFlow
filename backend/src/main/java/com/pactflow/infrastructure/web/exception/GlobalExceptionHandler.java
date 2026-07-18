@@ -61,10 +61,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         return respond(HttpStatus.CONFLICT, "BUSINESS_RULE_VIOLATION", ex.getMessage(), req);
     }
 
-    @ExceptionHandler(DuplicateResourceException.class)
+    @ExceptionHandler(com.pactflow.application.wallet.exception.WalletLockedException.class)
+    public ResponseEntity<ProblemDetail> handleWalletLocked(
+            final com.pactflow.application.wallet.exception.WalletLockedException ex, final HttpServletRequest req) {
+        return respond(HttpStatus.LOCKED, "WALLET_LOCKED", ex.getMessage(), req);
+    }
+
+    /**
+     * Handles duplicate resource exceptions.
+     *
+     * @param ex  the exception
+     * @param req the request
+     * @return 409 ProblemDetail
+     */
+    @ExceptionHandler({DuplicateResourceException.class, org.springframework.dao.DataIntegrityViolationException.class})
     public ResponseEntity<ProblemDetail> handleDuplicateResource(
-            final DuplicateResourceException ex, final HttpServletRequest req) {
-        return respond(HttpStatus.CONFLICT, "DUPLICATE_RESOURCE", ex.getMessage(), req);
+            final Exception ex, final HttpServletRequest req) {
+        final String msg = ex instanceof org.springframework.dao.DataIntegrityViolationException 
+                ? "This resource already exists or violates a uniqueness constraint." 
+                : ex.getMessage();
+        return respond(HttpStatus.CONFLICT, "DUPLICATE_RESOURCE", msg, req);
     }
 
     @ExceptionHandler(AuthorizationException.class)

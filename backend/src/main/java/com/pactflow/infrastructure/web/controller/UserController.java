@@ -5,7 +5,6 @@ import com.pactflow.application.user.ProfileService;
 import com.pactflow.application.user.dto.ProfileResponse;
 import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
 import com.pactflow.infrastructure.web.security.PrincipalExtractor;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
