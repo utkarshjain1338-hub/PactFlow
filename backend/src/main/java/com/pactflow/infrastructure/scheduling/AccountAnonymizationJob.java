@@ -35,6 +35,10 @@ public class AccountAnonymizationJob {
     private final UserRepository userRepository;
     private final MetricsConfig metricsConfig;
 
+    /**
+     * Scheduled job to process a batch of soft-deleted accounts and null out their PII.
+     * Runs periodically as defined by pactflow.scheduling.anonymization-interval-ms.
+     */
     @Scheduled(fixedDelayString = "${pactflow.scheduling.anonymization-interval-ms:3600000}")
     @Transactional
     public void runAnonymizationBatch() {
@@ -64,9 +68,10 @@ public class AccountAnonymizationJob {
                     }
 
                     // Check if approaching 30-day compliance SLA limit (e.g. > 20 days old)
-                    if (user.getDeletedAt() != null && user.getDeletedAt().isBefore(now.minus(SLA_WARNING_THRESHOLD))) {
-                        LOG.warn("COMPLIANCE ALERT: Account {} soft-deleted at {} is over 20 days old pending anonymization! Approaching 30-day GDPR SLA limit.",
-                                user.getId(), user.getDeletedAt());
+                    if (user.getDeletedAt() != null
+                            && user.getDeletedAt().isBefore(now.minus(SLA_WARNING_THRESHOLD))) {
+                        LOG.warn("COMPLIANCE ALERT: Account {} soft-deleted at {} is over 20 days old! "
+                                + "Approaching 30-day GDPR SLA limit.", user.getId(), user.getDeletedAt());
                     }
 
                     userRepository.anonymizeUser(user.getId());
@@ -82,6 +87,7 @@ public class AccountAnonymizationJob {
             LOG.error("Account anonymization batch query failed unexpectedly: {}", e.getMessage(), e);
         }
 
-        LOG.info("Account anonymization batch cycle finished: {} processed, {} skipped, {} failed.", processed, skipped, failed);
+        LOG.info("Account anonymization batch cycle finished: {} processed, {} skipped, {} failed.",
+                processed, skipped, failed);
     }
 }

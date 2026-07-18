@@ -25,7 +25,9 @@ public interface UserJpaRepository extends JpaRepository<UserJpaEntity, UUID> {
 
     boolean existsByEmailIgnoreCaseAndIsDeletedFalse(String email);
 
-    @Query("SELECT u FROM UserJpaEntity u WHERE u.isDeleted = true AND (u.email IS NOT NULL OR u.displayName IS NOT NULL OR u.avatarUrl IS NOT NULL OR u.bio IS NOT NULL OR u.passwordHash IS NOT NULL) ORDER BY u.deletedAt ASC")
+    @Query("SELECT u FROM UserJpaEntity u WHERE u.isDeleted = true "
+            + "AND (u.email IS NOT NULL OR u.displayName IS NOT NULL OR u.avatarUrl IS NOT NULL "
+            + "OR u.bio IS NOT NULL OR u.passwordHash IS NOT NULL) ORDER BY u.deletedAt ASC")
     List<UserJpaEntity> findSoftDeletedPendingAnonymization(Pageable pageable);
 
     @Modifying

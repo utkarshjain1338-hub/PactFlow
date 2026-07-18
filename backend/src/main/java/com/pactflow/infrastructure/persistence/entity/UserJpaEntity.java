@@ -80,6 +80,7 @@ public class UserJpaEntity implements Persistable<UUID> {
 
     @Override
     public boolean isNew() {
-        return version == 0L || (createdAt != null && updatedAt != null && createdAt.equals(updatedAt) && version <= 1L);
+        return version == 0L || (createdAt != null && updatedAt != null
+                && createdAt.equals(updatedAt) && version <= 1L);
     }
 }

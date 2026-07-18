@@ -8,41 +8,15 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.scheduling.annotation.EnableAsync;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 /**
  * Core application infrastructure configuration.
  *
- * <p>Configures:
- * <ul>
- *   <li>Virtual Threads executor for async operations (Java 21 — SYSTEM_ARCHITECTURE.md §5.1)</li>
- *   <li>Jackson ObjectMapper with ISO 8601 dates and camelCase (API_SPECIFICATION.md §1.2)</li>
- * </ul>
- *
- * <p>NOTE: Virtual Threads for HTTP request handling are enabled globally via
+ * <p>Configures Jackson ObjectMapper with ISO 8601 dates and camelCase (API_SPECIFICATION.md §1.2).
+ * Note: Virtual Threads for HTTP request handling are enabled globally via
  * {@code spring.threads.virtual.enabled=true} in application.yml.
- * This bean provides a named VT executor for @Async tasks and scheduled work.
  */
 @Configuration
-@EnableAsync
 public class ApplicationConfig {
-
-    /**
-     * Virtual Threads executor for @Async methods and scheduled tasks.
-     *
-     * <p>Uses Java 21 virtual threads per-task executor which creates a new
-     * lightweight virtual thread for each submitted task. Per SYSTEM_ARCHITECTURE.md §5.1:
-     * "Virtual Threads for I/O-bound paths."
-     *
-     * @return a virtual-thread-per-task executor
-     */
-    @Bean(name = "virtualThreadExecutor")
-    public Executor virtualThreadExecutor() {
-        return Executors.newVirtualThreadPerTaskExecutor();
-    }
 
     /**
      * Primary Jackson ObjectMapper configured for PactFlow's API contract.
