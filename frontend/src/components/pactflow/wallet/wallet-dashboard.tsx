@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Wallet as WalletType } from "@/types/wallet";
+import { ConnectWalletDialog } from "./connect-wallet-dialog";
 
 export function WalletDashboard() {
   const { data: wallets } = useQuery<WalletType[]>({
@@ -23,7 +24,11 @@ export function WalletDashboard() {
         icon={<Wallet size={22} />}
         title="No wallet connected"
         description="Connect your Stellar wallet to fund escrows and receive payments."
-        action={<Button size="sm">Connect Wallet</Button>}
+        action={
+          <ConnectWalletDialog>
+            <Button size="sm">Connect Wallet</Button>
+          </ConnectWalletDialog>
+        }
         size="lg"
       />
     );
