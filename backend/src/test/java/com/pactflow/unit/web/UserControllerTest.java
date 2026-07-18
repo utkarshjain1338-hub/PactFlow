@@ -3,9 +3,7 @@ package com.pactflow.unit.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pactflow.application.auth.dto.MessageResponse;
 import com.pactflow.application.auth.dto.UserSummaryDto;
-import com.pactflow.application.user.GetPublicProfileUseCase;
-import com.pactflow.application.user.RequestAccountErasureUseCase;
-import com.pactflow.application.user.UpdateProfileUseCase;
+import com.pactflow.application.user.ProfileService;
 import com.pactflow.application.user.dto.ProfileResponse;
 import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
@@ -14,6 +12,7 @@ import com.pactflow.domain.user.AccountType;
 import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.web.controller.UserController;
+import com.pactflow.infrastructure.web.exception.GlobalExceptionHandler;
 import com.pactflow.infrastructure.web.security.JwtAuthenticationFilter;
 import com.pactflow.infrastructure.web.security.RateLimitFilter;
 import org.junit.jupiter.api.AfterEach;
@@ -24,10 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -37,7 +38,6 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +47,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(controllers = UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(GlobalExceptionHandler.class)
 @DisplayName("UserController WebMvc unit tests")
+@WithMockUser
 class UserControllerTest {
 
     @Autowired
@@ -57,13 +59,7 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UpdateProfileUseCase updateProfileUseCase;
-
-    @MockBean
-    private RequestAccountErasureUseCase requestAccountErasureUseCase;
-
-    @MockBean
-    private GetPublicProfileUseCase getPublicProfileUseCase;
+    private ProfileService profileService;
 
     @MockBean
     private UserRepository userRepository;
@@ -115,7 +111,7 @@ class UserControllerTest {
                 .updatedAt(Instant.now())
                 .build();
 
-        when(updateProfileUseCase.updateProfile(eq(userId), any(UpdateProfileRequest.class))).thenReturn(response);
+        when(profileService.updateProfile(eq(userId), any(UpdateProfileRequest.class))).thenReturn(response);
 
         mockMvc.perform(patch("/api/v1/users/me")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -145,7 +141,7 @@ class UserControllerTest {
     void shouldRequestAccountErasure() throws Exception {
         final MessageResponse response = new MessageResponse(
                 "Account deletion scheduled. You will be logged out and your data will be anonymised within 30 days.");
-        when(requestAccountErasureUseCase.requestAccountErasure(userId)).thenReturn(response);
+        when(profileService.requestAccountErasure(userId)).thenReturn(response);
 
         mockMvc.perform(delete("/api/v1/users/me"))
                 .andExpect(status().isAccepted())
@@ -155,7 +151,7 @@ class UserControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/users/me should return 409 Conflict when active milestones exist")
     void shouldReturn409WhenActiveMilestonesExist() throws Exception {
-        when(requestAccountErasureUseCase.requestAccountErasure(userId))
+        when(profileService.requestAccountErasure(userId))
                 .thenThrow(new ActiveMilestonesPreventErasureException());
 
         mockMvc.perform(delete("/api/v1/users/me"))
@@ -176,7 +172,7 @@ class UserControllerTest {
                 .createdAt(Instant.now())
                 .build();
 
-        when(getPublicProfileUseCase.getPublicProfile(targetId)).thenReturn(response);
+        when(profileService.getPublicProfile(targetId)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/users/" + targetId + "/profile"))
                 .andExpect(status().isOk())

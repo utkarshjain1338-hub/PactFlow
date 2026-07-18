@@ -1,10 +1,7 @@
 package com.pactflow.infrastructure.web.controller;
 
 import com.pactflow.application.auth.dto.MessageResponse;
-import com.pactflow.application.auth.dto.UserSummaryDto;
-import com.pactflow.application.user.GetPublicProfileUseCase;
-import com.pactflow.application.user.RequestAccountErasureUseCase;
-import com.pactflow.application.user.UpdateProfileUseCase;
+import com.pactflow.application.user.ProfileService;
 import com.pactflow.application.user.dto.ProfileResponse;
 import com.pactflow.application.user.dto.PublicProfileResponse;
 import com.pactflow.application.user.dto.UpdateProfileRequest;
@@ -40,11 +37,15 @@ import java.util.UUID;
 @Validated
 public class UserController {
 
-    private final UpdateProfileUseCase updateProfileUseCase;
-    private final RequestAccountErasureUseCase requestAccountErasureUseCase;
-    private final GetPublicProfileUseCase getPublicProfileUseCase;
+    private final ProfileService profileService;
     private final UserRepository userRepository;
 
+    /**
+     * Retrieves the authenticated user's profile.
+     *
+     * @param principal authenticated user principal
+     * @return 200 OK with profile data
+     */
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileResponse> getMyProfile(@AuthenticationPrincipal final Object principal) {
@@ -54,28 +55,47 @@ public class UserController {
         return ResponseEntity.ok(ProfileResponse.from(user));
     }
 
+    /**
+     * Updates the authenticated user's profile fields.
+     *
+     * @param principal authenticated user principal
+     * @param request profile update request parameters
+     * @return 200 OK with updated profile data
+     */
     @PatchMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ProfileResponse> updateProfile(
             @AuthenticationPrincipal final Object principal,
             @Valid @RequestBody final UpdateProfileRequest request) {
         final UUID userId = PrincipalExtractor.extractUserId(principal);
-        final ProfileResponse response = updateProfileUseCase.updateProfile(userId, request);
+        final ProfileResponse response = profileService.updateProfile(userId, request);
         return ResponseEntity.ok(response);
     }
 
+    /**
+     * Requests account erasure and soft deletion.
+     *
+     * @param principal authenticated user principal
+     * @return 202 Accepted confirming erasure scheduled
+     */
     @DeleteMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<MessageResponse> requestAccountErasure(@AuthenticationPrincipal final Object principal) {
         final UUID userId = PrincipalExtractor.extractUserId(principal);
-        final MessageResponse response = requestAccountErasureUseCase.requestAccountErasure(userId);
+        final MessageResponse response = profileService.requestAccountErasure(userId);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
     }
 
+    /**
+     * Retrieves the public profile for a user by ID.
+     *
+     * @param id target user ID
+     * @return 200 OK with public profile data
+     */
     @GetMapping("/{id}/profile")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PublicProfileResponse> getPublicProfile(@PathVariable("id") final UUID id) {
-        final PublicProfileResponse response = getPublicProfileUseCase.getPublicProfile(id);
+        final PublicProfileResponse response = profileService.getPublicProfile(id);
         return ResponseEntity.ok(response);
     }
 }

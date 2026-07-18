@@ -22,20 +22,12 @@ import java.util.UUID;
 
 /**
  * Application facade service implementing User Profile management and account erasure operations.
- *
  * <p>Authority: API_SPECIFICATION.md Domain 2, DOMAIN_MODEL.md §6 & §8,
  * SYSTEM_ARCHITECTURE.md §4.2 (Application Layer Use Cases).
- *
- * <p>Implements:
- * <ul>
- *   <li>{@link UpdateProfileUseCase} — {@code PATCH /api/v1/users/me}</li>
- *   <li>{@link RequestAccountErasureUseCase} — {@code DELETE /api/v1/users/me}</li>
- *   <li>{@link GetPublicProfileUseCase} — {@code GET /api/v1/users/{id}/profile}</li>
- * </ul>
  */
 @Service
 @RequiredArgsConstructor
-public class ProfileService implements UpdateProfileUseCase, RequestAccountErasureUseCase, GetPublicProfileUseCase {
+public class ProfileService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ProfileService.class);
 
@@ -44,7 +36,13 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
     private final DomainEventPublisher domainEventPublisher;
     private final MetricsConfig metricsConfig;
 
-    @Override
+    /**
+     * Updates the authenticated user's profile fields.
+     *
+     * @param userId  UUID of the authenticated user
+     * @param request profile update request parameters
+     * @return updated profile response
+     */
     @Transactional
     public ProfileResponse updateProfile(final UUID userId, final UpdateProfileRequest request) {
         LOG.info("Updating profile for user: {}", userId);
@@ -65,7 +63,12 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
         return ProfileResponse.from(saved);
     }
 
-    @Override
+    /**
+     * Requests soft-deletion and GDPR account erasure for the user.
+     *
+     * @param userId UUID of the authenticated user requesting erasure
+     * @return message confirming erasure scheduled
+     */
     @Transactional
     public MessageResponse requestAccountErasure(final UUID userId) {
         LOG.info("Processing account erasure request for user: {}", userId);
@@ -81,15 +84,22 @@ public class ProfileService implements UpdateProfileUseCase, RequestAccountErasu
         metricsConfig.incrementErasureRequestedCount();
 
         LOG.info("Account soft-deleted and erasure scheduled for user: {}", userId);
-        return new MessageResponse("Account deletion scheduled. You will be logged out and your data will be anonymised within 30 days.");
+        return new MessageResponse("Account deletion scheduled. You will be logged out and your data will be "
+                + "anonymised within 30 days.");
     }
 
-    @Override
+    /**
+     * Retrieves the public profile of any user by ID.
+     *
+     * @param userId UUID of the user to lookup
+     * @return safe public profile response
+     */
     @Transactional(readOnly = true)
     public PublicProfileResponse getPublicProfile(final UUID userId) {
         LOG.debug("Fetching public profile for user: {}", userId);
         final User user = userRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User profile not found (or account has been deleted)."));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "User profile not found (or account has been deleted)."));
 
         return PublicProfileResponse.from(user);
     }
