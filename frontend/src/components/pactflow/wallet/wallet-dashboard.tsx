@@ -7,6 +7,7 @@ import { Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Wallet as WalletType } from "@/types/wallet";
 import { ConnectWalletDialog } from "./connect-wallet-dialog";
+import { WalletCard } from "./wallet-card";
 
 export function WalletDashboard() {
   const { data: wallets } = useQuery<WalletType[]>({
@@ -35,9 +36,18 @@ export function WalletDashboard() {
   }
 
   return (
-    <div className="space-y-4">
-      {/* Feature 4: Wallet List */}
-      <pre className="text-sm text-gray-500">{JSON.stringify(wallets, null, 2)}</pre>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold tracking-tight text-text-primary">Your Wallets</h2>
+        <ConnectWalletDialog>
+          <Button size="sm">Add Wallet</Button>
+        </ConnectWalletDialog>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {wallets.map((wallet) => (
+          <WalletCard key={wallet.id} wallet={wallet} />
+        ))}
+      </div>
     </div>
   );
 }
