@@ -64,6 +64,9 @@ dependencies {
     // ─── Metrics ────────────────────────────────────────────────────────────
     implementation 'io.micrometer:micrometer-registry-prometheus'
 
+    // ─── Blockchain ─────────────────────────────────────────────────────────
+    implementation 'network.lightsail:stellar-sdk:4.0.0'
+
     // ─── Lombok (DTOs and config classes only) ──────────────────────────────
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -149,6 +152,10 @@ tasks.register('integrationTest', Test) {
 }
 
 // ─── Test Configuration ───────────────────────────────────────────────────────
+tasks.withType(ProcessResources).configureEach {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+}
+
 tasks.named('test') {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
