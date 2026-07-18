@@ -255,6 +255,10 @@ public class AuthService {
         user.changePassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         sessionRepository.invalidateAllSessionsForUser(userId);
+        
+        // Lock wallet operations for 24 hours after a password reset/change for security
+        redisTemplate.opsForValue().set("wallet:lock:" + userIdStr, "LOCKED", Duration.ofHours(24));
+        
         return new MessageResponse("Password successfully reset. Please log in with your new credentials.");
     }
 
