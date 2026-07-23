@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient, ApiClientError } from "@/lib/api-client";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge";
 export function WalletDashboard() {
   const { wallet, isConnecting, connect, disconnect } = useWalletKit();
   const queryClient = useQueryClient();
-  const [syncing, setSyncing] = useState(false);
+  const syncAttemptedFor = useRef<string | null>(null);
 
   const { data: wallets, isLoading } = useQuery<WalletType[]>({
     queryKey: ["wallets"],
@@ -32,12 +32,10 @@ export function WalletDashboard() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["wallets"] });
       toast.success("Wallet synchronized with your account");
-      setSyncing(false);
     },
     onError: (error) => {
       // If the wallet is already added, the backend might return 409 or similar.
       // We can ignore it if it's already there, but let's show an error if it's a real failure.
-      setSyncing(false);
       if (error instanceof ApiClientError) {
         if (error.status !== 409) {
           toast.error(error.apiError?.title || "Failed to sync wallet", {
@@ -52,8 +50,8 @@ export function WalletDashboard() {
     // When a wallet connects successfully via the kit, sync it to backend
     if (wallet.address && wallet.providerId && wallets) {
       const alreadySaved = wallets.some((w) => w.stellarPublicKey === wallet.address);
-      if (!alreadySaved && !syncing && !connectMutation.isPending && !connectMutation.isSuccess) {
-        setSyncing(true);
+      if (!alreadySaved && syncAttemptedFor.current !== wallet.address) {
+        syncAttemptedFor.current = wallet.address;
         let mappedProvider: WalletProvider = "OTHER";
         const pid = wallet.providerId.toUpperCase();
         if (pid.includes("FREIGHTER")) mappedProvider = "FREIGHTER";
@@ -67,7 +65,7 @@ export function WalletDashboard() {
         });
       }
     }
-  }, [wallet.address, wallet.providerId, wallets, syncing, connectMutation]);
+  }, [wallet.address, wallet.providerId, wallets]);
 
   if (isLoading) {
     return <div className="text-text-tertiary">Loading wallets...</div>;

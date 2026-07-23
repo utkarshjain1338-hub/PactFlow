@@ -95,24 +95,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(
     async (email: string, password: string, displayName: string, accountType: string) => {
-      const data = await apiClient.post<any>(
+      await apiClient.post<any>(
         "/auth/register",
         { email, password, displayName, accountType },
         { skipAuth: true }
       );
-      setAccessToken(data.accessToken);
-      const authUser: AuthUser = {
-        id: data.user.id,
-        email: data.user.email,
-        displayName: data.user.displayName,
-        accountType: data.user.accountType,
-        avatarUrl: data.user.avatarUrl ?? null,
-      };
-      setUser(authUser);
-      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
-      localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+      // Backend /auth/register returns 201 with UserSummaryDto, no tokens.
+      // Automatically login to get JWT and initialize session.
+      await login(email, password);
     },
-    []
+    [login]
   );
 
   const logout = useCallback(async () => {
