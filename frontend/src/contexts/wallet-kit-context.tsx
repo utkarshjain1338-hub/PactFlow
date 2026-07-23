@@ -146,9 +146,18 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
     const response = await StellarWalletsKit.signMessage(message);
     let sig = response.signedMessage;
     
-    // Freighter returns a Uint8Array; backend expects a base64 string
+    // Freighter / Kit might return a Buffer object, Uint8Array, or string
     if (typeof sig !== "string") {
-      const bytes = new Uint8Array(Object.values(sig));
+      let bytes: Uint8Array;
+      
+      // Handle { type: "Buffer", data: [...] }
+      if (sig && typeof sig === "object" && "type" in sig && (sig as any).type === "Buffer" && Array.isArray((sig as any).data)) {
+        bytes = new Uint8Array((sig as any).data);
+      } else {
+        // Fallback for regular Uint8Array or standard object mapping
+        bytes = new Uint8Array(Object.values(sig));
+      }
+      
       // Convert Uint8Array to base64 safely in the browser
       const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
       sig = btoa(binString);
