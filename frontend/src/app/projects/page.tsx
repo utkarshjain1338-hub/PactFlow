@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { MOCK_PROJECTS } from "@/lib/mock-data";
-import { type ProjectStatus } from "@/types/domain";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api-client";
+import { type Project } from "@/types/domain";
 
 type TabType = "ALL" | "IN_PROGRESS" | "DRAFT" | "COMPLETED";
 
@@ -23,11 +25,16 @@ export default function ProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
+  const { data: projects = [], isLoading } = useQuery<Project[]>({
+    queryKey: ["projects"],
+    queryFn: () => apiClient.get("/projects"),
+  });
+
   const filteredProjects = useMemo(() => {
-    return MOCK_PROJECTS.filter((p) => {
+    return projects.filter((p) => {
       const matchesTab =
         activeTab === "ALL" ||
-        (activeTab === "IN_PROGRESS" && p.status === "IN_PROGRESS") ||
+        (activeTab === "IN_PROGRESS" && p.status === "ACTIVE") ||
         (activeTab === "DRAFT" && p.status === "DRAFT") ||
         (activeTab === "COMPLETED" && p.status === "COMPLETED");
 
@@ -35,30 +42,28 @@ export default function ProjectsPage() {
       const matchesSearch =
         !query ||
         p.title.toLowerCase().includes(query) ||
-        (p.description && p.description.toLowerCase().includes(query)) ||
-        p.client.displayName.toLowerCase().includes(query) ||
-        p.assignee.displayName.toLowerCase().includes(query);
-
+        (p.description && p.description.toLowerCase().includes(query));
+      // Removing assignee and client name filter for simplicity unless present on DTO
       return matchesTab && matchesSearch;
     });
-  }, [activeTab, searchQuery]);
+  }, [activeTab, searchQuery, projects]);
 
   const tabs: { id: TabType; label: string; count: number }[] = [
-    { id: "ALL", label: "All Projects", count: MOCK_PROJECTS.length },
+    { id: "ALL", label: "All Projects", count: projects.length },
     {
       id: "IN_PROGRESS",
       label: "In Progress",
-      count: MOCK_PROJECTS.filter((p) => p.status === "IN_PROGRESS").length,
+      count: projects.filter((p) => p.status === "ACTIVE").length,
     },
     {
       id: "DRAFT",
       label: "Drafts",
-      count: MOCK_PROJECTS.filter((p) => p.status === "DRAFT").length,
+      count: projects.filter((p) => p.status === "DRAFT").length,
     },
     {
       id: "COMPLETED",
       label: "Completed",
-      count: MOCK_PROJECTS.filter((p) => p.status === "COMPLETED").length,
+      count: projects.filter((p) => p.status === "COMPLETED").length,
     },
   ];
 

@@ -42,13 +42,7 @@ export function ProjectCard({ project, href, className }: ProjectCardProps) {
     totalBudgetXlm,
     assetCode,
     deadline,
-    milestonesCount,
-    milestonesCompleted,
-    client,
-    assignee,
   } = project;
-
-  const progressPercent = getProgress(milestonesCompleted, milestonesCount);
 
   const cardContent = (
     <motion.div
@@ -87,38 +81,7 @@ export function ProjectCard({ project, href, className }: ProjectCardProps) {
         )}
       </div>
 
-      {/* Middle: Milestone Progress Bar */}
-      <div className="space-y-2 py-2 border-y border-border-subtle">
-        <div className="flex items-center justify-between text-xs font-medium">
-          <span className="text-text-secondary flex items-center gap-1.5">
-            <MilestoneIcon size={14} className="text-brand-400" />
-            <span>Milestone Progress</span>
-          </span>
-          <span className="font-mono text-text-primary">
-            {milestonesCompleted} / {milestonesCount}{" "}
-            <span className="text-text-tertiary">({progressPercent}%)</span>
-          </span>
-        </div>
-
-        <div
-          className="h-2 w-full rounded-full bg-surface-0 overflow-hidden border border-border-subtle"
-          role="progressbar"
-          aria-valuenow={progressPercent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <motion.div
-            layout
-            initial={{ width: 0 }}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            className={cn(
-              "h-full rounded-full transition-colors",
-              progressPercent === 100 ? "bg-status-success" : "bg-brand-500"
-            )}
-          />
-        </div>
-      </div>
+        {/* Progress removed for brevity since API doesn't return count yet */}
 
       {/* Bottom: Budget, Deadline, & Participants */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
@@ -147,20 +110,6 @@ export function ProjectCard({ project, href, className }: ProjectCardProps) {
 
         {/* Client & Freelancer Avatars */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <div className="flex -space-x-2 overflow-hidden">
-            <Avatar
-              size="sm"
-              fallback={getInitials(client.displayName)}
-              src={client.avatarUrl ?? undefined}
-              className="border-2 border-surface-1"
-            />
-            <Avatar
-              size="sm"
-              fallback={getInitials(assignee.displayName)}
-              src={assignee.avatarUrl ?? undefined}
-              className="border-2 border-surface-1"
-            />
-          </div>
           <span className="text-[10px] font-semibold text-brand-400 bg-brand-500/15 px-1.5 py-0.5 rounded border border-brand-500/30 flex items-center gap-1">
             <ShieldCheck size={11} />
             Level 4

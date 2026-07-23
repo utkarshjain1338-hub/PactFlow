@@ -10,7 +10,7 @@
 
 export type AccountType = "COMPANY" | "FREELANCER" | "ADMIN";
 
-export type ProjectStatus = "DRAFT" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+export type ProjectStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
 
 export type MilestoneStatus =
   | "DRAFT"
@@ -140,19 +140,18 @@ export interface MilestoneSummary {
 
 export interface Project {
   id: string;
+  clientUserId: string;
+  clientWalletId: string | null;
+  freelancerUserId: string;
+  freelancerWalletId: string | null;
   title: string;
   description: string | null;
   status: ProjectStatus;
   totalBudgetXlm: string;
   assetCode: string;
   deadline: string | null;
-  milestonesCount: number;
-  milestonesCompleted: number;
-  client: UserSummary;
-  assignee: UserSummary;
-  milestones?: MilestoneSummary[];
-  createdAt: string;
-  updatedAt: string;
+  isDeleted: boolean;
+  isEscrowReady: boolean;
 }
 
 export interface Notification {

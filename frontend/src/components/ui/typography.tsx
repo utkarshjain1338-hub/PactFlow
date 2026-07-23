@@ -220,7 +220,7 @@ const projectStatusConfig: Record<
   { label: string; variant: BadgeProps["variant"] }
 > = {
   DRAFT: { label: "Draft", variant: "default" },
-  IN_PROGRESS: { label: "In Progress", variant: "warning" },
+  ACTIVE: { label: "Active", variant: "warning" },
   COMPLETED: { label: "Completed", variant: "success" },
   CANCELLED: { label: "Cancelled", variant: "destructive" },
 };

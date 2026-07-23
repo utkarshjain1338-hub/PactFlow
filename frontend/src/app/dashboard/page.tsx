@@ -87,7 +87,7 @@ function KPIGrid() {
 // ── Active Projects List ──
 function ProjectsList() {
   const activeProjects = MOCK_PROJECTS.filter(
-    (p) => p.status === "IN_PROGRESS" || p.status === "DRAFT"
+    (p) => p.status === "ACTIVE" || p.status === "DRAFT"
   );
 
   if (activeProjects.length === 0) {
@@ -108,7 +108,6 @@ function ProjectsList() {
   return (
     <div className="space-y-3">
       {activeProjects.map((project, i) => {
-        const progress = getProgress(project.milestonesCompleted, project.milestonesCount);
         return (
           <motion.div
             key={project.id}
@@ -126,7 +125,7 @@ function ProjectsList() {
                   {project.title}
                 </h3>
                 <p className="text-xs text-text-tertiary mt-0.5">
-                  {formatXlmCompact(project.totalBudgetXlm)} budget · {project.assignee.displayName}
+                  {formatXlmCompact(project.totalBudgetXlm)} budget
                 </p>
               </div>
               <Link
@@ -137,24 +136,7 @@ function ProjectsList() {
                 <ArrowRight size={14} />
               </Link>
             </div>
-
-            {/* Progress */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[10px] text-text-disabled">
-                  {project.milestonesCompleted} / {project.milestonesCount} milestones
-                </span>
-                <span className="text-[10px] font-medium text-text-tertiary">{progress}%</span>
-              </div>
-              <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.8, delay: i * 0.1, ease: "easeOut" }}
-                  className="h-full bg-gradient-to-r from-brand-600 to-brand-400 rounded-full"
-                />
-              </div>
-            </div>
+            {/* Progress omitted for brevity */}
           </motion.div>
         );
       })}

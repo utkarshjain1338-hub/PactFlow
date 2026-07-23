@@ -58,9 +58,7 @@ export function SearchBar() {
         ? MOCK_PROJECTS.filter(
             (p) =>
               p.title.toLowerCase().includes(q) ||
-              (p.description?.toLowerCase().includes(q) ?? false) ||
-              p.client.displayName.toLowerCase().includes(q) ||
-              p.assignee.displayName.toLowerCase().includes(q)
+              (p.description?.toLowerCase().includes(q) ?? false)
           ).map((p) => ({
             id: p.id,
             type: "project" as const,
