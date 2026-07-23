@@ -12,6 +12,7 @@ import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/toast";
+import { WalletKitProvider } from "@/contexts/wallet-kit-context";
 
 // ── QueryClient configuration ──
 function makeQueryClient() {
@@ -66,7 +67,9 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem={false}
         disableTransitionOnChange
       >
-        {children}
+        <WalletKitProvider>
+          {children}
+        </WalletKitProvider>
 
         {/* Toast notification system */}
         <Toaster />

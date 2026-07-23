@@ -1,4 +1,4 @@
-export type WalletProvider = "STELLAR" | "FREELANCER" | "COMPANY";
+export type WalletProvider = "FREIGHTER" | "XBULL" | "RABET" | "LOBSTR" | "OTHER";
 
 export interface Wallet {
   id: string;
