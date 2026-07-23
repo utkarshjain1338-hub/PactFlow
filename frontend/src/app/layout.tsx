@@ -5,6 +5,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/components/providers";
+import { AuthGuard } from "@/components/auth-guard";
 import "@/app/globals.css";
 
 // ── Font Configuration ──
@@ -92,7 +93,9 @@ export default function RootLayout({
       </head>
       <body className="dark min-h-screen antialiased">
         <Providers>
-          {children}
+          <AuthGuard>
+            {children}
+          </AuthGuard>
         </Providers>
       </body>
     </html>

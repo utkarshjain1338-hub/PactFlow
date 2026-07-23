@@ -5,6 +5,8 @@
  * Wraps the app with all required context providers:
  * - ThemeProvider (next-themes)
  * - QueryClientProvider (TanStack Query)
+ * - AuthProvider (JWT management)
+ * - WalletKitProvider (Stellar wallet)
  * - Toast (Sonner)
  */
 import React from "react";
@@ -13,6 +15,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/toast";
 import { WalletKitProvider } from "@/contexts/wallet-kit-context";
+import { AuthProvider } from "@/contexts/auth-context";
 
 // ── QueryClient configuration ──
 function makeQueryClient() {
@@ -67,9 +70,11 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem={false}
         disableTransitionOnChange
       >
-        <WalletKitProvider>
-          {children}
-        </WalletKitProvider>
+        <AuthProvider>
+          <WalletKitProvider>
+            {children}
+          </WalletKitProvider>
+        </AuthProvider>
 
         {/* Toast notification system */}
         <Toaster />
