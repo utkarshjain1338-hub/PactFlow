@@ -109,7 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await apiClient.post("/auth/logout", {});
+      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        await apiClient.post("/auth/logout", { refreshToken });
+      }
     } catch {
       // Best-effort
     } finally {

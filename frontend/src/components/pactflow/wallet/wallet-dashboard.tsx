@@ -34,14 +34,20 @@ export function WalletDashboard() {
       toast.success("Wallet synchronized with your account");
     },
     onError: (error) => {
-      // If the wallet is already added, the backend might return 409 or similar.
-      // We can ignore it if it's already there, but let's show an error if it's a real failure.
       if (error instanceof ApiClientError) {
-        if (error.status !== 409) {
+        if (error.status === 409) {
+          toast.error("Wallet already in use", {
+            description: "This Stellar wallet is already connected to another PactFlow account.",
+          });
+        } else {
           toast.error(error.apiError?.title || "Failed to sync wallet", {
             description: error.apiError?.detail || error.message,
           });
         }
+      } else {
+        toast.error("Failed to sync wallet", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
       }
     },
   });

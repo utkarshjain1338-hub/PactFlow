@@ -25,6 +25,7 @@ import {
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn, getInitials } from "@/lib/utils";
 import { useAppStore } from "@/store/app-store";
+import { useAuth } from "@/contexts/auth-context";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
@@ -32,7 +33,8 @@ import { toast } from "@/components/ui/toast";
 export function UserMenu() {
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-  const { currentUser, activeRole, setRole } = useAppStore();
+  const { activeRole, setRole } = useAppStore();
+  const { user, logout } = useAuth();
 
   const handleRoleToggle = (newRole: "COMPANY" | "FREELANCER") => {
     setRole(newRole);
@@ -40,7 +42,8 @@ export function UserMenu() {
     setOpen(false);
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
+    await logout();
     toast.info("Signed out of PactFlow session");
     setOpen(false);
   };
@@ -61,13 +64,13 @@ export function UserMenu() {
         >
           <Avatar
             size="sm"
-            fallback={currentUser ? currentUser.displayName : "PF"}
-            src={currentUser?.avatarUrl ?? undefined}
+            fallback={user ? user.displayName : "PF"}
+            src={user?.avatarUrl ?? undefined}
             status="online"
           />
           <div className="flex flex-col items-start leading-none max-w-[110px] truncate hidden md:flex">
             <span className="text-xs font-semibold text-text-primary truncate w-full">
-              {currentUser ? currentUser.displayName : "Stellar Ventures"}
+              {user ? user.displayName : "Stellar Ventures"}
             </span>
             <span className="text-[10px] text-brand-400 font-medium mt-0.5">
               {activeRole === "COMPANY" ? "Company" : "Freelancer"}
@@ -90,15 +93,15 @@ export function UserMenu() {
           <div className="px-3 py-3 mb-1 bg-surface-1 rounded-xl border border-border-subtle flex items-center gap-3">
             <Avatar
               size="md"
-              fallback={currentUser ? currentUser.displayName : "PF"}
-              src={currentUser?.avatarUrl ?? undefined}
+              fallback={user ? user.displayName : "PF"}
+              src={user?.avatarUrl ?? undefined}
             />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold text-text-primary truncate">
-                {currentUser ? currentUser.displayName : "Stellar Ventures"}
+                {user ? user.displayName : "Stellar Ventures"}
               </p>
               <p className="text-[11px] text-text-tertiary truncate">
-                {currentUser ? currentUser.email : "alex@stellarventures.io"}
+                {user ? user.email : "alex@stellarventures.io"}
               </p>
               <div className="mt-1.5 flex items-center gap-1.5">
                 <Badge variant="brand" size="sm">
