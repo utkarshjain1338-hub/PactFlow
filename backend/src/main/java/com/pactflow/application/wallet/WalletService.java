@@ -11,6 +11,7 @@ import com.pactflow.infrastructure.web.exception.BusinessRuleViolationException;
 import com.pactflow.infrastructure.web.exception.DuplicateResourceException;
 import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class WalletService {
 
     private final WalletRepository walletRepository;
     private final StringRedisTemplate redisTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Gets all wallets for a user.
@@ -93,6 +95,8 @@ public class WalletService {
 
         wallet.softDelete();
         walletRepository.save(wallet);
+        
+        eventPublisher.publishEvent(new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), false));
 
         // If the primary wallet was deleted, promote the oldest remaining wallet
         if (wallet.isPrimary()) {
@@ -212,6 +216,8 @@ public class WalletService {
         redisTemplate.delete(key);
         wallet.verify();
         walletRepository.save(wallet);
+        
+        eventPublisher.publishEvent(new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), true));
     }
 
     private void promoteOldestWallet(final UUID userId) {

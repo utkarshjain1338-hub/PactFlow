@@ -1,0 +1,199 @@
+package com.pactflow.application.escrow;
+
+import com.pactflow.application.escrow.port.EscrowContractGateway;
+import com.pactflow.application.escrow.port.UnsignedTransaction;
+import com.pactflow.domain.blockchain.BlockchainOperation;
+import com.pactflow.domain.blockchain.BlockchainTransaction;
+import com.pactflow.domain.blockchain.BlockchainTransactionRepository;
+import com.pactflow.domain.escrow.Escrow;
+import com.pactflow.domain.escrow.EscrowRepository;
+import com.pactflow.domain.project.Project;
+import com.pactflow.domain.project.ProjectRepository;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Service
+public class EscrowService {
+
+    private final EscrowRepository escrowRepository;
+    private final ProjectRepository projectRepository;
+    private final EscrowContractGateway escrowContractGateway;
+    private final BlockchainTransactionRepository blockchainTransactionRepository;
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+
+    public EscrowService(EscrowRepository escrowRepository, ProjectRepository projectRepository,
+                         EscrowContractGateway escrowContractGateway,
+                         BlockchainTransactionRepository blockchainTransactionRepository,
+                         org.springframework.context.ApplicationEventPublisher eventPublisher) {
+        this.escrowRepository = escrowRepository;
+        this.projectRepository = projectRepository;
+        this.escrowContractGateway = escrowContractGateway;
+        this.blockchainTransactionRepository = blockchainTransactionRepository;
+        this.eventPublisher = eventPublisher;
+    }
+
+    @Transactional
+    public Escrow createEscrow(UUID projectId, UUID milestoneId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+
+        if (!project.isStructurallyReady()) {
+            throw new IllegalStateException("Project is not structurally ready for escrow.");
+        }
+
+        if (escrowRepository.findByMilestoneId(milestoneId).isPresent()) {
+            throw new IllegalStateException("Escrow already exists for this milestone.");
+        }
+
+        Escrow escrow = Escrow.create(projectId, milestoneId);
+        return escrowRepository.save(escrow);
+    }
+
+    @Transactional
+    public UnsignedTransaction buildFundingTransaction(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        
+        // Ensure state is valid before building transaction
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.CREATED && 
+            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
+            throw new IllegalStateException("Escrow is not in a valid state for funding.");
+        }
+        
+        // This validates the domain rule (Escrow checks if it's CREATED)
+        escrow.initiateFunding();
+        escrowRepository.save(escrow);
+
+        UnsignedTransaction tx = escrowContractGateway.buildFundingTransaction(escrow);
+        
+        // In a real system, the transaction hash is known only after the user signs,
+        // or we compute the hash of the unsigned XDR. We can store it as pending once submitted.
+        // We will expose submitSignedTransaction for the next step.
+        return tx;
+    }
+
+    @Transactional
+    public void submitSignedTransaction(UUID escrowId, String transactionHash, BlockchainOperation operation) {
+        // Called by the frontend after signing and submitting to the network.
+        BlockchainTransaction tx = BlockchainTransaction.create(escrowId, transactionHash, operation);
+        blockchainTransactionRepository.save(tx);
+    }
+
+    // These are called by the SorobanEventListener once the blockchain confirms the transaction
+    @Transactional
+    public Escrow handleTransactionConfirmed(String transactionHash, Long ledger, OffsetDateTime confirmedAt) {
+        BlockchainTransaction tx = blockchainTransactionRepository.findByTransactionHash(transactionHash)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown transaction hash: " + transactionHash));
+        
+        tx = tx.markSuccess(ledger, confirmedAt);
+        blockchainTransactionRepository.save(tx);
+
+        Escrow escrow = getEscrow(tx.getEscrowId());
+
+        String eventType = "transaction.confirmed";
+
+        switch (tx.getOperation()) {
+            case FUND -> { 
+                escrow.markFunded(BigDecimal.ZERO, transactionHash); 
+                eventType = "escrow.funded"; 
+            }
+            case RELEASE -> { 
+                escrow.release(transactionHash); 
+                eventType = "escrow.released"; 
+            }
+            case REFUND -> { 
+                escrow.refund(transactionHash); 
+                eventType = "escrow.refunded"; 
+            }
+            default -> throw new IllegalStateException("Unsupported operation: " + tx.getOperation());
+        }
+
+        escrow = escrowRepository.save(escrow);
+
+        eventPublisher.publishEvent(com.pactflow.application.event.dto.SseEventPayload.builder()
+                .eventId(UUID.randomUUID().toString())
+                .timestamp(java.time.Instant.now())
+                .entityId(escrow.getId().toString())
+                .type(eventType)
+                .payload(escrow)
+                .build());
+
+        return escrow;
+    }
+
+    @Transactional
+    public UnsignedTransaction buildReleaseTransaction(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED && 
+            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+            throw new IllegalStateException("Escrow is not in a valid state for release.");
+        }
+        return escrowContractGateway.buildReleaseTransaction(escrow);
+    }
+
+    @Transactional
+    public UnsignedTransaction buildRefundTransaction(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED && 
+            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+            throw new IllegalStateException("Escrow is not in a valid state for refund.");
+        }
+        return escrowContractGateway.buildRefundTransaction(escrow);
+    }
+
+    @Transactional
+    public void handleTransactionFailed(String transactionHash, String failureReason) {
+        BlockchainTransaction tx = blockchainTransactionRepository.findByTransactionHash(transactionHash)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown transaction hash: " + transactionHash));
+        
+        tx = tx.markFailed(failureReason);
+        blockchainTransactionRepository.save(tx);
+        
+        // Depending on business rules, we might want to revert the escrow state or just leave it pending
+    }
+
+    // ... other methods omitted for brevity, but they would follow a similar buildXyz -> submit -> confirm pattern
+
+    @Transactional
+    public Escrow submitWork(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        escrow.submitWork();
+        return escrowRepository.save(escrow);
+    }
+
+    @Transactional
+    public Escrow startReview(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        escrow.startReview();
+        return escrowRepository.save(escrow);
+    }
+
+    @Transactional
+    public Escrow approve(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        escrow.approve();
+        return escrowRepository.save(escrow);
+    }
+
+    @Transactional
+    public Escrow dispute(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        escrow.dispute();
+        return escrowRepository.save(escrow);
+    }
+
+    @Transactional
+    public Escrow markFailed(UUID escrowId) {
+        Escrow escrow = getEscrow(escrowId);
+        escrow.markFailed();
+        return escrowRepository.save(escrow);
+    }
+
+    private Escrow getEscrow(UUID escrowId) {
+        return escrowRepository.findById(escrowId)
+                .orElseThrow(() -> new IllegalArgumentException("Escrow not found: " + escrowId));
+    }
+}
