@@ -144,7 +144,17 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
 
   const signMessage = useCallback(async (message: string) => {
     const response = await StellarWalletsKit.signMessage(message);
-    return response.signedMessage;
+    let sig = response.signedMessage;
+    
+    // Freighter returns a Uint8Array; backend expects a base64 string
+    if (typeof sig !== "string") {
+      const bytes = new Uint8Array(Object.values(sig));
+      // Convert Uint8Array to base64 safely in the browser
+      const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+      sig = btoa(binString);
+    }
+    
+    return sig as string;
   }, []);
 
   return (
