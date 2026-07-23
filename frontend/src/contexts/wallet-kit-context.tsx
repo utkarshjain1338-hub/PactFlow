@@ -36,6 +36,8 @@ export interface WalletKitContextValue {
   disconnect: () => void;
   refreshWallet: () => Promise<void>;
   signTransaction: (xdr: string) => Promise<string>;
+  /** Signs an arbitrary message (nonce) for wallet verification. Returns base64 signature. */
+  signMessage: (message: string) => Promise<string>;
 }
 
 const WalletKitContext = createContext<WalletKitContextValue | undefined>(undefined);
@@ -140,8 +142,13 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
     return response.signedTxXdr;
   }, []);
 
+  const signMessage = useCallback(async (message: string) => {
+    const response = await StellarWalletsKit.signMessage(message);
+    return response.signedMessage;
+  }, []);
+
   return (
-    <WalletKitContext.Provider value={{ wallet, isConnecting, connect, disconnect, refreshWallet, signTransaction }}>
+    <WalletKitContext.Provider value={{ wallet, isConnecting, connect, disconnect, refreshWallet, signTransaction, signMessage }}>
       {children}
     </WalletKitContext.Provider>
   );
