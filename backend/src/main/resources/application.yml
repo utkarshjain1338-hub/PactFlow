@@ -241,3 +241,11 @@ pactflow:
   ingestion:
     poll-interval-seconds: 3
     max-retry-attempts: 5
+
+# ─── Stellar / Soroban Configuration ──────────────────────────────
+stellar:
+  network: ${STELLAR_NETWORK:testnet}
+  rpc-url: ${STELLAR_RPC_URL:https://soroban-testnet.stellar.org}
+  network-passphrase: ${STELLAR_NETWORK_PASSPHRASE:Test SDF Network ; September 2015}
+  contract-id: ${STELLAR_CONTRACT_ID:}
+  operator-address: ${STELLAR_OPERATOR_ADDRESS:}

@@ -83,7 +83,7 @@ public class WalletRepository {
                 entity.getId(),
                 entity.getCreatedAt(),
                 entity.getUpdatedAt(),
-                entity.getVersion(),
+                0L, // version not stored for wallet_connections
                 entity.getUserId(),
                 entity.getStellarPublicKey(),
                 WalletProvider.valueOf(entity.getWalletProvider()),
@@ -104,7 +104,6 @@ public class WalletRepository {
                 .isDeleted(domain.isDeleted())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
-                .version(domain.getVersion())
                 .build();
     }
 }
