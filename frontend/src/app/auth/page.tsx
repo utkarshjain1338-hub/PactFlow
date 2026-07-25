@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { ApiClientError } from "@/lib/api-client";
 import { toast } from "sonner";
@@ -171,9 +172,9 @@ export default function AuthPage() {
 
         <p className="text-center text-xs text-text-tertiary mt-6">
           Secured by Stellar blockchain ·{" "}
-          <a href="/" className="underline hover:text-text-secondary transition-colors">
+          <Link href="/" className="text-primary hover:underline">
             Back to home
-          </a>
+          </Link>
         </p>
       </div>
     </div>

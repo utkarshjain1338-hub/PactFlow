@@ -8,6 +8,7 @@
  * category filter tabs, live search over mock projects, freelancers, and companies.
  */
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,6 +34,12 @@ export function SearchBar() {
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<SearchCategory>("all");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   // Keyboard shortcut Ctrl+K / Cmd+K
   useEffect(() => {
@@ -151,9 +158,10 @@ export function SearchBar() {
       </button>
 
       {/* Command Palette Modal */}
-      <AnimatePresence>
-        {open && (
-          <div className="fixed inset-0 z-modal flex items-start justify-center pt-[12vh] px-4">
+      {mounted && createPortal(
+        <AnimatePresence>
+          {open && (
+            <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] px-4">
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -288,7 +296,9 @@ export function SearchBar() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </>
   );
 }

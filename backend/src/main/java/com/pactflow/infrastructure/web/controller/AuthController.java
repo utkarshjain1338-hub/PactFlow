@@ -62,6 +62,19 @@ public class AuthController {
                 req.getHeader("User-Agent")));
     }
 
+    @PostMapping("/switch-role")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<AuthResponse> switchRole(
+            @Valid @RequestBody final com.pactflow.application.auth.dto.SwitchRoleRequest request,
+            @AuthenticationPrincipal final Object principal,
+            final HttpServletRequest req) {
+        return ResponseEntity.ok(authService.switchRole(
+                request,
+                PrincipalExtractor.extractUserId(principal),
+                ClientIpExtractor.from(req),
+                req.getHeader("User-Agent")));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(@Valid @RequestBody final LogoutRequest request) {
         authService.logout(request);

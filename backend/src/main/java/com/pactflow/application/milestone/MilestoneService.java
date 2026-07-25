@@ -3,6 +3,12 @@ package com.pactflow.application.milestone;
 import com.pactflow.application.milestone.dto.CreateMilestoneRequest;
 import com.pactflow.application.milestone.dto.MilestoneDto;
 import com.pactflow.application.milestone.dto.UpdateMilestoneRequest;
+import com.pactflow.application.milestone.dto.CreateDeliverableRequest;
+import com.pactflow.application.milestone.dto.DeliverableDto;
+import com.pactflow.domain.deliverable.Deliverable;
+import com.pactflow.domain.deliverable.DeliverableRepository;
+import com.pactflow.domain.escrow.Escrow;
+import com.pactflow.domain.escrow.EscrowRepository;
 import com.pactflow.domain.milestone.Milestone;
 import com.pactflow.domain.milestone.MilestoneStatus;
 import com.pactflow.domain.project.Project;
@@ -20,10 +26,14 @@ import java.util.stream.Collectors;
 public class MilestoneService {
 
     private final ProjectRepository projectRepository;
+    private final DeliverableRepository deliverableRepository;
+    private final EscrowRepository escrowRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public MilestoneService(ProjectRepository projectRepository, ApplicationEventPublisher eventPublisher) {
+    public MilestoneService(ProjectRepository projectRepository, DeliverableRepository deliverableRepository, EscrowRepository escrowRepository, ApplicationEventPublisher eventPublisher) {
         this.projectRepository = projectRepository;
+        this.deliverableRepository = deliverableRepository;
+        this.escrowRepository = escrowRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -76,15 +86,7 @@ public class MilestoneService {
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
-    
-    @Transactional(readOnly = true)
-    public MilestoneDto getMilestone(UUID milestoneId, UUID requesterId) {
-        // Since milestone doesn't have a standalone repository read endpoint, 
-        // we'd typically need a custom query in the project repo to find the project by milestone ID,
-        // or just add a read-only MilestoneRepository for fetching. 
-        // For simplicity, assuming the Controller passes projectId as part of the URI, or we use a separate read repo.
-        throw new UnsupportedOperationException("Not implemented yet. Please use getMilestonesForProject instead.");
-    }
+
 
     @Transactional
     public MilestoneDto updateMilestone(UUID projectId, UUID milestoneId, UpdateMilestoneRequest request, UUID requesterId) {
@@ -153,6 +155,143 @@ public class MilestoneService {
         mutableMilestones.add(deletedMilestone);
         
         projectRepository.save(project.toBuilder().milestones(mutableMilestones).build());
+    }
+
+    @Transactional
+    public DeliverableDto submitDeliverable(UUID projectId, UUID milestoneId, CreateDeliverableRequest request, UUID requesterId) {
+        Project project = getProject(projectId);
+        if (project.getFreelancerUserId() == null || !requesterId.equals(project.getFreelancerUserId())) {
+            throw new AccessDeniedException("Only the assigned freelancer can submit deliverables.");
+        }
+        
+        Milestone milestone = getMilestone(project, milestoneId);
+        milestone.submitWork();
+        
+        Deliverable deliverable = Deliverable.submit(
+            milestoneId, requesterId, request.getTitle(), request.getDescription(),
+            request.getFileUrl(), request.getRepositoryUrl(), request.getCommitHash()
+        );
+        deliverable = deliverableRepository.save(deliverable);
+        
+        Escrow escrow = getEscrowForMilestone(milestoneId);
+        if (escrow != null) {
+            escrow.submitWork();
+            escrowRepository.save(escrow);
+        }
+        
+        // Updating milestone within project
+        updateMilestoneInProject(project, milestone);
+        
+        return toDeliverableDto(deliverable);
+    }
+
+    @Transactional
+    public void markInReview(UUID projectId, UUID milestoneId, UUID requesterId) {
+        Project project = getProject(projectId);
+        if (!requesterId.equals(project.getClientUserId())) {
+            throw new AccessDeniedException("Only the client can mark as in review.");
+        }
+        
+        Milestone milestone = getMilestone(project, milestoneId);
+        milestone.startReview();
+        
+        Escrow escrow = getEscrowForMilestone(milestoneId);
+        if (escrow != null) {
+            escrow.startReview();
+            escrowRepository.save(escrow);
+        }
+        updateMilestoneInProject(project, milestone);
+    }
+
+    @Transactional
+    public void approveMilestone(UUID projectId, UUID milestoneId, UUID requesterId) {
+        Project project = getProject(projectId);
+        if (!requesterId.equals(project.getClientUserId())) {
+            throw new AccessDeniedException("Only the client can approve a milestone.");
+        }
+        
+        Milestone milestone = getMilestone(project, milestoneId);
+        milestone.approveWork();
+        
+        deliverableRepository.findByMilestoneId(milestoneId).forEach(d -> {
+            if (d.getStatus() == com.pactflow.domain.deliverable.DeliverableStatus.SUBMITTED) {
+                d.accept();
+                deliverableRepository.save(d);
+            }
+        });
+        
+        Escrow escrow = getEscrowForMilestone(milestoneId);
+        if (escrow != null) {
+            escrow.approve();
+            escrowRepository.save(escrow);
+        }
+        updateMilestoneInProject(project, milestone);
+    }
+
+    @Transactional
+    public void rejectMilestone(UUID projectId, UUID milestoneId, UUID requesterId) {
+        Project project = getProject(projectId);
+        if (!requesterId.equals(project.getClientUserId())) {
+            throw new AccessDeniedException("Only the client can reject a milestone.");
+        }
+        
+        Milestone milestone = getMilestone(project, milestoneId);
+        milestone.rejectWork();
+        
+        deliverableRepository.findByMilestoneId(milestoneId).forEach(d -> {
+            if (d.getStatus() == com.pactflow.domain.deliverable.DeliverableStatus.SUBMITTED) {
+                d.reject();
+                deliverableRepository.save(d);
+            }
+        });
+        
+        updateMilestoneInProject(project, milestone);
+    }
+
+    @Transactional
+    public void completeMilestone(UUID projectId, UUID milestoneId) {
+        Project project = getProject(projectId);
+        Milestone milestone = getMilestone(project, milestoneId);
+        milestone.markAsPaid();
+        updateMilestoneInProject(project, milestone);
+    }
+
+    private Project getProject(UUID projectId) {
+        return projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+    }
+    
+    private Milestone getMilestone(Project project, UUID milestoneId) {
+        return project.getMilestones().stream()
+                .filter(m -> m.getId().equals(milestoneId) && !m.isDeleted())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Milestone not found"));
+    }
+    
+    private Escrow getEscrowForMilestone(UUID milestoneId) {
+        return escrowRepository.findByMilestoneId(milestoneId).orElse(null);
+    }
+    
+    private void updateMilestoneInProject(Project project, Milestone milestone) {
+        List<Milestone> mutableMilestones = new java.util.ArrayList<>(project.getMilestones());
+        mutableMilestones.removeIf(m -> m.getId().equals(milestone.getId()));
+        mutableMilestones.add(milestone);
+        projectRepository.save(project.toBuilder().milestones(mutableMilestones).build());
+    }
+
+    private DeliverableDto toDeliverableDto(Deliverable deliverable) {
+        return DeliverableDto.builder()
+                .id(deliverable.getId())
+                .milestoneId(deliverable.getMilestoneId())
+                .submittedBy(deliverable.getSubmittedBy())
+                .title(deliverable.getTitle())
+                .description(deliverable.getDescription())
+                .fileUrl(deliverable.getFileUrl())
+                .repositoryUrl(deliverable.getRepositoryUrl())
+                .commitHash(deliverable.getCommitHash())
+                .status(deliverable.getStatus().name())
+                .submittedAt(deliverable.getSubmittedAt())
+                .build();
     }
 
     private MilestoneDto toDto(Milestone milestone) {

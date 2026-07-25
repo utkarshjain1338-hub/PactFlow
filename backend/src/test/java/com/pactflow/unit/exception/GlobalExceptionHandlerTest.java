@@ -1,14 +1,14 @@
 package com.pactflow.unit.exception;
 
-import com.pactflow.infrastructure.web.exception.AuthorizationException;
-import com.pactflow.infrastructure.web.exception.BlockchainCommunicationException;
-import com.pactflow.infrastructure.web.exception.BusinessRuleViolationException;
-import com.pactflow.infrastructure.web.exception.DuplicateResourceException;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
-import com.pactflow.infrastructure.web.exception.ExternalServiceException;
+import com.pactflow.application.exception.AuthorizationException;
+import com.pactflow.application.exception.BlockchainCommunicationException;
+import com.pactflow.application.exception.BusinessRuleViolationException;
+import com.pactflow.application.exception.DuplicateResourceException;
+import com.pactflow.application.exception.EntityNotFoundException;
+import com.pactflow.application.exception.ExternalServiceException;
 import com.pactflow.infrastructure.web.exception.GlobalExceptionHandler;
-import com.pactflow.infrastructure.web.exception.InvalidStateTransitionException;
-import com.pactflow.infrastructure.web.exception.ValidationException;
+import com.pactflow.application.exception.InvalidStateTransitionException;
+import com.pactflow.application.exception.ValidationException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

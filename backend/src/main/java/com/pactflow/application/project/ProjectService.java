@@ -7,7 +7,7 @@ import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.domain.project.ProjectStatus;
 import com.pactflow.domain.wallet.Wallet;
-import com.pactflow.infrastructure.persistence.WalletRepository;
+import com.pactflow.domain.wallet.WalletRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -112,6 +112,20 @@ public class ProjectService {
         
         project.markAsDeleted();
         projectRepository.save(project);
+    }
+    
+    @Transactional
+    public ProjectDto archiveProject(UUID projectId, UUID requesterId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found: " + projectId));
+
+        if (!project.getClientUserId().equals(requesterId)) {
+            throw new AccessDeniedException("Only the project owner can archive this project");
+        }
+        
+        project.archive();
+        Project savedProject = projectRepository.save(project);
+        return toDto(savedProject);
     }
     
     @Transactional

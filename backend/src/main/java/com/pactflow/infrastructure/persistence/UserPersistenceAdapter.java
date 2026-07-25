@@ -78,6 +78,7 @@ public class UserPersistenceAdapter implements UserRepository {
                 entity.getEmail() != null ? new Email(entity.getEmail()) : null,
                 entity.getPasswordHash(),
                 AccountType.valueOf(entity.getAccountType()),
+                parseAllowedRoles(entity.getAllowedRoles()),
                 entity.getDisplayName(),
                 entity.getAvatarUrl(),
                 entity.getTimezone(),
@@ -95,6 +96,7 @@ public class UserPersistenceAdapter implements UserRepository {
                 .email(domain.getEmail() != null ? domain.getEmail().getValue() : null)
                 .passwordHash(domain.getPasswordHash())
                 .accountType(domain.getAccountType().name())
+                .allowedRoles(formatAllowedRoles(domain.getAllowedRoles()))
                 .displayName(domain.getDisplayName())
                 .avatarUrl(domain.getAvatarUrl())
                 .timezone(domain.getTimezone())
@@ -107,5 +109,25 @@ public class UserPersistenceAdapter implements UserRepository {
                 .updatedAt(domain.getUpdatedAt())
                 .version(domain.getVersion())
                 .build();
+    }
+
+    private java.util.Set<AccountType> parseAllowedRoles(final String allowedRolesStr) {
+        if (allowedRolesStr == null || allowedRolesStr.isBlank()) {
+            return java.util.Collections.emptySet();
+        }
+        return java.util.Arrays.stream(allowedRolesStr.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(AccountType::valueOf)
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    private String formatAllowedRoles(final java.util.Set<AccountType> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return "";
+        }
+        return roles.stream()
+                .map(AccountType::name)
+                .collect(java.util.stream.Collectors.joining(","));
     }
 }

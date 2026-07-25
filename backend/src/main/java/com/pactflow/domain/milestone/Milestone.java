@@ -6,14 +6,18 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.pactflow.domain.shared.SoftDeletable;
+import java.time.Instant;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
-public class Milestone {
+public class Milestone implements SoftDeletable {
 
     private UUID id;
     private UUID projectId;
@@ -26,6 +30,7 @@ public class Milestone {
     private LocalDate dueDate;
     private boolean isStrictDeadline;
     private boolean isDeleted;
+    private Instant deletedAt;
 
     public static Milestone create(UUID projectId, String title, String description, BigDecimal amountXlm, Integer sequenceOrder, LocalDate dueDate, boolean isStrictDeadline) {
         if (projectId == null) {
@@ -61,8 +66,8 @@ public class Milestone {
     }
 
     public void markAsInProgress() {
-        if (this.status != MilestoneStatus.FUNDED) {
-            throw new IllegalStateException("Only FUNDED milestones can move to IN_PROGRESS");
+        if (this.status != MilestoneStatus.FUNDED && this.status != MilestoneStatus.UNDER_REVIEW && this.status != MilestoneStatus.SUBMITTED) {
+            throw new IllegalStateException("Only FUNDED or rejected milestones can move to IN_PROGRESS");
         }
         this.status = MilestoneStatus.IN_PROGRESS;
     }
@@ -74,9 +79,23 @@ public class Milestone {
         this.status = MilestoneStatus.SUBMITTED;
     }
 
-    public void approveWork() {
+    public void startReview() {
         if (this.status != MilestoneStatus.SUBMITTED) {
-            throw new IllegalStateException("Only SUBMITTED milestones can be APPROVED");
+            throw new IllegalStateException("Only SUBMITTED milestones can start review");
+        }
+        this.status = MilestoneStatus.UNDER_REVIEW;
+    }
+
+    public void rejectWork() {
+        if (this.status != MilestoneStatus.UNDER_REVIEW && this.status != MilestoneStatus.SUBMITTED) {
+            throw new IllegalStateException("Only SUBMITTED or UNDER_REVIEW milestones can be rejected");
+        }
+        this.status = MilestoneStatus.IN_PROGRESS;
+    }
+
+    public void approveWork() {
+        if (this.status != MilestoneStatus.SUBMITTED && this.status != MilestoneStatus.UNDER_REVIEW) {
+            throw new IllegalStateException("Only SUBMITTED or UNDER_REVIEW milestones can be APPROVED");
         }
         this.status = MilestoneStatus.APPROVED;
     }
@@ -91,6 +110,9 @@ public class Milestone {
     public void refund() {
         if (this.status == MilestoneStatus.PAID) {
             throw new IllegalStateException("Cannot refund a PAID milestone");
+        }
+        if (this.status == MilestoneStatus.REFUNDED) {
+            throw new IllegalStateException("Milestone is already REFUNDED");
         }
         this.status = MilestoneStatus.REFUNDED;
     }

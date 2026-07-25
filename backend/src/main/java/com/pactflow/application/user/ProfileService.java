@@ -11,7 +11,7 @@ import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
 import com.pactflow.domain.user.event.UserProfileUpdatedEvent;
 import com.pactflow.infrastructure.config.MetricsConfig;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
+import com.pactflow.application.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

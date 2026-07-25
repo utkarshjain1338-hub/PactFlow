@@ -1,6 +1,6 @@
 package com.pactflow.application.user.exception;
 
-import com.pactflow.infrastructure.web.exception.BusinessRuleViolationException;
+import com.pactflow.application.exception.BusinessRuleViolationException;
 
 /**
  * Thrown when a user attempts to request account erasure while possessing active milestones.

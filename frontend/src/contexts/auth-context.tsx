@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+ 
 "use client";
 
 import React, {
@@ -17,6 +17,7 @@ export interface AuthUser {
   email: string;
   displayName: string;
   accountType: "COMPANY" | "FREELANCER" | "ADMIN";
+  allowedRoles: ("COMPANY" | "FREELANCER" | "ADMIN")[];
   avatarUrl: string | null;
 }
 
@@ -26,6 +27,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, displayName: string, accountType: string) => Promise<void>;
+  switchRole: (role: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -86,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: data.user.email,
       displayName: data.user.displayName,
       accountType: data.user.accountType,
+      allowedRoles: data.user.allowedRoles || [data.user.accountType],
       avatarUrl: data.user.avatarUrl ?? null,
     };
     setUser(authUser);
@@ -106,6 +109,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [login]
   );
+
+  const switchRole = useCallback(async (role: string) => {
+    const data = await apiClient.post<any>("/auth/switch-role", { role });
+    setAccessToken(data.accessToken);
+    const authUser: AuthUser = {
+      id: data.user.id,
+      email: data.user.email,
+      displayName: data.user.displayName,
+      accountType: data.user.accountType,
+      allowedRoles: data.user.allowedRoles || [data.user.accountType],
+      avatarUrl: data.user.avatarUrl ?? null,
+    };
+    setUser(authUser);
+    localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+    localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -131,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         login,
         register,
+        switchRole,
         logout,
       }}
     >

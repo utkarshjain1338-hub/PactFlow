@@ -11,14 +11,18 @@ import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import com.pactflow.domain.shared.SoftDeletable;
+import java.time.Instant;
 
 @Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder(toBuilder = true)
-public class Project {
+public class Project implements SoftDeletable {
 
     private UUID id;
     private UUID clientUserId;
@@ -32,6 +36,7 @@ public class Project {
     private String assetCode;
     private LocalDate deadline;
     private boolean isDeleted;
+    private Instant deletedAt;
     
     @Builder.Default
     private List<Milestone> milestones = new ArrayList<>();
@@ -140,5 +145,17 @@ public class Project {
         return this.clientWalletId != null && 
                this.freelancerWalletId != null && 
                this.status == ProjectStatus.ACTIVE;
+    }
+    
+    public void archive() {
+        if (this.status == ProjectStatus.ARCHIVED) {
+            throw new IllegalStateException("Project is already archived.");
+        }
+        if (this.status == ProjectStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot archive a cancelled project.");
+        }
+        // Verify all milestones are in terminal state if needed?
+        // Let's just allow archiving if they decide to close it.
+        this.status = ProjectStatus.ARCHIVED;
     }
 }

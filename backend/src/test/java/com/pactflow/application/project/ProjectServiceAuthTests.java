@@ -6,7 +6,7 @@ import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.domain.wallet.Wallet;
 import com.pactflow.domain.wallet.WalletProvider;
-import com.pactflow.infrastructure.persistence.WalletRepository;
+import com.pactflow.domain.wallet.WalletRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

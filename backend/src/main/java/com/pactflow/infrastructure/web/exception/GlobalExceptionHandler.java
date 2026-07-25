@@ -1,5 +1,6 @@
 package com.pactflow.infrastructure.web.exception;
 
+import com.pactflow.application.exception.*;
 import com.pactflow.application.user.exception.ActiveMilestonesPreventErasureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;

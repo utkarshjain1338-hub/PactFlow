@@ -1,5 +1,6 @@
 package com.pactflow.infrastructure.mail;
 
+import com.pactflow.application.port.mail.EmailService;
 import com.pactflow.infrastructure.config.PactFlowProperties;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -14,7 +15,10 @@ import org.springframework.stereotype.Service;
  * <p>Authority: API_SPECIFICATION.md Domain 1, PROJECT_CONSTITUTION.md Rule 7 (production-ready).
  * Sends formatted email messages using configurable from-address properties (`pactflow.mail.from-address`).
  */
+import org.springframework.context.annotation.Lazy;
+
 @Service
+@Lazy
 @RequiredArgsConstructor
 public class SmtpEmailService implements EmailService {
 

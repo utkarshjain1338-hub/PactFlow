@@ -219,7 +219,7 @@ class UserControllerTest {
     @DisplayName("GET /api/v1/users/me should return 404 Not Found for soft-deleted user")
     void shouldReturn404ForDeletedUser() throws Exception {
         when(profileService.getMyProfile(userId))
-                .thenThrow(new com.pactflow.infrastructure.web.exception.EntityNotFoundException("User not found"));
+                .thenThrow(new com.pactflow.application.exception.EntityNotFoundException("User not found"));
 
         mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isNotFound())

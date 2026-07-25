@@ -9,6 +9,7 @@ import com.pactflow.domain.escrow.Escrow;
 import com.pactflow.domain.escrow.EscrowRepository;
 import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
+import com.pactflow.application.wallet.WalletService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,16 +24,19 @@ public class EscrowService {
     private final ProjectRepository projectRepository;
     private final EscrowContractGateway escrowContractGateway;
     private final BlockchainTransactionRepository blockchainTransactionRepository;
+    private final WalletService walletService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     public EscrowService(EscrowRepository escrowRepository, ProjectRepository projectRepository,
                          EscrowContractGateway escrowContractGateway,
                          BlockchainTransactionRepository blockchainTransactionRepository,
+                         WalletService walletService,
                          org.springframework.context.ApplicationEventPublisher eventPublisher) {
         this.escrowRepository = escrowRepository;
         this.projectRepository = projectRepository;
         this.escrowContractGateway = escrowContractGateway;
         this.blockchainTransactionRepository = blockchainTransactionRepository;
+        this.walletService = walletService;
         this.eventPublisher = eventPublisher;
     }
 
@@ -54,7 +58,8 @@ public class EscrowService {
     }
 
     @Transactional
-    public UnsignedTransaction buildFundingTransaction(UUID escrowId) {
+    public UnsignedTransaction buildFundingTransaction(UUID escrowId, UUID userId) {
+        walletService.assertVerifiedPrimaryWallet(userId);
         Escrow escrow = getEscrow(escrowId);
         
         // Ensure state is valid before building transaction
@@ -64,8 +69,10 @@ public class EscrowService {
         }
         
         // This validates the domain rule (Escrow checks if it's CREATED)
-        escrow.initiateFunding();
-        escrowRepository.save(escrow);
+        if (escrow.getStatus() == com.pactflow.domain.escrow.EscrowStatus.CREATED) {
+            escrow.initiateFunding();
+            escrowRepository.save(escrow);
+        }
 
         UnsignedTransaction tx = escrowContractGateway.buildFundingTransaction(escrow);
         
@@ -125,7 +132,8 @@ public class EscrowService {
     }
 
     @Transactional
-    public UnsignedTransaction buildReleaseTransaction(UUID escrowId) {
+    public UnsignedTransaction buildReleaseTransaction(UUID escrowId, UUID userId) {
+        walletService.assertVerifiedPrimaryWallet(userId);
         Escrow escrow = getEscrow(escrowId);
         if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED && 
             escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
@@ -135,7 +143,8 @@ public class EscrowService {
     }
 
     @Transactional
-    public UnsignedTransaction buildRefundTransaction(UUID escrowId) {
+    public UnsignedTransaction buildRefundTransaction(UUID escrowId, UUID userId) {
+        walletService.assertVerifiedPrimaryWallet(userId);
         Escrow escrow = getEscrow(escrowId);
         if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED && 
             escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
@@ -152,7 +161,7 @@ public class EscrowService {
         tx = tx.markFailed(failureReason);
         blockchainTransactionRepository.save(tx);
         
-        // Depending on business rules, we might want to revert the escrow state or just leave it pending
+        // Do not revert business state (e.g. Escrow remains APPROVED or FUNDED) to allow the user to retry.
     }
 
     // ... other methods omitted for brevity, but they would follow a similar buildXyz -> submit -> confirm pattern

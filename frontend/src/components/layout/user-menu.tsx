@@ -34,18 +34,41 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const { activeRole, setRole } = useAppStore();
-  const { user, logout } = useAuth();
+  const { user, logout, switchRole } = useAuth();
 
-  const handleRoleToggle = (newRole: "COMPANY" | "FREELANCER") => {
-    setRole(newRole);
-    toast.success(`Active role switched to ${newRole === "COMPANY" ? "Company / Client" : "Freelancer"}`);
-    setOpen(false);
+  const handleRoleToggle = async (newRole: "COMPANY" | "FREELANCER") => {
+    try {
+      if (!user?.allowedRoles?.includes(newRole)) {
+        toast.error(`You do not have a ${newRole === "COMPANY" ? "Company" : "Freelancer"} profile setup.`);
+        return;
+      }
+      await switchRole(newRole);
+      setRole(newRole);
+      toast.success(`Active role switched to ${newRole === "COMPANY" ? "Company / Client" : "Freelancer"}`);
+      setOpen(false);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to switch role.");
+    }
   };
 
   const handleSignOut = async () => {
     await logout();
     toast.info("Signed out of PactFlow session");
     setOpen(false);
+  };
+
+  const toggleTheme = () => {
+    const isDark = theme === "dark";
+    const nextTheme = isDark ? "light" : "dark";
+
+    if (!document.startViewTransition) {
+      setTheme(nextTheme);
+      return;
+    }
+
+    document.startViewTransition(() => {
+      setTheme(nextTheme);
+    });
   };
 
   return (
@@ -199,7 +222,7 @@ export function UserMenu() {
 
           {/* Theme switcher */}
           <DropdownMenuPrimitive.Item
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={toggleTheme}
             className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors outline-none cursor-pointer"
           >
             <span className="flex items-center gap-2.5">

@@ -63,6 +63,15 @@ public class ProjectController {
         return ResponseEntity.ok(project);
     }
 
+    @PatchMapping("/{id}/archive")
+    public ResponseEntity<ProjectDto> archiveProject(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID id) {
+            
+        ProjectDto project = projectService.archiveProject(id, user.getId());
+        return ResponseEntity.ok(project);
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(
             @AuthenticationPrincipal User user,

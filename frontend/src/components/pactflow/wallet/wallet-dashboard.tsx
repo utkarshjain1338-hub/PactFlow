@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+ 
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -71,6 +71,7 @@ export function WalletDashboard() {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet.address, wallet.providerId, wallets]);
 
   if (isLoading) {

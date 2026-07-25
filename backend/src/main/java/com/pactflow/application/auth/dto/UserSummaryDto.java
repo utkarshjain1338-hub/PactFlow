@@ -14,6 +14,7 @@ public record UserSummaryDto(
         UUID id,
         String email,
         AccountType accountType,
+        java.util.Set<AccountType> allowedRoles,
         String displayName
 ) {
     /**
@@ -27,6 +28,7 @@ public record UserSummaryDto(
                 user.getId(),
                 user.getEmail().getValue(),
                 user.getAccountType(),
+                user.getAllowedRoles(),
                 user.getDisplayName()
         );
     }

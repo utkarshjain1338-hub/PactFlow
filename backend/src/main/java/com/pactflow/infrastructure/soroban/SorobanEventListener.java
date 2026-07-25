@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
  * Service responsible for polling Soroban RPC for contract events
  * and synchronizing the blockchain state with our internal database state.
  */
+import org.springframework.context.annotation.Lazy;
+
 @Service
+@Lazy
 @RequiredArgsConstructor
 @Slf4j
 public class SorobanEventListener {
@@ -18,7 +21,7 @@ public class SorobanEventListener {
     private final EscrowService escrowService;
     private final com.pactflow.domain.blockchain.BlockchainTransactionRepository transactionRepository;
 
-    @Scheduled(fixedDelayString = "${stellar.sync.delay:5000}")
+    @Scheduled(fixedDelayString = "${stellar.sync.delay:5000}", initialDelayString = "${stellar.sync.initial-delay:15000}")
     public void pollForEvents() {
         // Mock polling: find PENDING transactions and confirm them after a few seconds
         var pendingTxs = transactionRepository.findByStatus(com.pactflow.domain.blockchain.BlockchainTransactionStatus.PENDING);

@@ -6,10 +6,10 @@ import com.pactflow.application.wallet.dto.VerifyWalletRequest;
 import com.pactflow.application.wallet.dto.WalletResponse;
 import com.pactflow.application.wallet.exception.WalletLockedException;
 import com.pactflow.domain.wallet.Wallet;
-import com.pactflow.infrastructure.persistence.WalletRepository;
-import com.pactflow.infrastructure.web.exception.BusinessRuleViolationException;
-import com.pactflow.infrastructure.web.exception.DuplicateResourceException;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
+import com.pactflow.domain.wallet.WalletRepository;
+import com.pactflow.application.exception.BusinessRuleViolationException;
+import com.pactflow.application.exception.DuplicateResourceException;
+import com.pactflow.application.exception.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -133,14 +133,29 @@ public class WalletService {
         walletRepository.save(targetWallet);
     }
 
-    /**
-     * Enforces the wallet lock for a user.
-     *
-     * @param userId the user ID
-     */
     public void enforceWalletLock(final UUID userId) {
         if (Boolean.TRUE.equals(redisTemplate.hasKey(WALLET_LOCK_PREFIX + userId))) {
             throw new WalletLockedException("Wallet operations are locked for 24 hours after a password change");
+        }
+    }
+
+    /**
+     * Asserts that the user has a verified primary wallet.
+     * Throws BusinessRuleViolationException if not found or not verified.
+     *
+     * @param userId the user ID
+     */
+    @Transactional(readOnly = true)
+    public void assertVerifiedPrimaryWallet(final UUID userId) {
+        enforceWalletLock(userId);
+        
+        final Wallet primaryWallet = walletRepository.findAllByUserId(userId).stream()
+                .filter(Wallet::isPrimary)
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleViolationException("User does not have a primary wallet."));
+                
+        if (!primaryWallet.isVerified()) {
+            throw new BusinessRuleViolationException("Only verified wallets can perform blockchain actions.");
         }
     }
 
@@ -196,20 +211,44 @@ public class WalletService {
         final String nonce = redisTemplate.opsForValue().get(key);
 
         if (nonce == null) {
-            throw new com.pactflow.infrastructure.web.exception.TokenExpiredException(
+            throw new com.pactflow.application.exception.TokenExpiredException(
                     "Challenge has expired or does not exist. Please request a new challenge.");
         }
 
         try {
             final org.stellar.sdk.KeyPair keyPair = org.stellar.sdk.KeyPair.fromAccountId(wallet.getStellarPublicKey());
+
             final byte[] signatureBytes = java.util.Base64.getDecoder().decode(request.signature());
             
-            if (!keyPair.verify(nonce.getBytes(java.nio.charset.StandardCharsets.UTF_8), signatureBytes)) {
-                throw new com.pactflow.infrastructure.web.exception.AuthorizationException("Signature is invalid.");
+            // Construct SEP-53 payload: "Stellar Signed Message:\n" + message
+            final byte[] nonceBytes = nonce.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            final byte[] prefix = "Stellar Signed Message:\n".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            
+            final byte[] payload = new byte[prefix.length + nonceBytes.length];
+            System.arraycopy(prefix, 0, payload, 0, prefix.length);
+            System.arraycopy(nonceBytes, 0, payload, prefix.length, nonceBytes.length);
+
+            final java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            final byte[] hash = digest.digest(payload);
+            
+            boolean isValid = false;
+            if (keyPair.verify(hash, signatureBytes)) {
+                isValid = true;
+            } else if (keyPair.verify(payload, signatureBytes)) {
+                // Some wallets might not hash before signing
+                isValid = true;
+            } else if (keyPair.verify(nonceBytes, signatureBytes)) {
+                // Fallback for raw signing
+                isValid = true;
+            }
+
+            if (!isValid) {
+                throw new com.pactflow.application.exception.AuthorizationException("Signature is invalid.");
             }
         } catch (Exception e) {
-            throw new com.pactflow.infrastructure.web.exception.AuthorizationException(
-                    "Failed to decode signature or public key.");
+
+            throw new com.pactflow.application.exception.AuthorizationException(
+                    "Failed to decode signature or public key: " + e.getMessage());
         }
 
         // Signature is valid, delete nonce and mark verified

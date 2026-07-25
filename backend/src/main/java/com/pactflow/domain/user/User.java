@@ -5,6 +5,7 @@ import com.pactflow.domain.shared.SoftDeletable;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -19,7 +20,8 @@ public class User extends AuditableEntity implements SoftDeletable {
 
     private Email email;
     private String passwordHash;
-    private final AccountType accountType;
+    private AccountType accountType;
+    private Set<AccountType> allowedRoles;
     private String displayName;
     private String avatarUrl;
     private String timezone;
@@ -50,6 +52,7 @@ public class User extends AuditableEntity implements SoftDeletable {
         this.email = Objects.requireNonNull(email, "email must not be null");
         this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash must not be null");
         this.accountType = Objects.requireNonNull(accountType, "accountType must not be null");
+        this.allowedRoles = new java.util.HashSet<>(java.util.Collections.singleton(this.accountType));
         this.displayName = Objects.requireNonNull(displayName, "displayName must not be null");
         this.timezone = timezone != null && !timezone.isBlank() ? timezone : "UTC";
         this.isEmailVerified = false;
@@ -67,7 +70,8 @@ public class User extends AuditableEntity implements SoftDeletable {
      * @param version         optimistic locking version counter
      * @param email           validated email value object
      * @param passwordHash    Argon2id password hash
-     * @param accountType     account role
+     * @param accountType     active account role
+     * @param allowedRoles    set of roles the user possesses
      * @param displayName     display name
      * @param avatarUrl       optional CDN avatar URL
      * @param timezone        IANA timezone
@@ -85,6 +89,7 @@ public class User extends AuditableEntity implements SoftDeletable {
             final Email email,
             final String passwordHash,
             final AccountType accountType,
+            final Set<AccountType> allowedRoles,
             final String displayName,
             final String avatarUrl,
             final String timezone,
@@ -97,6 +102,7 @@ public class User extends AuditableEntity implements SoftDeletable {
         this.email = email;
         this.passwordHash = passwordHash;
         this.accountType = Objects.requireNonNull(accountType, "accountType must not be null");
+        this.allowedRoles = allowedRoles != null ? new java.util.HashSet<>(allowedRoles) : new java.util.HashSet<>(java.util.Collections.singleton(accountType));
         this.displayName = displayName;
         this.avatarUrl = avatarUrl;
         this.timezone = timezone != null && !timezone.isBlank() ? timezone : "UTC";
@@ -105,6 +111,29 @@ public class User extends AuditableEntity implements SoftDeletable {
         this.isActive = isActive;
         this.isDeleted = isDeleted;
         this.deletedAt = deletedAt;
+    }
+
+    public Set<AccountType> getAllowedRoles() {
+        return java.util.Collections.unmodifiableSet(allowedRoles);
+    }
+
+    /**
+     * Switches the active role context if the user is authorized.
+     */
+    public void switchActiveRole(AccountType targetRole) {
+        if (!allowedRoles.contains(targetRole)) {
+            throw new IllegalStateException("User does not possess the requested role.");
+        }
+        if (this.accountType != targetRole) {
+            this.accountType = targetRole;
+            touch();
+        }
+    }
+
+    public void addRole(AccountType newRole) {
+        if (newRole != null && allowedRoles.add(newRole)) {
+            touch();
+        }
     }
 
     /**

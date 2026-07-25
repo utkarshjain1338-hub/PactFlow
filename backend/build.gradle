@@ -175,9 +175,3 @@ tasks.named('bootJar') {
 
 // ─── Annotation Processor Order ──────────────────────────────────────────────
 // Ensures Lombok processes before MapStruct during compilation
-compileJava {
-    options.compilerArgs += [
-        '-Amapstruct.defaultComponentModel=spring',
-        '-Amapstruct.suppressGeneratorTimestamp=true'
-    ]
-}

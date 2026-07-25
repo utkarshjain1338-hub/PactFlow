@@ -24,7 +24,10 @@ import java.util.List;
  * well within the promised 30-day GDPR SLA. Processes in bounded batches (`BATCH_SIZE = 100`) to
  * prevent long-held database locks or high memory consumption.
  */
+import org.springframework.context.annotation.Lazy;
+
 @Component
+@Lazy
 @RequiredArgsConstructor
 public class AccountAnonymizationJob {
 
@@ -39,7 +42,7 @@ public class AccountAnonymizationJob {
      * Scheduled job to process a batch of soft-deleted accounts and null out their PII.
      * Runs periodically as defined by pactflow.scheduling.anonymization-interval-ms.
      */
-    @Scheduled(fixedDelayString = "${pactflow.scheduling.anonymization-interval-ms:3600000}")
+    @Scheduled(fixedDelayString = "${pactflow.scheduling.anonymization-interval-ms:3600000}", initialDelayString = "30000")
     @Transactional
     public void runAnonymizationBatch() {
         LOG.debug("Starting scheduled account anonymization batch cycle...");

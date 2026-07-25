@@ -16,17 +16,18 @@ import com.pactflow.domain.user.Email;
 import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.config.PactFlowProperties;
-import com.pactflow.infrastructure.mail.EmailService;
-import com.pactflow.infrastructure.persistence.UserSessionRepository;
+import com.pactflow.application.port.mail.EmailService;
+import com.pactflow.application.auth.port.SessionRepository;
+import com.pactflow.application.auth.port.TokenProvider;
 import com.pactflow.infrastructure.persistence.entity.UserSessionEntity;
-import com.pactflow.infrastructure.web.exception.AccountDeactivatedException;
-import com.pactflow.infrastructure.web.exception.AccountLockedException;
-import com.pactflow.infrastructure.web.exception.DuplicateResourceException;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
-import com.pactflow.infrastructure.web.exception.InvalidCredentialsException;
-import com.pactflow.infrastructure.web.exception.TokenExpiredException;
-import com.pactflow.infrastructure.web.exception.TokenReplayException;
-import com.pactflow.infrastructure.web.security.JwtService;
+import com.pactflow.application.exception.AccountDeactivatedException;
+import com.pactflow.application.exception.AccountLockedException;
+import com.pactflow.application.exception.DuplicateResourceException;
+import com.pactflow.application.exception.EntityNotFoundException;
+import com.pactflow.application.exception.InvalidCredentialsException;
+import com.pactflow.application.exception.TokenExpiredException;
+import com.pactflow.application.exception.TokenReplayException;
+
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -59,8 +60,8 @@ public class AuthService {
     private static final String REDIS_LOGIN_LOCKOUT_PREFIX = "auth:login:lockout:";
 
     private final UserRepository userRepository;
-    private final UserSessionRepository sessionRepository;
-    private final JwtService jwtService;
+    private final SessionRepository sessionRepository;
+    private final TokenProvider jwtService;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
     private final StringRedisTemplate redisTemplate;
@@ -69,9 +70,11 @@ public class AuthService {
 
     private String timingSafeDummyHash;
 
-    @PostConstruct
-    public void init() {
-        this.timingSafeDummyHash = passwordEncoder.encode("TimingSafeDummyPassword123!");
+    private String getTimingSafeDummyHash() {
+        if (timingSafeDummyHash == null) {
+            timingSafeDummyHash = passwordEncoder.encode("TimingSafeDummyPassword123!");
+        }
+        return timingSafeDummyHash;
     }
 
     /**
@@ -127,7 +130,7 @@ public class AuthService {
         final Optional<User> optUser = userRepository.findByEmail(email);
         if (optUser.isEmpty() || !passwordEncoder.matches(request.password(), optUser.get().getPasswordHash())) {
             if (optUser.isEmpty()) {
-                passwordEncoder.matches(request.password(), timingSafeDummyHash);
+                passwordEncoder.matches(request.password(), getTimingSafeDummyHash());
             }
             recordFailedLoginAttempt(normalizedEmail);
             throw new InvalidCredentialsException("Invalid email or password.");
@@ -174,6 +177,30 @@ public class AuthService {
         }
 
         return rotateAndBuildAuthResponse(user, oldSession);
+    }
+
+    /**
+     * Switches the active role context and issues fresh tokens.
+     */
+    @Transactional
+    public AuthResponse switchRole(
+            final com.pactflow.application.auth.dto.SwitchRoleRequest request, 
+            final UUID userId, 
+            final String ipAddress, 
+            final String userAgent) {
+        
+        final User user = userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found."));
+
+        user.switchActiveRole(request.role());
+        userRepository.save(user);
+
+        // Issue a fresh session with the new active role
+        final UserSessionEntity session = sessionRepository.createSession(
+                user.getId(), "temporary-pre-jwt", jwtService.generateRefreshToken(),
+                ipAddress, userAgent, Instant.now().plus(properties.getSecurity().getJwt().getRefreshTokenTtl())
+        );
+        return rotateAndBuildAuthResponse(user, session);
     }
 
     /**

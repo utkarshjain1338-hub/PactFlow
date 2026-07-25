@@ -17,14 +17,14 @@ import com.pactflow.domain.user.Email;
 import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
 import com.pactflow.infrastructure.config.PactFlowProperties;
-import com.pactflow.infrastructure.mail.EmailService;
-import com.pactflow.infrastructure.persistence.UserSessionRepository;
+import com.pactflow.application.port.mail.EmailService;
+import com.pactflow.application.auth.port.SessionRepository;
 import com.pactflow.infrastructure.persistence.entity.UserSessionEntity;
-import com.pactflow.infrastructure.web.exception.AccountLockedException;
-import com.pactflow.infrastructure.web.exception.DuplicateResourceException;
-import com.pactflow.infrastructure.web.exception.InvalidCredentialsException;
-import com.pactflow.infrastructure.web.exception.TokenExpiredException;
-import com.pactflow.infrastructure.web.exception.TokenReplayException;
+import com.pactflow.application.exception.AccountLockedException;
+import com.pactflow.application.exception.DuplicateResourceException;
+import com.pactflow.application.exception.InvalidCredentialsException;
+import com.pactflow.application.exception.TokenExpiredException;
+import com.pactflow.application.exception.TokenReplayException;
 import com.pactflow.infrastructure.web.security.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,7 +60,7 @@ class AuthServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
-    private UserSessionRepository sessionRepository;
+    private SessionRepository sessionRepository;
     @Mock
     private JwtService jwtService;
     @Mock
@@ -93,7 +93,6 @@ class AuthServiceTest {
                 redisTemplate,
                 properties
         );
-        authService.init();
     }
 
     @Test

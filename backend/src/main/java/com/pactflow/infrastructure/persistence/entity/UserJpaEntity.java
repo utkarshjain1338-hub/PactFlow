@@ -44,6 +44,9 @@ public class UserJpaEntity implements Persistable<UUID> {
     @Column(name = "account_type", nullable = false, length = 20)
     private String accountType;
 
+    @Column(name = "allowed_roles", nullable = false, length = 100)
+    private String allowedRoles;
+
     @Column(name = "display_name", nullable = false, length = 100)
     private String displayName;
 

@@ -25,7 +25,7 @@ class EscrowIntegrationTests {
     private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     private void insertTestData(UUID userId, UUID projectId, UUID milestoneId) {
-        jdbcTemplate.update("INSERT INTO users (id, email, password_hash, account_type, display_name, created_at, updated_at, is_deleted) VALUES (?, ?, 'hash', 'COMPANY', 'Test User', now(), now(), false)", userId, "test-" + userId + "@example.com");
+        jdbcTemplate.update("INSERT INTO users (id, email, password_hash, account_type, allowed_roles, display_name, timezone, is_email_verified, is_active, created_at, updated_at, is_deleted, version) VALUES (?, ?, 'hash', 'COMPANY', 'COMPANY', 'Test User', 'UTC', true, true, now(), now(), false, 1)", userId, "test-" + userId + "@example.com");
         
         jdbcTemplate.update("INSERT INTO projects (id, client_user_id, title, description, status, total_budget_xlm, asset_code, created_at, updated_at, is_deleted, version) VALUES (?, ?, 'Test Project', 'Desc', 'OPEN', 100, 'XLM', now(), now(), false, 1)", projectId, userId);
         

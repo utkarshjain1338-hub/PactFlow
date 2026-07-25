@@ -110,10 +110,10 @@ interface TextProps
   as?: "p" | "span" | "div" | "label" | "small";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const Text = React.forwardRef<HTMLElement, TextProps>(
   ({ className, as = "p", size, color, weight, leading, ...props }, ref) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const Tag = as as any;
     return (
       <Tag

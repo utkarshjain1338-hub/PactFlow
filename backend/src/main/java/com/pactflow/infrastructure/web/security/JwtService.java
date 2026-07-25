@@ -21,6 +21,8 @@ import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.pactflow.application.auth.port.TokenProvider;
+
 /**
  * Security infrastructure service responsible for JWT access token and opaque refresh token lifecycle.
  *
@@ -30,7 +32,7 @@ import java.util.UUID;
  */
 @Service
 @RequiredArgsConstructor
-public class JwtService {
+public class JwtService implements TokenProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(JwtService.class);
     private final PactFlowProperties properties;

@@ -15,7 +15,10 @@ import java.util.UUID;
  * This class is strictly responsible for generating XDRs and reading contract state.
  * It contains NO business logic.
  */
+import org.springframework.context.annotation.Lazy;
+
 @Component
+@Lazy
 public class SorobanEscrowGateway implements EscrowContractGateway {
 
     private final String networkPassphrase;

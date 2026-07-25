@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+ 
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
@@ -9,6 +9,7 @@ import { AlbedoModule } from "@creit.tech/stellar-wallets-kit/modules/albedo";
 import { LobstrModule } from "@creit.tech/stellar-wallets-kit/modules/lobstr";
 import { RabetModule } from "@creit.tech/stellar-wallets-kit/modules/rabet";
 import { apiClient } from "@/lib/api-client";
+import { useAuth } from "./auth-context";
 
 class CustomFreighterModule extends FreighterModule {
   async isAvailable(): Promise<boolean> {
@@ -67,6 +68,8 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
+  const { isLoading: isAuthLoading } = useAuth();
+
   useEffect(() => {
     StellarWalletsKit.init({
       network: Networks.TESTNET,
@@ -78,6 +81,11 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
         new RabetModule()
       ],
     });
+  }, []);
+
+  useEffect(() => {
+    // Wait for AuthProvider to restore the session so apiClient has the token
+    if (isAuthLoading) return;
 
     const restoredAddress = localStorage.getItem("pactflow_wallet_address");
     const restoredProvider = localStorage.getItem("pactflow_wallet_provider");
@@ -94,7 +102,7 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
         });
       });
     }
-  }, []);
+  }, [isAuthLoading]);
 
   const refreshWallet = useCallback(async () => {
     const isVerified = await checkVerifiedStatus(wallet.address);

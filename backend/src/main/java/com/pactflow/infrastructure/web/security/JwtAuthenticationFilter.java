@@ -2,7 +2,7 @@ package com.pactflow.infrastructure.web.security;
 
 import com.pactflow.application.auth.dto.UserSummaryDto;
 import com.pactflow.domain.user.AccountType;
-import com.pactflow.infrastructure.persistence.UserSessionRepository;
+import com.pactflow.application.auth.port.SessionRepository;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -42,7 +42,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
-    private final UserSessionRepository sessionRepository;
+    private final SessionRepository sessionRepository;
 
     @Override
     protected void doFilterInternal(
@@ -102,7 +102,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final AccountType accountType = AccountType.valueOf(accountTypeStr);
 
                 final UserSummaryDto principal = new UserSummaryDto(
-                        userId, email != null ? email : "", accountType, "");
+                        userId, email != null ? email : "", accountType, java.util.Collections.singleton(accountType), "");
 
                 final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         principal,

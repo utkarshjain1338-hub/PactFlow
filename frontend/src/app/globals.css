@@ -328,3 +328,36 @@
     user-select: none;
   }
 }
+
+/* ─────────────────────────────────────────
+ * THEME TRANSITION ANIMATIONS (View Transitions API)
+ * ───────────────────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 1;
+}
+.dark::view-transition-new(root) {
+  z-index: 2;
+  animation: curtain-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.light::view-transition-old(root) {
+  z-index: 2;
+  animation: curtain-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1) reverse;
+}
+.light::view-transition-new(root) {
+  z-index: 1;
+}
+
+@keyframes curtain-reveal {
+  0% {
+    clip-path: circle(0% at 50% 0%);
+  }
+  100% {
+    clip-path: circle(150% at 50% 0%);
+  }
+}

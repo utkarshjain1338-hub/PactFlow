@@ -11,8 +11,8 @@ import com.pactflow.application.wallet.dto.WalletResponse;
 import com.pactflow.domain.user.AccountType;
 import com.pactflow.domain.wallet.WalletProvider;
 import com.pactflow.infrastructure.web.controller.WalletController;
-import com.pactflow.infrastructure.web.exception.BusinessRuleViolationException;
-import com.pactflow.infrastructure.web.exception.EntityNotFoundException;
+import com.pactflow.application.exception.BusinessRuleViolationException;
+import com.pactflow.application.exception.EntityNotFoundException;
 import com.pactflow.infrastructure.web.exception.GlobalExceptionHandler;
 import com.pactflow.infrastructure.web.security.JwtAuthenticationFilter;
 import com.pactflow.infrastructure.web.security.RateLimitFilter;
@@ -241,7 +241,7 @@ class WalletControllerTest {
     @DisplayName("POST /verify should return 403 Forbidden for bad signature")
     void verifyWallet_Forbidden() throws Exception {
         final VerifyWalletRequest request = new VerifyWalletRequest(walletId, "bad_sig");
-        doThrow(new com.pactflow.infrastructure.web.exception.AuthorizationException("Invalid")).when(walletService).verifyWallet(eq(userId), any(VerifyWalletRequest.class));
+        doThrow(new com.pactflow.application.exception.AuthorizationException("Invalid")).when(walletService).verifyWallet(eq(userId), any(VerifyWalletRequest.class));
 
         mockMvc.perform(post("/api/v1/users/me/wallets/verify")
                         .contentType(MediaType.APPLICATION_JSON)

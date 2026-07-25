@@ -2,10 +2,10 @@ package com.pactflow.infrastructure.web.controller;
 
 import com.pactflow.application.escrow.EscrowService;
 import com.pactflow.application.escrow.port.UnsignedTransaction;
-import com.pactflow.domain.blockchain.BlockchainOperation;
+
 import com.pactflow.domain.escrow.Escrow;
 import com.pactflow.domain.user.User;
-import lombok.Data;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +46,23 @@ public class EscrowController {
     public ResponseEntity<UnsignedTransaction> buildFundingTransaction(
             @AuthenticationPrincipal User user,
             @PathVariable UUID id) {
-        UnsignedTransaction tx = escrowService.buildFundingTransaction(id);
+        UnsignedTransaction tx = escrowService.buildFundingTransaction(id, user.getId());
+        return ResponseEntity.ok(tx);
+    }
+
+    @PostMapping("/{id}/release")
+    public ResponseEntity<UnsignedTransaction> buildReleaseTransaction(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID id) {
+        UnsignedTransaction tx = escrowService.buildReleaseTransaction(id, user.getId());
+        return ResponseEntity.ok(tx);
+    }
+
+    @PostMapping("/{id}/refund")
+    public ResponseEntity<UnsignedTransaction> buildRefundTransaction(
+            @AuthenticationPrincipal User user,
+            @PathVariable UUID id) {
+        UnsignedTransaction tx = escrowService.buildRefundTransaction(id, user.getId());
         return ResponseEntity.ok(tx);
     }
 

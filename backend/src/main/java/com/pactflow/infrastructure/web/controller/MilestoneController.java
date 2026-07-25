@@ -1,6 +1,8 @@
 package com.pactflow.infrastructure.web.controller;
 
 import com.pactflow.application.milestone.MilestoneService;
+import com.pactflow.application.milestone.dto.CreateDeliverableRequest;
+import com.pactflow.application.milestone.dto.DeliverableDto;
 import com.pactflow.application.milestone.dto.CreateMilestoneRequest;
 import com.pactflow.application.milestone.dto.MilestoneDto;
 import com.pactflow.application.milestone.dto.UpdateMilestoneRequest;
@@ -41,15 +43,7 @@ public class MilestoneController {
         List<MilestoneDto> milestones = milestoneService.getMilestonesForProject(projectId, user.getId());
         return ResponseEntity.ok(milestones);
     }
-    
-    @GetMapping("/milestones/{id}")
-    public ResponseEntity<MilestoneDto> getMilestone(
-            @PathVariable UUID id,
-            @AuthenticationPrincipal User user) {
-            
-        MilestoneDto milestone = milestoneService.getMilestone(id, user.getId());
-        return ResponseEntity.ok(milestone);
-    }
+
 
     @PatchMapping("/projects/{projectId}/milestones/{milestoneId}")
     public ResponseEntity<MilestoneDto> updateMilestone(
@@ -70,5 +64,46 @@ public class MilestoneController {
             
         milestoneService.deleteMilestone(projectId, milestoneId, user.getId());
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/projects/{projectId}/milestones/{milestoneId}/submit")
+    public ResponseEntity<DeliverableDto> submitDeliverable(
+            @PathVariable UUID projectId,
+            @PathVariable UUID milestoneId,
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody CreateDeliverableRequest request) {
+            
+        DeliverableDto deliverable = milestoneService.submitDeliverable(projectId, milestoneId, request, user.getId());
+        return ResponseEntity.ok(deliverable);
+    }
+
+    @PostMapping("/projects/{projectId}/milestones/{milestoneId}/review")
+    public ResponseEntity<Void> markInReview(
+            @PathVariable UUID projectId,
+            @PathVariable UUID milestoneId,
+            @AuthenticationPrincipal User user) {
+            
+        milestoneService.markInReview(projectId, milestoneId, user.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/projects/{projectId}/milestones/{milestoneId}/approve")
+    public ResponseEntity<Void> approveMilestone(
+            @PathVariable UUID projectId,
+            @PathVariable UUID milestoneId,
+            @AuthenticationPrincipal User user) {
+            
+        milestoneService.approveMilestone(projectId, milestoneId, user.getId());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/projects/{projectId}/milestones/{milestoneId}/reject")
+    public ResponseEntity<Void> rejectMilestone(
+            @PathVariable UUID projectId,
+            @PathVariable UUID milestoneId,
+            @AuthenticationPrincipal User user) {
+            
+        milestoneService.rejectMilestone(projectId, milestoneId, user.getId());
+        return ResponseEntity.ok().build();
     }
 }

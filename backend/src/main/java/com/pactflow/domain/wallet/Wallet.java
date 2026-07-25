@@ -1,6 +1,8 @@
 package com.pactflow.domain.wallet;
 
 import com.pactflow.domain.shared.AuditableEntity;
+import com.pactflow.domain.shared.SoftDeletable;
+import lombok.*;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -9,7 +11,9 @@ import java.util.UUID;
 /**
  * Wallet domain aggregate representing a user's verified or unverified Stellar wallet.
  */
-public class Wallet extends AuditableEntity {
+@Getter
+@Setter
+public class Wallet extends AuditableEntity implements SoftDeletable {
 
     private final UUID userId;
     private final String stellarPublicKey;
@@ -17,6 +21,7 @@ public class Wallet extends AuditableEntity {
     private boolean isPrimary;
     private Instant verifiedAt;
     private boolean isDeleted;
+    private Instant deletedAt;
 
     /**
      * Constructs a new Wallet aggregate for initial creation.
@@ -43,7 +48,8 @@ public class Wallet extends AuditableEntity {
             final WalletProvider provider,
             final boolean isPrimary,
             final Instant verifiedAt,
-            final boolean isDeleted) {
+            final boolean isDeleted,
+            final Instant deletedAt) {
         super(id, createdAt, updatedAt, version);
         this.userId = userId;
         this.stellarPublicKey = stellarPublicKey;
@@ -51,6 +57,7 @@ public class Wallet extends AuditableEntity {
         this.isPrimary = isPrimary;
         this.verifiedAt = verifiedAt;
         this.isDeleted = isDeleted;
+        this.deletedAt = deletedAt;
     }
 
     /**
