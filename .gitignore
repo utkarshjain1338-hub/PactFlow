@@ -3,3 +3,4 @@
 bin/
 gradle.properties
 
+*.class

@@ -27,3 +27,4 @@ logs/
 # IDE binaries and settings
 bin/
 .vscode/
+*.class
