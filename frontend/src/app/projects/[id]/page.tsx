@@ -7,6 +7,7 @@ import { useWalletKit } from "@/contexts/wallet-kit-context";
 import { DashboardShell, PageHeader } from "@/components/layout/dashboard-shell";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,21 @@ export default function ProjectDetailPage() {
   const { data: profile } = useQuery<any>({
     queryKey: ["auth-me"],
     queryFn: () => apiClient.get("/auth/me"),
+  });
+
+  const { data: myWallets = [] } = useQuery<any[]>({
+    queryKey: ["my-wallets"],
+    queryFn: () => apiClient.get("/users/me/wallets"),
+  });
+
+  const [freelancerIdInput, setFreelancerIdInput] = useState("");
+  const [submitFormOpenId, setSubmitFormOpenId] = useState<string | null>(null);
+  const [deliverableData, setDeliverableData] = useState({
+    title: "",
+    description: "",
+    repositoryUrl: "",
+    commitHash: "",
+    fileUrl: ""
   });
 
   // SSE setup
@@ -73,34 +89,169 @@ export default function ProjectDetailPage() {
   }, [id, queryClient]);
 
   // Mutations
+  const assignFreelancerMutation = useMutation({
+    mutationFn: (freelancerId: string) => 
+      apiClient.patch(`/projects/${id}`, { freelancerUserId: freelancerId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      toast.success("Freelancer assigned successfully");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to assign freelancer", { description: error.message || "Unknown error" });
+    }
+  });
+
+  const linkClientWalletMutation = useMutation({
+    mutationFn: (walletId: string) => 
+      apiClient.patch(`/projects/${id}/client-wallet`, { walletId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      toast.success("Client wallet linked successfully");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to link wallet", { description: error.message || "Unknown error" });
+    }
+  });
+
+  const linkFreelancerWalletMutation = useMutation({
+    mutationFn: (walletId: string) => 
+      apiClient.patch(`/projects/${id}/freelancer-wallet`, { walletId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      toast.success("Freelancer wallet linked successfully");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to link wallet", { description: error.message || "Unknown error" });
+    }
+  });
+
   const createEscrowMutation = useMutation({
-    mutationFn: (milestoneId: string) => apiClient.post(`/escrows?projectId=${id}&milestoneId=${milestoneId}`),
+    mutationFn: async (milestoneId: string) => {
+      // Step 1: Create the escrow record in the DB
+      const escrow = await apiClient.post(`/escrows?projectId=${id}&milestoneId=${milestoneId}`) as any;
+
+      // Step 2: Build the initialize() Soroban transaction XDR
+      const unsignedTx = await apiClient.post(`/escrows/${escrow.id}/initialization-transaction`) as any;
+
+      // Step 3: Sign with Freighter wallet
+      const signedXdr = await signTransaction(unsignedTx.transactionXdr);
+
+      // Step 4: Broadcast to Stellar Testnet
+      await apiClient.post("/transactions", {
+        escrowId: escrow.id,
+        signedXdr,
+        operation: "INITIALIZE"
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-escrows", id] });
+      toast.success("Escrow initialized on Stellar Testnet!");
     },
+    onError: (error: any) => {
+      toast.error("Failed to initialize escrow", { description: error.message || "Unknown error" });
+    }
+  });
+
+  const activateProjectMutation = useMutation({
+    mutationFn: () => apiClient.patch(`/projects/${id}`, { status: "ACTIVE" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      toast.success("Project activated successfully!");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to activate project", { description: error.message || "Unknown error" });
+    }
   });
 
   const fundMilestoneMutation = useMutation({
     mutationFn: async (escrowId: string) => {
-      // 1. Get unsigned transaction
+      // 1. Get unsigned transaction XDR from backend (with Soroban simulation footprint)
       const unsignedTx = await apiClient.post(`/escrows/${escrowId}/funding-transaction`);
       
-      // 2. Sign it using Wallet Kit
+      // 2. Sign it with the user's Freighter wallet
       const signedXdr = await signTransaction((unsignedTx as any).transactionXdr);
 
-      // 3. Submit back to backend
+      // 3. Send signedXdr to backend — backend broadcasts to Stellar Testnet and records the real hash
       await apiClient.post("/transactions", {
         escrowId,
         signedXdr,
-        transactionHash: "simulate-" + Math.random().toString(36).substring(7),
         operation: "FUND"
       });
     },
     onSuccess: () => {
-      toast.success("Funding transaction submitted! Waiting for network confirmation...");
+      toast.success("Funding transaction submitted! Waiting for blockchain confirmation...");
     },
-    onError: (error: any) => {
-      toast.error("Funding failed", { description: error.message || "Unknown error" });
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to fund milestone");
+    }
+  });
+
+  const submitDeliverableMutation = useMutation({
+    mutationFn: async (milestoneId: string) => {
+      const response = await apiClient.post(`/projects/${id}/milestones/${milestoneId}/submit`, deliverableData);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-milestones", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-escrows", id] });
+      setSubmitFormOpenId(null);
+      setDeliverableData({ title: "", description: "", repositoryUrl: "", commitHash: "", fileUrl: "" });
+      toast.success("Deliverable submitted successfully!");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to submit deliverable");
+    },
+  });
+
+  const startReviewMutation = useMutation({
+    mutationFn: async (milestoneId: string) => {
+      const response = await apiClient.post(`/projects/${id}/milestones/${milestoneId}/review`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-milestones", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-escrows", id] });
+      toast.success("Review started");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to start review");
+    },
+  });
+
+  const approveMilestoneMutation = useMutation({
+    mutationFn: async (milestoneId: string) => {
+      const response = await apiClient.post(`/projects/${id}/milestones/${milestoneId}/approve`);
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-milestones", id] });
+      queryClient.invalidateQueries({ queryKey: ["project-escrows", id] });
+      toast.success("Milestone approved");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to approve milestone");
+    },
+  });
+
+  const releasePaymentMutation = useMutation({
+    mutationFn: async (escrowId: string) => {
+      const unsignedTx = await apiClient.post(`/escrows/${escrowId}/release`);
+      const signedXdr = await signTransaction((unsignedTx as any).transactionXdr);
+      
+      await apiClient.post("/transactions", {
+        escrowId,
+        signedXdr,
+        operation: "RELEASE"
+      });
+    },
+    onSuccess: () => {
+      toast.success("Release transaction submitted! Waiting for blockchain confirmation...");
+    },
+    onError: (err: any) => {
+      toast.error(err.response?.data?.message || err.message || "Failed to release payment");
     }
   });
 
@@ -121,6 +272,8 @@ export default function ProjectDetailPage() {
   }
 
   const isClientUser = profile?.id === project.clientUserId;
+  const isFreelancerUser = profile?.id === project.freelancerUserId;
+  const primaryWallet = myWallets.find((w: any) => w.isPrimary);
 
   return (
     <DashboardShell
@@ -143,10 +296,12 @@ export default function ProjectDetailPage() {
                 milestones.map((milestone) => {
                   const escrow = escrows.find(e => e.milestoneId === milestone.id);
                   const isEscrowCreated = !!escrow;
-                  const isFunded = escrow?.status === "FUNDED" || escrow?.status === "RELEASED";
+                  const isPending = escrow?.status === "CREATED" || escrow?.status === "PENDING_FUNDING";
+                  const isFunded = escrow?.status === "FUNDED";
+                  const isPostFunded = ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "DISPUTED", "RELEASED"].includes(escrow?.status);
                   
                   return (
-                    <div key={milestone.id} className="p-4 bg-surface-2 rounded-xl border border-border-default flex items-center justify-between">
+                    <div key={milestone.id} className="bg-surface-2 rounded-xl border border-border-default overflow-hidden"><div className="p-4 flex items-center justify-between">
                       <div>
                         <h4 className="font-bold text-text-primary text-sm">{milestone.title}</h4>
                         <div className="text-text-secondary text-xs mt-1">{milestone.description}</div>
@@ -166,7 +321,52 @@ export default function ProjectDetailPage() {
                             <Badge variant="secondary">Pending Escrow</Badge>
                           )
                         ) : isFunded ? (
-                          <Badge variant="success">Funded</Badge>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant="success">Funded</Badge>
+                            {isFreelancerUser && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => setSubmitFormOpenId(submitFormOpenId === milestone.id ? null : milestone.id)}
+                              >
+                                {submitFormOpenId === milestone.id ? "Cancel" : "Submit Deliverable"}
+                              </Button>
+                            )}
+                          </div>
+                        ) : isPostFunded ? (
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant="secondary" className="uppercase">{escrow?.status.replace('_', ' ')}</Badge>
+                            {isClientUser && escrow?.status === "SUBMITTED" && (
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={() => startReviewMutation.mutate(milestone.id)}
+                                disabled={startReviewMutation.isPending}
+                              >
+                                {startReviewMutation.isPending ? "Starting..." : "Start Review"}
+                              </Button>
+                            )}
+                            {isClientUser && escrow?.status === "UNDER_REVIEW" && (
+                              <Button
+                                size="sm"
+                                variant="success"
+                                onClick={() => approveMilestoneMutation.mutate(milestone.id)}
+                                disabled={approveMilestoneMutation.isPending}
+                              >
+                                {approveMilestoneMutation.isPending ? "Approving..." : "Approve"}
+                              </Button>
+                            )}
+                            {isClientUser && escrow?.status === "APPROVED" && (
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                onClick={() => releasePaymentMutation.mutate(escrow.id)}
+                                disabled={releasePaymentMutation.isPending || !wallet.address}
+                              >
+                                {releasePaymentMutation.isPending ? "Releasing..." : "Release Payment"}
+                              </Button>
+                            )}
+                          </div>
                         ) : (
                           isClientUser ? (
                             <Button
@@ -183,8 +383,52 @@ export default function ProjectDetailPage() {
                         )}
                       </div>
                     </div>
-                  );
-                })
+                    {submitFormOpenId === milestone.id && (
+                      <div className="mt-4 pt-4 border-t border-border-default space-y-4">
+                        <h5 className="font-semibold text-sm">Submit Deliverable</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <Input 
+                            placeholder="Deliverable Title" 
+                            value={deliverableData.title}
+                            onChange={(e) => setDeliverableData({ ...deliverableData, title: e.target.value })}
+                          />
+                          <Input 
+                            placeholder="Description" 
+                            value={deliverableData.description}
+                            onChange={(e) => setDeliverableData({ ...deliverableData, description: e.target.value })}
+                          />
+                          <Input 
+                            placeholder="Repository URL" 
+                            value={deliverableData.repositoryUrl}
+                            onChange={(e) => setDeliverableData({ ...deliverableData, repositoryUrl: e.target.value })}
+                          />
+                          <Input 
+                            placeholder="Commit Hash" 
+                            value={deliverableData.commitHash}
+                            onChange={(e) => setDeliverableData({ ...deliverableData, commitHash: e.target.value })}
+                          />
+                          <Input 
+                            placeholder="File URL (Optional)" 
+                            className="md:col-span-2"
+                            value={deliverableData.fileUrl}
+                            onChange={(e) => setDeliverableData({ ...deliverableData, fileUrl: e.target.value })}
+                          />
+                        </div>
+                        <div className="flex justify-end pt-2">
+                          <Button 
+                            size="sm"
+                            variant="primary"
+                            onClick={() => submitDeliverableMutation.mutate(milestone.id)}
+                            disabled={submitDeliverableMutation.isPending || !deliverableData.title || !deliverableData.description || !deliverableData.repositoryUrl || !deliverableData.commitHash}
+                          >
+                            {submitDeliverableMutation.isPending ? "Submitting..." : "Submit for Review"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
               )}
             </CardContent>
           </Card>
@@ -199,7 +443,19 @@ export default function ProjectDetailPage() {
             <CardContent className="space-y-4 text-sm">
               <div className="flex justify-between items-center pb-2 border-b border-border-subtle">
                 <span className="text-text-secondary">Status</span>
-                <Badge variant={project.status === "ACTIVE" ? "success" : "default"}>{project.status}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={project.status === "ACTIVE" ? "success" : "default"}>{project.status}</Badge>
+                  {isClientUser && project.status === "DRAFT" && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      onClick={() => activateProjectMutation.mutate()}
+                      disabled={activateProjectMutation.isPending}
+                    >
+                      Activate Project
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="flex justify-between items-center pb-2 border-b border-border-subtle">
                 <span className="text-text-secondary">Total Budget</span>
@@ -219,11 +475,83 @@ export default function ProjectDetailPage() {
             <CardContent className="space-y-4 text-sm">
               <div>
                 <div className="text-text-secondary mb-1">Client Wallet ID</div>
-                <div className="font-mono truncate">{project.clientWalletId || "Not linked"}</div>
+                {project.clientWalletId ? (
+                  <div className="font-mono truncate">{project.clientWalletId}</div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <div className="font-mono truncate text-text-tertiary">Not linked</div>
+                    {isClientUser && primaryWallet && (
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        disabled={linkClientWalletMutation.isPending}
+                        onClick={() => linkClientWalletMutation.mutate(primaryWallet.id)}
+                      >
+                        Link My Primary Wallet
+                      </Button>
+                    )}
+                    {isClientUser && !primaryWallet && (
+                      <div className="text-xs text-status-warning">You need to verify a wallet in your profile first.</div>
+                    )}
+                  </div>
+                )}
               </div>
               <div>
-                <div className="text-text-secondary mb-1">Freelancer Wallet ID</div>
-                <div className="font-mono truncate">{project.freelancerWalletId || "Not linked"}</div>
+                <div className="text-text-secondary mb-1">Freelancer</div>
+                {project.freelancerUserId ? (
+                  <div className="space-y-2">
+                    <div>
+                      <div className="text-xs text-text-tertiary">User ID</div>
+                      <div className="font-mono truncate text-brand-400">{project.freelancerUserId}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-text-tertiary">Wallet ID</div>
+                      {project.freelancerWalletId ? (
+                        <div className="font-mono truncate">{project.freelancerWalletId}</div>
+                      ) : (
+                        <div className="flex flex-col gap-2 mt-1">
+                          <div className="font-mono truncate text-text-tertiary">Not linked</div>
+                          {isFreelancerUser && primaryWallet && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              disabled={linkFreelancerWalletMutation.isPending}
+                              onClick={() => linkFreelancerWalletMutation.mutate(primaryWallet.id)}
+                            >
+                              Link My Primary Wallet
+                            </Button>
+                          )}
+                          {isFreelancerUser && !primaryWallet && (
+                            <div className="text-xs text-status-warning">You need to verify a wallet in your profile first.</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  isClientUser ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="text-xs text-text-tertiary">Not assigned yet. Assign now:</div>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="Freelancer User ID (UUID)" 
+                          value={freelancerIdInput}
+                          onChange={(e) => setFreelancerIdInput(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                        <Button 
+                          size="sm" 
+                          disabled={!freelancerIdInput || assignFreelancerMutation.isPending}
+                          onClick={() => assignFreelancerMutation.mutate(freelancerIdInput)}
+                        >
+                          Assign
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="font-mono truncate text-text-tertiary">Not Assigned</div>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>

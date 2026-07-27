@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { MOCK_PROJECTS } from "@/lib/mock-data";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
+import { useRouter } from "next/navigation";
 import { type Project } from "@/types/domain";
 
 type TabType = "ALL" | "IN_PROGRESS" | "DRAFT" | "COMPLETED";
@@ -23,7 +24,7 @@ type TabType = "ALL" | "IN_PROGRESS" | "DRAFT" | "COMPLETED";
 export default function ProjectsPage() {
   const [activeTab, setActiveTab] = useState<TabType>("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [modalOpen, setModalOpen] = useState(false);
+  const router = useRouter();
 
   const { data: projects = [], isLoading } = useQuery<Project[]>({
     queryKey: ["projects"],
@@ -77,7 +78,7 @@ export default function ProjectsPage() {
             size="sm"
             variant="primary"
             leftIcon={<Plus size={14} />}
-            onClick={() => setModalOpen(true)}
+            onClick={() => router.push("/projects/new")}
           >
             Create Project
           </Button>
@@ -162,62 +163,6 @@ export default function ProjectsPage() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* New Project Dialog Simulation */}
-      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent size="md" className="p-6 bg-surface-2 border border-border-strong rounded-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Escrow Project</DialogTitle>
-            <DialogDescription>
-              Configure a new milestone-based project. Once created, a Soroban smart contract will be staged for funding.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 my-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-text-primary">Project Title</label>
-              <input
-                type="text"
-                placeholder="e.g. Next.js & Soroban DeFi Dashboard"
-                className="w-full px-3 py-2 rounded-xl text-xs bg-surface-0 border border-border-default text-text-primary focus:outline-none focus:border-brand-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text-primary">Total Budget (XLM)</label>
-                <input
-                  type="text"
-                  placeholder="500 XLM"
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-surface-0 border border-border-default text-text-primary font-mono focus:outline-none focus:border-brand-400"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-text-primary">Milestones Count</label>
-                <input
-                  type="number"
-                  defaultValue={3}
-                  className="w-full px-3 py-2 rounded-xl text-xs bg-surface-0 border border-border-default text-text-primary font-mono focus:outline-none focus:border-brand-400"
-                />
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-brand-500/10 border border-brand-500/30 text-xs text-brand-300 flex items-center gap-2">
-              <FolderKanban size={16} className="shrink-0 text-brand-400" />
-              <span>Level 4 Hardware Enforced Escrow protection enabled by default.</span>
-            </div>
-          </div>
-
-          <DialogFooter className="flex justify-end gap-2 pt-2">
-            <Button variant="ghost" size="sm" onClick={() => setModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => setModalOpen(false)}>
-              Stage Project
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </DashboardShell>
   );
 }

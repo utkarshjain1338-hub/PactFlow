@@ -38,6 +38,7 @@ import {
   getProgress,
 } from "@/lib/utils";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { CompanyAnalytics } from "@/types/domain";
 
 // ── KPI Stats ──
@@ -86,6 +87,7 @@ function KPIGrid() {
 
 // ── Active Projects List ──
 function ProjectsList() {
+  const router = useRouter();
   const activeProjects = MOCK_PROJECTS.filter(
     (p) => p.status === "ACTIVE" || p.status === "DRAFT"
   );
@@ -96,7 +98,7 @@ function ProjectsList() {
         title="No active projects"
         description="Create your first project to get started with milestone-based escrow payments."
         action={
-          <Button size="sm" leftIcon={<Plus size={14} />}>
+          <Button size="sm" leftIcon={<Plus size={14} />} onClick={() => router.push("/projects/new")}>
             Create Project
           </Button>
         }
@@ -270,6 +272,8 @@ function WelcomeBanner() {
 
 // ── Dashboard Page ──
 export default function DashboardPage() {
+  const router = useRouter();
+  
   return (
     <DashboardShell title="Dashboard">
       <PageHeader
@@ -280,6 +284,7 @@ export default function DashboardPage() {
             size="sm"
             leftIcon={<Plus size={14} />}
             variant="primary"
+            onClick={() => router.push("/projects/new")}
           >
             New Project
           </Button>
