@@ -1,25 +1,29 @@
 package com.pactflow.domain.project;
 
-import com.pactflow.domain.milestone.Milestone;
-import com.pactflow.domain.milestone.MilestoneStatus;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import org.junit.jupiter.api.Test;
+
+import com.pactflow.domain.milestone.Milestone;
+import com.pactflow.domain.milestone.MilestoneStatus;
 
 class ProjectDomainTests {
 
     @Test
     void shouldCreateProjectWithValidParameters() {
         UUID clientUserId = UUID.randomUUID();
-        Project project = Project.create(clientUserId, null, "Test Project", "Desc", BigDecimal.valueOf(100), LocalDate.now().plusDays(10));
+        Project project = Project.create(clientUserId, null, "Test Project", null, BigDecimal.valueOf(100), LocalDate.now().plusDays(10));
         
         assertThat(project.getId()).isNotNull();
         assertThat(project.getClientUserId()).isEqualTo(clientUserId);
         assertThat(project.getFreelancerUserId()).isNull();
-        assertThat(project.getStatus()).isEqualTo(ProjectStatus.OPEN);
+        assertThat(project.getStatus()).isEqualTo(ProjectStatus.DRAFT);
+        assertThat(project.getDescription()).isNull();
         assertThat(project.getMilestones()).isEmpty();
         assertThat(project.isStructurallyReady()).isFalse();
     }

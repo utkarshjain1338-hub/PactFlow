@@ -81,7 +81,7 @@ class EscrowControllerTest {
 
         mockMvc.perform(post("/escrows/{id}/funding-transaction", escrowId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.xdr").value("base64xdrtx=="));
+                .andExpect(jsonPath("$.transactionXdr").value("base64xdrtx=="));
 
         verify(escrowService).buildFundingTransaction(eq(escrowId), eq(userId));
     }
@@ -94,7 +94,7 @@ class EscrowControllerTest {
 
         mockMvc.perform(post("/escrows/{id}/release", escrowId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.xdr").value("base64xdrtx=="));
+                .andExpect(jsonPath("$.transactionXdr").value("base64xdrtx=="));
 
         verify(escrowService).buildReleaseTransaction(eq(escrowId), eq(userId));
     }
@@ -107,7 +107,7 @@ class EscrowControllerTest {
 
         mockMvc.perform(post("/escrows/{id}/refund", escrowId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.xdr").value("base64xdrtx=="));
+                .andExpect(jsonPath("$.transactionXdr").value("base64xdrtx=="));
 
         verify(escrowService).buildRefundTransaction(eq(escrowId), eq(userId));
     }

@@ -1,19 +1,20 @@
 package com.pactflow.infrastructure.persistence.jpa;
 
-import com.pactflow.domain.project.Project;
-import com.pactflow.domain.project.ProjectStatus;
-import com.pactflow.domain.milestone.Milestone;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import com.pactflow.domain.milestone.Milestone;
+import com.pactflow.domain.project.Project;
+import com.pactflow.domain.project.ProjectStatus;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -42,7 +43,7 @@ class ProjectIntegrationTests {
         Project retrievedProject = projectRepository.findById(savedProject.getId()).orElseThrow();
         
         assertThat(retrievedProject.getTitle()).isEqualTo("Integration Test");
-        assertThat(retrievedProject.getStatus()).isEqualTo(ProjectStatus.OPEN);
+        assertThat(retrievedProject.getStatus()).isEqualTo(ProjectStatus.DRAFT);
         assertThat(retrievedProject.getMilestones()).hasSize(2);
         
         // Assert milestone totals
