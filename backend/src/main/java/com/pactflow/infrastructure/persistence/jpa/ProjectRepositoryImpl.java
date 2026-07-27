@@ -25,7 +25,8 @@ public class ProjectRepositoryImpl implements ProjectRepository {
 
     @Override
     public Project save(Project project) {
-        ProjectJpaEntity entity = toEntity(project);
+        ProjectJpaEntity entity = jpaProjectRepository.findById(project.getId()).orElseGet(ProjectJpaEntity::new);
+        updateEntity(entity, project);
         ProjectJpaEntity savedEntity = jpaProjectRepository.save(entity);
         return toDomain(savedEntity);
     }
@@ -49,8 +50,7 @@ public class ProjectRepositoryImpl implements ProjectRepository {
                 .collect(Collectors.toList());
     }
 
-    private ProjectJpaEntity toEntity(Project domain) {
-        ProjectJpaEntity entity = new ProjectJpaEntity();
+    private void updateEntity(ProjectJpaEntity entity, Project domain) {
         entity.setId(domain.getId());
         entity.setClientUserId(domain.getClientUserId());
         entity.setClientWalletId(domain.getClientWalletId());
@@ -64,9 +64,18 @@ public class ProjectRepositoryImpl implements ProjectRepository {
         entity.setDeadline(domain.getDeadline());
         entity.setDeleted(domain.isDeleted());
 
-        List<MilestoneJpaEntity> milestoneEntities = domain.getMilestones().stream().map(m -> {
-            MilestoneJpaEntity mEntity = new MilestoneJpaEntity();
-            mEntity.setId(m.getId());
+        List<MilestoneJpaEntity> newMilestones = domain.getMilestones().stream().map(m -> {
+            MilestoneJpaEntity mEntity = null;
+            if (entity.getMilestones() != null) {
+                mEntity = entity.getMilestones().stream()
+                        .filter(e -> e.getId().equals(m.getId()))
+                        .findFirst()
+                        .orElse(null);
+            }
+            if (mEntity == null) {
+                mEntity = new MilestoneJpaEntity();
+                mEntity.setId(m.getId());
+            }
             mEntity.setProjectId(m.getProjectId());
             mEntity.setTitle(m.getTitle());
             mEntity.setDescription(m.getDescription());
@@ -80,8 +89,11 @@ public class ProjectRepositoryImpl implements ProjectRepository {
             return mEntity;
         }).collect(Collectors.toList());
 
-        entity.setMilestones(milestoneEntities);
-        return entity;
+        if (entity.getMilestones() == null) {
+            entity.setMilestones(new java.util.ArrayList<>());
+        }
+        entity.getMilestones().clear();
+        entity.getMilestones().addAll(newMilestones);
     }
 
     private Project toDomain(ProjectJpaEntity entity) {

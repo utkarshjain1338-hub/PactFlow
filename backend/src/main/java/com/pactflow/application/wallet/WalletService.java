@@ -160,6 +160,28 @@ public class WalletService {
     }
 
     /**
+     * Returns the Stellar public key for the user's verified primary wallet.
+     *
+     * @param userId the user ID
+     * @return the verified primary wallet public key
+     */
+    @Transactional(readOnly = true)
+    public String getVerifiedPrimaryWalletPublicKey(final UUID userId) {
+        enforceWalletLock(userId);
+
+        final Wallet primaryWallet = walletRepository.findAllByUserId(userId).stream()
+                .filter(Wallet::isPrimary)
+                .findFirst()
+                .orElseThrow(() -> new BusinessRuleViolationException("User does not have a primary wallet."));
+
+        if (!primaryWallet.isVerified()) {
+            throw new BusinessRuleViolationException("Only verified wallets can perform blockchain actions.");
+        }
+
+        return primaryWallet.getStellarPublicKey();
+    }
+
+    /**
      * Generates a verification challenge for a wallet.
      *
      * @param userId the user ID

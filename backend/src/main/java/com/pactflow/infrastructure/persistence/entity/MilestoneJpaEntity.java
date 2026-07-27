@@ -64,7 +64,7 @@ public class MilestoneJpaEntity {
 
     @Version
     @Column(nullable = false)
-    private Long version = 1L;
+    private Long version;
 
     @PrePersist
     protected void onCreate() {

@@ -8,8 +8,13 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CreateMilestoneRequest {
 
     @NotBlank(message = "Title is required")
@@ -27,6 +32,7 @@ public class CreateMilestoneRequest {
     private Integer sequenceOrder;
 
     @FutureOrPresent(message = "Due date must be in the present or future")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate dueDate;
 
     private boolean strictDeadline;

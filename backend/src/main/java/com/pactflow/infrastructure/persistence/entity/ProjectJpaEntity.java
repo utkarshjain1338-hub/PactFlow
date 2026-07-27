@@ -64,7 +64,7 @@ public class ProjectJpaEntity {
     private boolean isDeleted = false;
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JoinColumn(name = "project_id")
+    @JoinColumn(name = "project_id", insertable = false, updatable = false)
     private List<MilestoneJpaEntity> milestones = new ArrayList<>();
 
     @Column(name = "deleted_at")
@@ -78,7 +78,7 @@ public class ProjectJpaEntity {
 
     @Version
     @Column(nullable = false)
-    private Long version = 1L;
+    private Long version;
 
     @PrePersist
     protected void onCreate() {

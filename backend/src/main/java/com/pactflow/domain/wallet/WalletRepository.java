@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public interface WalletRepository {
     List<Wallet> findAllByUserId(UUID userId);
+    Optional<Wallet> findById(UUID id);
     Optional<Wallet> findByIdAndUserId(UUID id, UUID userId);
     long countByUserId(UUID userId);
     boolean existsByStellarPublicKey(String publicKey);

@@ -2,7 +2,7 @@ package com.pactflow.infrastructure.web.controller;
 
 import com.pactflow.application.event.SseEventService;
 import com.pactflow.application.event.SseTicketService;
-import com.pactflow.domain.user.User;
+import com.pactflow.application.auth.dto.UserSummaryDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/events")
+@RequestMapping("/api/v1/events")
 public class SseController {
 
     private final SseTicketService sseTicketService;
@@ -25,8 +25,8 @@ public class SseController {
     }
 
     @PostMapping("/ticket")
-    public ResponseEntity<Map<String, String>> getTicket(@AuthenticationPrincipal User user) {
-        String ticket = sseTicketService.generateTicket(user.getId());
+    public ResponseEntity<Map<String, String>> getTicket(@AuthenticationPrincipal UserSummaryDto user) {
+        String ticket = sseTicketService.generateTicket(user.id());
         return ResponseEntity.ok(Map.of("ticket", ticket));
     }
 

@@ -44,12 +44,17 @@ public class PactFlowProperties {
         private String network = "testnet";
 
         @NotBlank
+        private String networkPassphrase = "Test SDF Network ; September 2015";
+
+        @NotBlank
         private String horizonUrl = "https://horizon-testnet.stellar.org";
 
         @NotBlank
         private String sorobanRpcUrl = "https://soroban-testnet.stellar.org";
 
         private String contractId = "";
+
+        private String xlmTokenId = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
     }
 
     /**

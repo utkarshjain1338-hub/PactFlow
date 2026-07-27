@@ -1,21 +1,23 @@
 package com.pactflow.domain.project;
 
-import com.pactflow.domain.milestone.Milestone;
-import com.pactflow.domain.milestone.MilestoneStatus;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
+import com.pactflow.domain.milestone.Milestone;
+import com.pactflow.domain.milestone.MilestoneStatus;
+import com.pactflow.domain.shared.SoftDeletable;
+
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import com.pactflow.domain.shared.SoftDeletable;
-import java.time.Instant;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -51,9 +53,6 @@ public class Project implements SoftDeletable {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Title is required.");
         }
-        if (description == null || description.isBlank()) {
-            throw new IllegalArgumentException("Description is required.");
-        }
         if (totalBudgetXlm == null || totalBudgetXlm.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Total budget must be positive.");
         }
@@ -63,8 +62,8 @@ public class Project implements SoftDeletable {
                 .clientUserId(clientUserId)
                 .freelancerUserId(freelancerUserId) // Optional during draft
                 .title(title)
-                .description(description)
-                .status(freelancerUserId == null ? ProjectStatus.OPEN : ProjectStatus.DRAFT) // Optional domain logic adjustment
+                .description(description != null && description.isBlank() ? null : description)
+                .status(ProjectStatus.DRAFT)
                 .totalBudgetXlm(totalBudgetXlm)
                 .assetCode("XLM")
                 .deadline(deadline)

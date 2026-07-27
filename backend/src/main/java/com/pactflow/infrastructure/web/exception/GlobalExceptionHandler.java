@@ -79,7 +79,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> handleDuplicateResource(
             final Exception ex, final HttpServletRequest req) {
         final String msg = ex instanceof org.springframework.dao.DataIntegrityViolationException 
-                ? "This resource already exists or violates a uniqueness constraint." 
+                ? "Constraint violation: " + ex.getMessage() 
                 : ex.getMessage();
         return respond(HttpStatus.CONFLICT, "DUPLICATE_RESOURCE", msg, req);
     }
@@ -196,9 +196,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleHttpMessageNotReadable(
             final HttpMessageNotReadableException ex, final HttpHeaders headers,
             final HttpStatusCode status, final WebRequest request) {
+        LOG.error("HttpMessageNotReadableException: ", ex);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildDetail(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Bad Request",
-                        "Request body is malformed or missing required fields.", null));
+                        "Request body is malformed: " + ex.getMessage(), null));
     }
 
     @Override
@@ -222,8 +223,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             final Exception ex, final HttpServletRequest req) {
         final String traceId = getTraceId();
         LOG.error("Unexpected error [traceId={}] at {}: {}", traceId, req.getRequestURI(), ex.getMessage(), ex);
+        
+        Throwable root = ex;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
-                "An unexpected error occurred. Reference ID: " + traceId, req);
+                "Unexpected error: " + ex.getMessage() + " | Root cause: " + root.getMessage() + " | Ref: " + traceId, req);
     }
 
     private ResponseEntity<ProblemDetail> respond(

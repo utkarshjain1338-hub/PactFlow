@@ -43,6 +43,19 @@ public class WalletRepositoryImpl implements WalletRepository {
      * @param userId the user ID
      * @return the wallet
      */
+    public Optional<Wallet> findById(final UUID id) {
+        return walletJpaRepository.findById(id)
+                .filter(w -> !w.isDeleted())
+                .map(this::toDomain);
+    }
+
+    /**
+     * Finds a wallet by its ID and user ID.
+     *
+     * @param id     the wallet ID
+     * @param userId the user ID
+     * @return the wallet
+     */
     public Optional<Wallet> findByIdAndUserId(final UUID id, final UUID userId) {
         return walletJpaRepository.findByIdAndUserIdAndIsDeletedFalse(id, userId)
                 .map(this::toDomain);

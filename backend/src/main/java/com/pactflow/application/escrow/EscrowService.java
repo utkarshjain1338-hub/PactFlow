@@ -10,6 +10,8 @@ import com.pactflow.domain.escrow.EscrowRepository;
 import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.application.wallet.WalletService;
+import com.pactflow.infrastructure.soroban.SorobanEscrowGateway;
+import com.pactflow.infrastructure.persistence.WalletRepositoryImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,18 +28,27 @@ public class EscrowService {
     private final BlockchainTransactionRepository blockchainTransactionRepository;
     private final WalletService walletService;
     private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final SorobanEscrowGateway sorobanEscrowGateway;
+    private final com.pactflow.domain.wallet.WalletRepository walletRepository;
+    private final com.pactflow.domain.milestone.MilestoneRepository milestoneRepository;
 
     public EscrowService(EscrowRepository escrowRepository, ProjectRepository projectRepository,
                          EscrowContractGateway escrowContractGateway,
                          BlockchainTransactionRepository blockchainTransactionRepository,
                          WalletService walletService,
-                         org.springframework.context.ApplicationEventPublisher eventPublisher) {
+                         org.springframework.context.ApplicationEventPublisher eventPublisher,
+                         SorobanEscrowGateway sorobanEscrowGateway,
+                         com.pactflow.domain.wallet.WalletRepository walletRepository,
+                         com.pactflow.domain.milestone.MilestoneRepository milestoneRepository) {
         this.escrowRepository = escrowRepository;
         this.projectRepository = projectRepository;
         this.escrowContractGateway = escrowContractGateway;
         this.blockchainTransactionRepository = blockchainTransactionRepository;
         this.walletService = walletService;
         this.eventPublisher = eventPublisher;
+        this.sorobanEscrowGateway = sorobanEscrowGateway;
+        this.walletRepository = walletRepository;
+        this.milestoneRepository = milestoneRepository;
     }
 
     @Transactional
@@ -58,8 +69,40 @@ public class EscrowService {
     }
 
     @Transactional
+    public UnsignedTransaction buildInitializationTransaction(UUID escrowId, UUID userId) {
+        walletService.assertVerifiedPrimaryWallet(userId);
+        String sourceAccountAddress = walletService.getVerifiedPrimaryWalletPublicKey(userId);
+
+        Escrow escrow = getEscrow(escrowId);
+        Project project = projectRepository.findById(escrow.getProjectId())
+                .orElseThrow(() -> new IllegalArgumentException("Project not found for escrow: " + escrowId));
+
+        // Fetch the actual Stellar public keys from the wallet IDs stored on the project
+        String clientPublicKey = walletRepository.findById(project.getClientWalletId())
+                .orElseThrow(() -> new IllegalStateException("Client wallet not found"))
+                .getStellarPublicKey();
+
+        String freelancerPublicKey = walletRepository.findById(project.getFreelancerWalletId())
+                .orElseThrow(() -> new IllegalStateException("Freelancer wallet not found"))
+                .getStellarPublicKey();
+
+        // Count milestones for this project (use 1 minimum)
+        long milestoneCount = escrowRepository.findByProjectId(escrow.getProjectId()).size();
+        int milestonesTotal = (int) Math.max(1, milestoneCount);
+
+        return sorobanEscrowGateway.buildInitializationTransaction(
+                clientPublicKey,
+                freelancerPublicKey,
+                project.getTotalBudgetXlm(),
+                milestonesTotal,
+                sourceAccountAddress
+        );
+    }
+
+    @Transactional
     public UnsignedTransaction buildFundingTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
+        String sourceAccountAddress = walletService.getVerifiedPrimaryWalletPublicKey(userId);
         Escrow escrow = getEscrow(escrowId);
         
         // Ensure state is valid before building transaction
@@ -74,7 +117,7 @@ public class EscrowService {
             escrowRepository.save(escrow);
         }
 
-        UnsignedTransaction tx = escrowContractGateway.buildFundingTransaction(escrow);
+        UnsignedTransaction tx = escrowContractGateway.buildFundingTransaction(escrow, sourceAccountAddress);
         
         // In a real system, the transaction hash is known only after the user signs,
         // or we compute the hash of the unsigned XDR. We can store it as pending once submitted.
@@ -84,7 +127,8 @@ public class EscrowService {
 
     @Transactional
     public void submitSignedTransaction(UUID escrowId, String transactionHash, BlockchainOperation operation) {
-        // Called by the frontend after signing and submitting to the network.
+        // Called by the frontend after signing and broadcasting to the Stellar network.
+        // The real transaction hash comes from the Stellar network after broadcast.
         BlockchainTransaction tx = BlockchainTransaction.create(escrowId, transactionHash, operation);
         blockchainTransactionRepository.save(tx);
     }
@@ -103,9 +147,24 @@ public class EscrowService {
         String eventType = "transaction.confirmed";
 
         switch (tx.getOperation()) {
+            case INITIALIZE -> {
+                // Contract is now initialized on-chain; escrow stays CREATED state in DB,
+                // ready for the client to call deposit().
+                eventType = "escrow.initialized";
+            }
             case FUND -> { 
                 escrow.markFunded(BigDecimal.ZERO, transactionHash); 
                 eventType = "escrow.funded"; 
+                
+                milestoneRepository.findById(escrow.getMilestoneId()).ifPresent(m -> {
+                    if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.DRAFT) {
+                        m.markAsFunded();
+                        m.markAsInProgress();
+                    } else if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.FUNDED) {
+                        m.markAsInProgress();
+                    }
+                    milestoneRepository.save(m);
+                });
             }
             case RELEASE -> { 
                 escrow.release(transactionHash); 
@@ -134,23 +193,25 @@ public class EscrowService {
     @Transactional
     public UnsignedTransaction buildReleaseTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
+        String sourceAccountAddress = walletService.getVerifiedPrimaryWalletPublicKey(userId);
         Escrow escrow = getEscrow(escrowId);
         if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED && 
             escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
             throw new IllegalStateException("Escrow is not in a valid state for release.");
         }
-        return escrowContractGateway.buildReleaseTransaction(escrow);
+        return escrowContractGateway.buildReleaseTransaction(escrow, sourceAccountAddress);
     }
 
     @Transactional
     public UnsignedTransaction buildRefundTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
+        String sourceAccountAddress = walletService.getVerifiedPrimaryWalletPublicKey(userId);
         Escrow escrow = getEscrow(escrowId);
         if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED && 
             escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
             throw new IllegalStateException("Escrow is not in a valid state for refund.");
         }
-        return escrowContractGateway.buildRefundTransaction(escrow);
+        return escrowContractGateway.buildRefundTransaction(escrow, sourceAccountAddress);
     }
 
     @Transactional

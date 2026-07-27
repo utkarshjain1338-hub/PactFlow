@@ -4,7 +4,7 @@ import com.pactflow.application.escrow.EscrowService;
 import com.pactflow.application.escrow.port.UnsignedTransaction;
 
 import com.pactflow.domain.escrow.Escrow;
-import com.pactflow.domain.user.User;
+import com.pactflow.application.auth.dto.UserSummaryDto;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,7 +15,7 @@ import java.util.UUID;
 import com.pactflow.domain.escrow.EscrowRepository;
 
 @RestController
-@RequestMapping("/escrows")
+@RequestMapping("/api/v1/escrows")
 public class EscrowController {
 
     private final EscrowService escrowService;
@@ -28,47 +28,55 @@ public class EscrowController {
 
     @PostMapping
     public ResponseEntity<Escrow> createEscrow(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @RequestParam UUID projectId,
             @RequestParam UUID milestoneId) {
         Escrow escrow = escrowService.createEscrow(projectId, milestoneId);
         return ResponseEntity.ok(escrow);
     }
 
+    @PostMapping("/{id}/initialization-transaction")
+    public ResponseEntity<UnsignedTransaction> buildInitializationTransaction(
+            @AuthenticationPrincipal UserSummaryDto user,
+            @PathVariable UUID id) {
+        UnsignedTransaction tx = escrowService.buildInitializationTransaction(id, user.id());
+        return ResponseEntity.ok(tx);
+    }
+
     @GetMapping
     public ResponseEntity<java.util.List<Escrow>> getEscrows(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @RequestParam UUID projectId) {
         return ResponseEntity.ok(escrowRepository.findByProjectId(projectId));
     }
 
     @PostMapping("/{id}/funding-transaction")
     public ResponseEntity<UnsignedTransaction> buildFundingTransaction(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @PathVariable UUID id) {
-        UnsignedTransaction tx = escrowService.buildFundingTransaction(id, user.getId());
+        UnsignedTransaction tx = escrowService.buildFundingTransaction(id, user.id());
         return ResponseEntity.ok(tx);
     }
 
     @PostMapping("/{id}/release")
     public ResponseEntity<UnsignedTransaction> buildReleaseTransaction(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @PathVariable UUID id) {
-        UnsignedTransaction tx = escrowService.buildReleaseTransaction(id, user.getId());
+        UnsignedTransaction tx = escrowService.buildReleaseTransaction(id, user.id());
         return ResponseEntity.ok(tx);
     }
 
     @PostMapping("/{id}/refund")
     public ResponseEntity<UnsignedTransaction> buildRefundTransaction(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @PathVariable UUID id) {
-        UnsignedTransaction tx = escrowService.buildRefundTransaction(id, user.getId());
+        UnsignedTransaction tx = escrowService.buildRefundTransaction(id, user.id());
         return ResponseEntity.ok(tx);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Escrow> getEscrow(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @PathVariable UUID id) {
         return escrowRepository.findById(id)
                 .map(ResponseEntity::ok)

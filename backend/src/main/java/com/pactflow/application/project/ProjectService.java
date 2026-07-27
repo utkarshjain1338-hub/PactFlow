@@ -1,5 +1,14 @@
 package com.pactflow.application.project;
 
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.pactflow.application.project.dto.CreateProjectRequest;
 import com.pactflow.application.project.dto.ProjectDto;
 import com.pactflow.application.project.dto.UpdateProjectRequest;
@@ -8,14 +17,6 @@ import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.domain.project.ProjectStatus;
 import com.pactflow.domain.wallet.Wallet;
 import com.pactflow.domain.wallet.WalletRepository;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ProjectService {
@@ -34,12 +35,12 @@ public class ProjectService {
     public ProjectDto createProject(UUID clientUserId, CreateProjectRequest request) {
         // Validation handled by Project.create and DTO annotations
         Project project = Project.create(
-                clientUserId,
-                request.getFreelancerUserId(),
-                request.getTitle(),
-                request.getDescription(),
-                request.getTotalBudgetXlm(),
-                request.getDeadline()
+            clientUserId,
+            request.getAssigneeId(),
+            request.getTitle(),
+            request.getDescription(),
+            request.getTotalBudgetXlm(),
+            request.getDeadline()
         );
 
         Project savedProject = projectRepository.save(project);

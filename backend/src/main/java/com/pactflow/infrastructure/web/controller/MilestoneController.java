@@ -6,7 +6,7 @@ import com.pactflow.application.milestone.dto.DeliverableDto;
 import com.pactflow.application.milestone.dto.CreateMilestoneRequest;
 import com.pactflow.application.milestone.dto.MilestoneDto;
 import com.pactflow.application.milestone.dto.UpdateMilestoneRequest;
-import com.pactflow.domain.user.User;
+import com.pactflow.application.auth.dto.UserSummaryDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
+@RequestMapping("/api/v1")
 public class MilestoneController {
 
     private final MilestoneService milestoneService;
@@ -28,19 +29,19 @@ public class MilestoneController {
     @PostMapping("/projects/{projectId}/milestones")
     public ResponseEntity<MilestoneDto> createMilestone(
             @PathVariable UUID projectId,
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @Valid @RequestBody CreateMilestoneRequest request) {
         
-        MilestoneDto milestone = milestoneService.createMilestone(projectId, request, user.getId());
+        MilestoneDto milestone = milestoneService.createMilestone(projectId, request, user.id());
         return ResponseEntity.status(HttpStatus.CREATED).body(milestone);
     }
 
     @GetMapping("/projects/{projectId}/milestones")
     public ResponseEntity<List<MilestoneDto>> getProjectMilestones(
             @PathVariable UUID projectId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserSummaryDto user) {
         
-        List<MilestoneDto> milestones = milestoneService.getMilestonesForProject(projectId, user.getId());
+        List<MilestoneDto> milestones = milestoneService.getMilestonesForProject(projectId, user.id());
         return ResponseEntity.ok(milestones);
     }
 
@@ -49,10 +50,10 @@ public class MilestoneController {
     public ResponseEntity<MilestoneDto> updateMilestone(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @Valid @RequestBody UpdateMilestoneRequest request) {
             
-        MilestoneDto milestone = milestoneService.updateMilestone(projectId, milestoneId, request, user.getId());
+        MilestoneDto milestone = milestoneService.updateMilestone(projectId, milestoneId, request, user.id());
         return ResponseEntity.ok(milestone);
     }
     
@@ -60,9 +61,9 @@ public class MilestoneController {
     public ResponseEntity<Void> deleteMilestone(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserSummaryDto user) {
             
-        milestoneService.deleteMilestone(projectId, milestoneId, user.getId());
+        milestoneService.deleteMilestone(projectId, milestoneId, user.id());
         return ResponseEntity.noContent().build();
     }
 
@@ -70,10 +71,10 @@ public class MilestoneController {
     public ResponseEntity<DeliverableDto> submitDeliverable(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal UserSummaryDto user,
             @Valid @RequestBody CreateDeliverableRequest request) {
             
-        DeliverableDto deliverable = milestoneService.submitDeliverable(projectId, milestoneId, request, user.getId());
+        DeliverableDto deliverable = milestoneService.submitDeliverable(projectId, milestoneId, request, user.id());
         return ResponseEntity.ok(deliverable);
     }
 
@@ -81,9 +82,9 @@ public class MilestoneController {
     public ResponseEntity<Void> markInReview(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserSummaryDto user) {
             
-        milestoneService.markInReview(projectId, milestoneId, user.getId());
+        milestoneService.markInReview(projectId, milestoneId, user.id());
         return ResponseEntity.ok().build();
     }
 
@@ -91,9 +92,9 @@ public class MilestoneController {
     public ResponseEntity<Void> approveMilestone(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserSummaryDto user) {
             
-        milestoneService.approveMilestone(projectId, milestoneId, user.getId());
+        milestoneService.approveMilestone(projectId, milestoneId, user.id());
         return ResponseEntity.ok().build();
     }
 
@@ -101,9 +102,9 @@ public class MilestoneController {
     public ResponseEntity<Void> rejectMilestone(
             @PathVariable UUID projectId,
             @PathVariable UUID milestoneId,
-            @AuthenticationPrincipal User user) {
+            @AuthenticationPrincipal UserSummaryDto user) {
             
-        milestoneService.rejectMilestone(projectId, milestoneId, user.getId());
+        milestoneService.rejectMilestone(projectId, milestoneId, user.id());
         return ResponseEntity.ok().build();
     }
 }

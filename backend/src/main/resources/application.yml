@@ -217,9 +217,11 @@ logging:
 pactflow:
   stellar:
     network: ${STELLAR_NETWORK:testnet}
+    network-passphrase: ${STELLAR_NETWORK_PASSPHRASE:Test SDF Network ; September 2015}
     horizon-url: ${HORIZON_URL:https://horizon-testnet.stellar.org}
     soroban-rpc-url: ${SOROBAN_RPC_URL:https://soroban-testnet.stellar.org}
-    contract-id: ${PACTFLOW_CONTRACT_ID:}
+    contract-id: ${PACTFLOW_CONTRACT_ID:CB5SH4Q4USZWMYCNXIX2IBBUCTS3HNO5GE4IJI6FKYJ25Q3HVYRUGNXL}
+    xlm-token-id: ${XLM_TOKEN_ID:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC}
   security:
     jwt:
       secret-key: ${JWT_SECRET_KEY:dev-only-change-in-production-must-be-256-bits-minimum}

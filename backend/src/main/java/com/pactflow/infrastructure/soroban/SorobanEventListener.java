@@ -1,8 +1,11 @@
 package com.pactflow.infrastructure.soroban;
 
+import com.pactflow.infrastructure.config.PactFlowProperties;
 import com.pactflow.application.escrow.EscrowService;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.stellar.sdk.SorobanServer;
+import org.stellar.sdk.responses.sorobanrpc.GetTransactionResponse;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -10,36 +13,69 @@ import org.springframework.stereotype.Service;
  * Service responsible for polling Soroban RPC for contract events
  * and synchronizing the blockchain state with our internal database state.
  */
-import org.springframework.context.annotation.Lazy;
 
 @Service
-@Lazy
-@RequiredArgsConstructor
 @Slf4j
 public class SorobanEventListener {
 
     private final EscrowService escrowService;
     private final com.pactflow.domain.blockchain.BlockchainTransactionRepository transactionRepository;
+    private final SorobanServer sorobanServer;
 
-    @Scheduled(fixedDelayString = "${stellar.sync.delay:5000}", initialDelayString = "${stellar.sync.initial-delay:15000}")
+    /**
+     * Creates a listener backed by the configured Soroban RPC endpoint.
+     */
+    public SorobanEventListener(
+            EscrowService escrowService,
+            com.pactflow.domain.blockchain.BlockchainTransactionRepository transactionRepository,
+            PactFlowProperties pactFlowProperties) {
+        this.escrowService = escrowService;
+        this.transactionRepository = transactionRepository;
+        this.sorobanServer = new SorobanServer(
+                pactFlowProperties.getStellar().getSorobanRpcUrl());
+    }
+
+        /**
+         * Polls Soroban RPC for pending transactions and applies confirmed status updates.
+         */
+        @Scheduled(
+            fixedDelayString = "${pactflow.ingestion.poll-interval-seconds:3}000",
+            initialDelayString = "15000")
     public void pollForEvents() {
-        // Mock polling: find PENDING transactions and confirm them after a few seconds
-        var pendingTxs = transactionRepository.findByStatus(com.pactflow.domain.blockchain.BlockchainTransactionStatus.PENDING);
+        var pendingTxs = transactionRepository.findByStatus(
+            com.pactflow.domain.blockchain.BlockchainTransactionStatus.PENDING);
         
         for (var tx : pendingTxs) {
-            // Confirm transactions that are older than 3 seconds
-            if (tx.getCreatedAt().plusSeconds(3).isBefore(java.time.OffsetDateTime.now())) {
-                log.info("Mocking Soroban confirmation for transaction hash: {}", tx.getTransactionHash());
-                try {
-                    escrowService.handleTransactionConfirmed(
-                            tx.getTransactionHash(),
-                            System.currentTimeMillis() / 1000,
-                            java.time.OffsetDateTime.now()
-                    );
-                } catch (Exception e) {
-                    log.error("Error confirming transaction {}", tx.getTransactionHash(), e);
+            try {
+                GetTransactionResponse response = sorobanServer.getTransaction(tx.getTransactionHash());
+                if (response == null || response.getStatus() == null) {
+                    continue;
                 }
+
+                switch (response.getStatus()) {
+                    case SUCCESS -> escrowService.handleTransactionConfirmed(
+                            tx.getTransactionHash(),
+                            response.getLedger(),
+                            java.time.OffsetDateTime.now());
+                    case FAILED -> escrowService.handleTransactionFailed(
+                            tx.getTransactionHash(),
+                            "Soroban RPC reported FAILED");
+                    case NOT_FOUND -> log.debug(
+                        "Soroban transaction not found yet: {}",
+                        tx.getTransactionHash());
+                    default -> log.debug(
+                        "Soroban transaction {} returned unexpected status {}",
+                        tx.getTransactionHash(),
+                        response.getStatus());
+                }
+            } catch (Exception e) {
+                log.error("Error polling Soroban transaction {}", tx.getTransactionHash(), e);
             }
         }
+    }
+
+    @PreDestroy
+    public void close() throws Exception {
+        sorobanServer.close();
     }
 }

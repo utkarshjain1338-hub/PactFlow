@@ -3,6 +3,7 @@ package com.pactflow.application.project.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,6 +21,9 @@ public class ProjectDto {
     private BigDecimal totalBudgetXlm;
     private String assetCode;
     private LocalDate deadline;
+    @JsonProperty("isDeleted")
     private boolean isDeleted;
+    
+    @JsonProperty("isEscrowReady")
     private boolean isEscrowReady;
 }

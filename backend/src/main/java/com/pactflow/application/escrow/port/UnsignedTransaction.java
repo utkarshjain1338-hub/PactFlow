@@ -1,7 +1,7 @@
 package com.pactflow.application.escrow.port;
 
 public record UnsignedTransaction(
-        String xdr,
+        String transactionXdr,
         String networkPassphrase,
         Long fee,
         Long validUntilLedger,
