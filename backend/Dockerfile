@@ -59,8 +59,7 @@ EXPOSE 8081
 # - Virtual threads: enabled via spring.threads.virtual.enabled=true (no JVM flag needed)
 # - G1GC: default in JDK 21, optimal for most workloads
 # - ExitOnOutOfMemoryError: fail-fast on OOM rather than thrashing
-ENV JAVA_OPTS="-XX:UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 \
     -XX:+ExitOnOutOfMemoryError \
     -Djava.security.egd=file:/dev/./urandom \
     -Dfile.encoding=UTF-8"

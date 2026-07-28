@@ -38,4 +38,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  org: "placeholder-org",
+  project: "placeholder-project",
+  sentryUrl: "https://sentry.io/",
+  silent: true, // Suppresses all logs
+});

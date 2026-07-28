@@ -63,6 +63,7 @@ dependencies {
 
     // ─── Metrics ────────────────────────────────────────────────────────────
     implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.12.1'
 
     // ─── Blockchain ─────────────────────────────────────────────────────────
     implementation 'network.lightsail:stellar-sdk:4.0.0'

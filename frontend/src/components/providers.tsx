@@ -16,6 +16,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/toast";
 import { WalletKitProvider } from "@/contexts/wallet-kit-context";
 import { AuthProvider } from "@/contexts/auth-context";
+import { PostHogProvider } from "@/providers/posthog-provider";
 
 // ── QueryClient configuration ──
 function makeQueryClient() {
@@ -70,11 +71,13 @@ export function Providers({ children }: ProvidersProps) {
         enableSystem={false}
         disableTransitionOnChange
       >
-        <AuthProvider>
-          <WalletKitProvider>
-            {children}
-          </WalletKitProvider>
-        </AuthProvider>
+        <PostHogProvider>
+          <AuthProvider>
+            <WalletKitProvider>
+              {children}
+            </WalletKitProvider>
+          </AuthProvider>
+        </PostHogProvider>
 
         {/* Toast notification system */}
         <Toaster />
