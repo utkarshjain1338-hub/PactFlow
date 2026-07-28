@@ -96,6 +96,14 @@ public class AuthController {
         return ResponseEntity.ok(authService.resetPassword(request));
     }
 
+    @PostMapping("/update-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<MessageResponse> updatePassword(
+            @Valid @RequestBody final com.pactflow.application.auth.dto.UpdatePasswordRequest request,
+            @AuthenticationPrincipal final Object principal) {
+        return ResponseEntity.ok(authService.updatePassword(request, PrincipalExtractor.extractUserId(principal)));
+    }
+
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserMeResponse> getMe(@AuthenticationPrincipal final Object principal) {

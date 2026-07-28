@@ -290,6 +290,31 @@ public class AuthService {
     }
 
     /**
+     * Updates password for authenticated user.
+     *
+     * @param request update password parameters
+     * @param userId authenticated user ID
+     * @return confirmation message response
+     */
+    @Transactional
+    public MessageResponse updatePassword(final com.pactflow.application.auth.dto.UpdatePasswordRequest request, final UUID userId) {
+        final User user = findUserOrThrow(userId);
+        
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new com.pactflow.application.exception.InvalidCredentialsException("Current password is incorrect");
+        }
+        
+        user.changePassword(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        sessionRepository.invalidateAllSessionsForUser(userId);
+        
+        // Lock wallet operations for 24 hours after a password reset/change for security
+        redisTemplate.opsForValue().set("wallet:lock:" + userId.toString(), "LOCKED", Duration.ofHours(24));
+        
+        return new MessageResponse("Password successfully updated. Other sessions have been signed out.");
+    }
+
+    /**
      * Retrieves current authenticated user details.
      *
      * @param userId user ID from security context

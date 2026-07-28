@@ -28,20 +28,6 @@ export default function SettingsLayout({
             Security & Access
           </Link>
           <Link
-            href="/settings/notifications"
-            className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors"
-          >
-            <Bell size={16} />
-            Notifications
-          </Link>
-          <Link
-            href="/settings/keys"
-            className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors"
-          >
-            <Key size={16} />
-            API Keys
-          </Link>
-          <Link
             href="/billing"
             className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors"
           >
