@@ -11,12 +11,13 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { type Project, type Milestone } from "@/types/domain";
 
 export default function ProjectDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const router = useRouter();
   const { wallet, signTransaction } = useWalletKit();
   const queryClient = useQueryClient();
 
@@ -46,7 +47,7 @@ export default function ProjectDetailPage() {
     queryFn: () => apiClient.get("/users/me/wallets"),
   });
 
-  const [freelancerIdInput, setFreelancerIdInput] = useState("");
+  const [freelancerEmailInput, setFreelancerEmailInput] = useState("");
   const [submitFormOpenId, setSubmitFormOpenId] = useState<string | null>(null);
   const [deliverableData, setDeliverableData] = useState({
     title: "",
@@ -90,8 +91,8 @@ export default function ProjectDetailPage() {
 
   // Mutations
   const assignFreelancerMutation = useMutation({
-    mutationFn: (freelancerId: string) => 
-      apiClient.patch(`/projects/${id}`, { freelancerUserId: freelancerId }),
+    mutationFn: (freelancerEmail: string) => 
+      apiClient.patch(`/projects/${id}`, { freelancerEmail: freelancerEmail }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project", id] });
       toast.success("Freelancer assigned successfully");
@@ -125,20 +126,24 @@ export default function ProjectDetailPage() {
     }
   });
 
-  const createEscrowMutation = useMutation({
-    mutationFn: async (milestoneId: string) => {
-      // Step 1: Create the escrow record in the DB
-      const escrow = await apiClient.post(`/escrows?projectId=${id}&milestoneId=${milestoneId}`) as any;
+  const initializeEscrowMutation = useMutation({
+    mutationFn: async ({ milestoneId, existingEscrowId }: { milestoneId: string, existingEscrowId?: string }) => {
+      let escrowId = existingEscrowId;
+      if (!escrowId) {
+        // Step 1: Create the escrow record in the DB
+        const escrow = await apiClient.post(`/escrows?projectId=${id}&milestoneId=${milestoneId}`) as any;
+        escrowId = escrow.id;
+      }
 
       // Step 2: Build the initialize() Soroban transaction XDR
-      const unsignedTx = await apiClient.post(`/escrows/${escrow.id}/initialization-transaction`) as any;
+      const unsignedTx = await apiClient.post(`/escrows/${escrowId}/initialization-transaction`) as any;
 
       // Step 3: Sign with Freighter wallet
       const signedXdr = await signTransaction(unsignedTx.transactionXdr);
 
       // Step 4: Broadcast to Stellar Testnet
       await apiClient.post("/transactions", {
-        escrowId: escrow.id,
+        escrowId: escrowId,
         signedXdr,
         operation: "INITIALIZE"
       });
@@ -160,6 +165,17 @@ export default function ProjectDetailPage() {
     },
     onError: (error: any) => {
       toast.error("Failed to activate project", { description: error.message || "Unknown error" });
+    }
+  });
+
+  const deleteProjectMutation = useMutation({
+    mutationFn: () => apiClient.delete(`/projects/${id}`),
+    onSuccess: () => {
+      toast.success("Project deleted successfully");
+      router.push("/projects");
+    },
+    onError: (error: any) => {
+      toast.error("Failed to delete project", { description: error.message || "Unknown error" });
     }
   });
 
@@ -308,14 +324,16 @@ export default function ProjectDetailPage() {
                         <div className="mt-2 text-xs font-mono text-text-tertiary">{milestone.amountXlm} XLM</div>
                       </div>
                       <div>
-                        {!isEscrowCreated ? (
+                        {!isEscrowCreated || escrow?.status === "CREATED" ? (
                           isClientUser && project.isEscrowReady ? (
                             <Button 
                               size="sm" 
-                              onClick={() => createEscrowMutation.mutate(milestone.id)}
-                              disabled={createEscrowMutation.isPending}
+                              onClick={() => initializeEscrowMutation.mutate({ milestoneId: milestone.id, existingEscrowId: escrow?.id })}
+                              disabled={initializeEscrowMutation.isPending}
                             >
-                              Initialize Escrow
+                              {initializeEscrowMutation.isPending && initializeEscrowMutation.variables?.milestoneId === milestone.id 
+                                ? "Processing..." 
+                                : escrow?.status === "CREATED" ? "Retry Initialize" : "Initialize Escrow"}
                             </Button>
                           ) : (
                             <Badge variant="secondary">Pending Escrow</Badge>
@@ -349,7 +367,7 @@ export default function ProjectDetailPage() {
                             {isClientUser && escrow?.status === "UNDER_REVIEW" && (
                               <Button
                                 size="sm"
-                                variant="success"
+                                variant="primary"
                                 onClick={() => approveMilestoneMutation.mutate(milestone.id)}
                                 disabled={approveMilestoneMutation.isPending}
                               >
@@ -446,14 +464,28 @@ export default function ProjectDetailPage() {
                 <div className="flex items-center gap-2">
                   <Badge variant={project.status === "ACTIVE" ? "success" : "default"}>{project.status}</Badge>
                   {isClientUser && project.status === "DRAFT" && (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={() => activateProjectMutation.mutate()}
-                      disabled={activateProjectMutation.isPending}
-                    >
-                      Activate Project
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => activateProjectMutation.mutate()}
+                        disabled={activateProjectMutation.isPending}
+                      >
+                        Activate Project
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="danger" 
+                        onClick={() => {
+                          if (window.confirm("Are you sure you want to delete this project?")) {
+                            deleteProjectMutation.mutate();
+                          }
+                        }}
+                        disabled={deleteProjectMutation.isPending}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -534,15 +566,15 @@ export default function ProjectDetailPage() {
                       <div className="text-xs text-text-tertiary">Not assigned yet. Assign now:</div>
                       <div className="flex gap-2">
                         <Input 
-                          placeholder="Freelancer User ID (UUID)" 
-                          value={freelancerIdInput}
-                          onChange={(e) => setFreelancerIdInput(e.target.value)}
+                          placeholder="Freelancer Email" 
+                          value={freelancerEmailInput}
+                          onChange={(e) => setFreelancerEmailInput(e.target.value)}
                           className="h-8 text-xs"
                         />
                         <Button 
                           size="sm" 
-                          disabled={!freelancerIdInput || assignFreelancerMutation.isPending}
-                          onClick={() => assignFreelancerMutation.mutate(freelancerIdInput)}
+                          disabled={!freelancerEmailInput || assignFreelancerMutation.isPending}
+                          onClick={() => assignFreelancerMutation.mutate(freelancerEmailInput)}
                         >
                           Assign
                         </Button>

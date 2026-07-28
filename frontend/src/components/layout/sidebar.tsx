@@ -94,7 +94,6 @@ export function Sidebar() {
           badge: 2,
           badgeVariant: "destructive",
         },
-        { id: "settings", label: "Settings", href: "/settings", icon: Settings },
       ],
     },
   ];
@@ -271,16 +270,6 @@ export function Sidebar() {
             )}
           </AnimatePresence>
         </div>
-
-        {!collapsed && (
-          <Link
-            href="/settings"
-            aria-label="Account Settings"
-            className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-2 transition-colors shrink-0"
-          >
-            <Settings size={15} />
-          </Link>
-        )}
       </div>
 
       {/* Collapse Toggle Pill Button */}

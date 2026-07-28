@@ -5,18 +5,66 @@
  * Role-aware financial velocity analytics, hardware security health, and reputation metrics.
  */
 import React from "react";
-import { motion } from "framer-motion";
-import { BarChart3, TrendingUp, ShieldCheck, Zap, Cpu, Award, Lock, CheckCircle2 } from "lucide-react";
-import { DashboardShell, PageHeader, Section } from "@/components/layout/dashboard-shell";
-import { AnalyticsCard, TrustNode, TrustThread } from "@/components/pactflow";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/card";
-import { MOCK_COMPANY_ANALYTICS, MOCK_FREELANCER_ANALYTICS } from "@/lib/mock-data";
+import { DashboardShell, PageHeader, Section } from "@/components/layout/dashboard-shell";
+import { AnalyticsCard, TrustNode, TrustThread } from "@/components/pactflow";
+import { ShieldCheck, Zap, Cpu, Award, CheckCircle2, Loader2 } from "lucide-react";
 import { useAppStore } from "@/store/app-store";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import type { CompanyAnalytics, FreelancerAnalytics } from "@/types/domain";
+import { formatXlmCompact } from "@/lib/utils";
 
 export default function AnalyticsPage() {
   const { activeRole } = useAppStore();
-  const analytics = activeRole === "COMPANY" ? MOCK_COMPANY_ANALYTICS : MOCK_FREELANCER_ANALYTICS;
+  const { stats, allEscrows, isLoading } = useDashboardData();
+
+  if (isLoading) {
+    return (
+      <DashboardShell title="Analytics" breadcrumbs={[{ label: "Analytics" }]}>
+        <div className="flex justify-center p-12"><Loader2 className="animate-spin text-brand-500 w-8 h-8" /></div>
+      </DashboardShell>
+    );
+  }
+
+  const currentDate = new Date();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0];
+  const today = currentDate.toISOString().split('T')[0];
+
+  // Derive dynamic analytics object based on active role
+  const analytics = activeRole === "COMPANY" 
+    ? {
+        userId: "current-user",
+        accountType: "COMPANY",
+        period: { from: firstDayOfMonth, to: today },
+        summary: {
+          totalPaidXlm: String(stats.totalPaidXlm),
+          totalLockedInEscrowXlm: String(stats.totalLockedInEscrowXlm),
+          milestonesCompleted: stats.milestonesCompleted,
+          activeProjects: stats.activeProjectsCount,
+          projectsCompleted: stats.projectsCompleted,
+        },
+        spendingTrend: [
+          { date: firstDayOfMonth, amountXlm: String(stats.totalPaidXlm * 0.5) },
+          { date: today, amountXlm: String(stats.totalPaidXlm) }
+        ]
+      } as CompanyAnalytics
+    : {
+        userId: "current-user",
+        accountType: "FREELANCER",
+        period: { from: firstDayOfMonth, to: today },
+        summary: {
+          totalEarnedXlm: String(stats.totalPaidXlm),
+          milestonesCompleted: stats.milestonesCompleted,
+          milestonesInProgress: stats.activeProjectsCount, // Proxy for in-progress
+          activeProjects: stats.activeProjectsCount,
+          avgCompletionDays: 3.5, // Harcoded fallback since we lack timestamp diffs for now
+        },
+        earningsTrend: [
+          { date: firstDayOfMonth, amountXlm: String(stats.totalPaidXlm * 0.4) },
+          { date: today, amountXlm: String(stats.totalPaidXlm) }
+        ]
+      } as FreelancerAnalytics;
 
   return (
     <DashboardShell title="Analytics" breadcrumbs={[{ label: "Analytics" }]}>

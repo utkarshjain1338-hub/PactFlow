@@ -1,4 +1,5 @@
 "use client";
+import { formatXlmCompact } from "@/lib/utils";
 
 /**
  * PactFlow — Escrows & Vaults Page
@@ -6,7 +7,7 @@
  */
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Lock, Unlock, Cpu, Milestone as MilestoneIcon, Layers } from "lucide-react";
+import { Shield, Lock, Unlock, Cpu, Milestone as MilestoneIcon, Layers, Loader2 } from "lucide-react";
 import { DashboardShell, PageHeader, Section } from "@/components/layout/dashboard-shell";
 import {
   EscrowVault,
@@ -15,21 +16,35 @@ import {
   TrustNode,
   TrustThread,
 } from "@/components/pactflow";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { MOCK_ESCROWS, MOCK_MILESTONES } from "@/lib/mock-data";
 import { useAppStore } from "@/store/app-store";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 type ViewTab = "VAULTS" | "MILESTONES" | "GRAPH";
 
 export default function EscrowsPage() {
   const [activeTab, setActiveTab] = useState<ViewTab>("VAULTS");
   const { activeRole } = useAppStore();
+  const { allEscrows, allMilestones, isLoading } = useDashboardData();
 
   const handleAction = (milestoneId: string, actionType: "FUND" | "SUBMIT" | "RELEASE") => {
-    // Mock action callback handler
+    // Mock action callback handler - realistically this would trigger API or contract calls
     console.log(`Action [${actionType}] triggered on milestone [${milestoneId}]`);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardShell title="Escrows & Vaults" breadcrumbs={[{ label: "Escrows" }]}>
+        <div className="flex justify-center p-12"><Loader2 className="animate-spin text-brand-500 w-8 h-8" /></div>
+      </DashboardShell>
+    );
+  }
+
+  // Derive top 2 escrows for the status cards
+  const activeEscrows = allEscrows.filter(e => e.status !== "RELEASED" && e.status !== "REFUNDED");
+  const releasedEscrows = allEscrows.filter(e => e.status === "RELEASED");
+  
+  const sampleActive = activeEscrows[0];
+  const sampleReleased = releasedEscrows[0];
 
   return (
     <DashboardShell title="Escrows & Vaults" breadcrumbs={[{ label: "Escrows" }]}>
@@ -51,18 +66,18 @@ export default function EscrowsPage() {
         <Section title="Escrow Security Overview">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <EscrowStatusCard
-              contractId="C...8E1"
-              status="ACTIVE"
-              lockedAmountXlm="150.0000000"
-              releasedAmountXlm="0.0000000"
-              timelockExpiry="2026-08-01T00:00:00Z"
+              contractId={sampleActive ? sampleActive.id.substring(0, 8) + "..." : "C...8E1"}
+              status={sampleActive ? sampleActive.status : "ACTIVE"}
+              lockedAmountXlm={sampleActive ? String(sampleActive.fundedAmount || 0) : "0"}
+              releasedAmountXlm="0"
+              timelockExpiry={sampleActive?.createdAt || "2026-08-01T00:00:00Z"}
               securityTier="LEVEL_4"
             />
             <EscrowStatusCard
-              contractId="C...8E0"
-              status="RELEASED"
-              lockedAmountXlm="0.0000000"
-              releasedAmountXlm="100.0000000"
+              contractId={sampleReleased ? sampleReleased.id.substring(0, 8) + "..." : "C...8E0"}
+              status={sampleReleased ? sampleReleased.status : "RELEASED"}
+              lockedAmountXlm="0"
+              releasedAmountXlm={sampleReleased ? String(sampleReleased.fundedAmount || 0) : "0"}
               timelockExpiry={null}
               securityTier="LEVEL_4"
             />
@@ -81,7 +96,7 @@ export default function EscrowsPage() {
               }`}
             >
               <Lock size={14} />
-              <span>Soroban Vaults ({MOCK_ESCROWS.length})</span>
+              <span>Soroban Vaults ({allEscrows.length})</span>
             </button>
 
             <button
@@ -93,7 +108,7 @@ export default function EscrowsPage() {
               }`}
             >
               <MilestoneIcon size={14} />
-              <span>Milestones ({MOCK_MILESTONES.length})</span>
+              <span>Milestones ({allMilestones.length})</span>
             </button>
 
             <button
@@ -121,7 +136,7 @@ export default function EscrowsPage() {
               transition={{ duration: 0.2 }}
               className="space-y-5"
             >
-              {MOCK_ESCROWS.map((escrow, index) => (
+              {allEscrows.map((escrow, index) => (
                 <EscrowVault
                   key={escrow.id}
                   escrow={escrow}
@@ -141,7 +156,7 @@ export default function EscrowsPage() {
               transition={{ duration: 0.2 }}
             >
               <MilestoneTimeline
-                milestones={MOCK_MILESTONES}
+                milestones={allMilestones}
                 userRole={activeRole}
                 onAction={handleAction}
               />
@@ -178,18 +193,18 @@ export default function EscrowsPage() {
                 <TrustThread
                   state="LOCKED"
                   orientation="horizontal"
-                  label="150 XLM Locked"
-                  amountXlm="150.0000000"
+                  label={`${allEscrows.length > 0 ? formatXlmCompact(allEscrows.reduce((sum, e) => sum + (e.fundedAmount || 0), 0)) : "0"} Locked`}
+                  amountXlm={String(allEscrows.reduce((sum, e) => sum + (e.fundedAmount || 0), 0))}
                 />
 
                 <TrustNode
                   id="escrow-node"
                   title="pactflow_escrow"
-                  subtitle="CCV7...C8E1"
+                  subtitle={allEscrows.length > 0 ? allEscrows[0].id.substring(0,8) + "..." : "CCV7...C8E1"}
                   nodeType="ESCROW_CONTRACT"
                   state="ACTIVE"
                   badgeLabel="2-of-3 Multisig"
-                  amountXlm="150.0000000"
+                  amountXlm={String(allEscrows.reduce((sum, e) => sum + (e.fundedAmount || 0), 0))}
                   className="w-full sm:w-auto flex-1 border-brand-500/50"
                 />
 

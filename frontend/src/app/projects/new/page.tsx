@@ -28,16 +28,16 @@ import * as z from "zod";
 const milestoneSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(200),
   description: z.string().max(3000).optional(),
-  amountXlm: z.coerce.number().min(0.0000001, "Amount must be positive"),
+  amountXlm: z.preprocess((val) => Number(val), z.number().min(0.0000001, "Amount must be positive")),
   dueDate: z.string().min(1, "Due date is required"),
 });
 
 const projectSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters").max(200),
   description: z.string().max(5000).optional(),
-  totalBudgetXlm: z.coerce.number().min(0.0000001, "Budget must be positive"),
+  totalBudgetXlm: z.preprocess((val) => Number(val), z.number().min(0.0000001, "Budget must be positive")),
   deadline: z.string().min(1, "Deadline is required"),
-  assigneeId: z.string().uuid("Must be a valid User ID (UUID)").optional().or(z.literal('')),
+  assigneeEmail: z.string().email("Must be a valid email").optional().or(z.literal('')),
   milestones: z.array(milestoneSchema).min(1, "At least one milestone is required"),
 });
 
@@ -54,13 +54,13 @@ export default function NewProjectPage() {
     watch,
     formState: { errors },
   } = useForm<ProjectFormValues>({
-    resolver: zodResolver(projectSchema),
+    resolver: zodResolver(projectSchema) as any,
     defaultValues: {
       title: "",
       description: "",
       totalBudgetXlm: 0,
       deadline: "",
-      assigneeId: "",
+      assigneeEmail: "",
       milestones: [
         {
           title: "Initial Milestone",
@@ -87,7 +87,7 @@ export default function NewProjectPage() {
         description: data.description,
         totalBudgetXlm: data.totalBudgetXlm,
         deadline: data.deadline,
-        ...(data.assigneeId && { assigneeId: data.assigneeId }),
+        ...(data.assigneeEmail && { assigneeEmail: data.assigneeEmail }),
       };
 
       const project = await apiClient.post<Project>("/projects", projectPayload);
@@ -200,9 +200,9 @@ export default function NewProjectPage() {
                 Assign Freelancer (Optional)
               </label>
               <Input
-                {...register("assigneeId")}
-                placeholder="Enter freelancer User ID to assign them immediately"
-                errorText={errors.assigneeId?.message}
+                {...register("assigneeEmail")}
+                placeholder="freelancer@example.com"
+                errorText={errors.assigneeEmail?.message}
               />
               <p className="text-xs text-text-tertiary mt-1.5">
                 Leave blank to create a draft project that you can assign later.

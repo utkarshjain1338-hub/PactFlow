@@ -17,6 +17,7 @@ import {
   CircleDot,
   Zap,
   Plus,
+  Loader2,
 } from "lucide-react";
 import { DashboardShell, PageHeader, Section } from "@/components/layout/dashboard-shell";
 import { StatCard } from "@/components/ui/card";
@@ -25,51 +26,48 @@ import { MilestoneStatusBadge, ProjectStatusBadge } from "@/components/ui/typogr
 import { EmptyState } from "@/components/ui/empty-state";
 import { ActivityTimeline } from "@/components/pactflow";
 import {
-  MOCK_PROJECTS,
-  MOCK_MILESTONES,
-  MOCK_ACTIVITY,
-  MOCK_COMPANY_ANALYTICS,
-} from "@/lib/mock-data";
-import {
   cn,
   formatXlmCompact,
   timeAgo,
-  getInitials,
-  getProgress,
 } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { CompanyAnalytics } from "@/types/domain";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
+import { ActivityEvent } from "@/types/domain";
 
 // ── KPI Stats ──
 function KPIGrid() {
-  const analytics = MOCK_COMPANY_ANALYTICS as CompanyAnalytics;
+  const { stats, isLoading } = useDashboardData();
 
-  const stats = [
+  if (isLoading) {
+    return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-brand-500" /></div>;
+  }
+
+  const kpis = [
     {
       label: "Total Paid",
-      value: formatXlmCompact(analytics.summary.totalPaidXlm),
+      value: formatXlmCompact(stats.totalPaidXlm),
       subValue: "lifetime payments",
       icon: <TrendingUp size={20} />,
-      trend: { value: "+12% this month", direction: "up" as const },
+      trend: { value: "Up to date", direction: "up" as const },
     },
     {
       label: "In Escrow",
-      value: formatXlmCompact(analytics.summary.totalLockedInEscrowXlm),
+      value: formatXlmCompact(stats.totalLockedInEscrowXlm),
       subValue: "funds locked",
       icon: <Wallet size={20} />,
-      trend: { value: "2 active contracts", direction: "neutral" as const },
+      trend: { value: "Active", direction: "neutral" as const },
     },
     {
       label: "Active Projects",
-      value: String(analytics.summary.activeProjects),
-      subValue: `${analytics.summary.projectsCompleted} completed`,
+      value: String(stats.activeProjectsCount),
+      subValue: `${stats.projectsCompleted} completed`,
       icon: <FolderKanban size={20} />,
-      trend: { value: "+1 this week", direction: "up" as const },
+      trend: { value: "Live", direction: "up" as const },
     },
     {
       label: "Milestones Done",
-      value: String(analytics.summary.milestonesCompleted),
+      value: String(stats.milestonesCompleted),
       subValue: "total completed",
       icon: <Milestone size={20} />,
       trend: { value: "On track", direction: "up" as const },
@@ -78,7 +76,7 @@ function KPIGrid() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {stats.map((stat, i) => (
+      {kpis.map((stat, i) => (
         <StatCard key={stat.label} {...stat} animate animateDelay={i * 0.05} />
       ))}
     </div>
@@ -88,9 +86,11 @@ function KPIGrid() {
 // ── Active Projects List ──
 function ProjectsList() {
   const router = useRouter();
-  const activeProjects = MOCK_PROJECTS.filter(
-    (p) => p.status === "ACTIVE" || p.status === "DRAFT"
-  );
+  const { activeProjects, isLoading } = useDashboardData();
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-brand-500" /></div>;
+  }
 
   if (activeProjects.length === 0) {
     return (
@@ -138,7 +138,6 @@ function ProjectsList() {
                 <ArrowRight size={14} />
               </Link>
             </div>
-            {/* Progress omitted for brevity */}
           </motion.div>
         );
       })}
@@ -148,9 +147,11 @@ function ProjectsList() {
 
 // ── Pending Milestones ──
 function PendingMilestones() {
-  const pending = MOCK_MILESTONES.filter(
-    (m) => m.status === "SUBMITTED" || m.status === "FUNDED" || m.status === "IN_PROGRESS"
-  );
+  const { pendingMilestones: pending, isLoading } = useDashboardData();
+
+  if (isLoading) {
+    return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-brand-500" /></div>;
+  }
 
   if (pending.length === 0) {
     return (
@@ -200,20 +201,74 @@ function PendingMilestones() {
 
 // ── Activity Feed ──
 function ActivityFeed() {
-  if (MOCK_ACTIVITY.length === 0) {
+  const { allEscrows, isLoading } = useDashboardData();
+  
+  if (isLoading) {
+    return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-brand-500" /></div>;
+  }
+
+  // Derive activity from escrows since we don't have a global transactions endpoint
+  // 3) Derived Recent Activity feed (Mocked via Escrow logs)
+  const recentEvents: ActivityEvent[] = allEscrows
+    .flatMap((e) => {
+      const evts: ActivityEvent[] = [];
+      
+      const actorMock = {
+        id: "sys",
+        email: "system@pactflow.com",
+        displayName: "System",
+        role: "COMPANY" as any,
+        isEmailVerified: true,
+        avatarUrl: null,
+        accountType: "COMPANY" as any
+      };
+
+      if (e.fundedAt) {
+        evts.push({
+          id: `${e.id}-funded`,
+          eventType: "MILESTONE_FUNDED",
+          summary: `Funded ${e.fundedAmount} XLM in escrow`,
+          actor: actorMock,
+          project: { id: e.projectId, title: "Escrow Contract" },
+          milestone: null,
+          occurredAt: new Date(e.fundedAt).toISOString(),
+          metadata: { escrowId: e.id }
+        });
+      }
+      if (e.releasedAt) {
+        evts.push({
+          id: `${e.id}-released`,
+          eventType: "PAYMENT_RELEASED",
+          summary: `Released ${e.fundedAmount} XLM from escrow`,
+          actor: actorMock,
+          project: { id: e.projectId, title: "Escrow Contract" },
+          milestone: null,
+          occurredAt: new Date(e.releasedAt).toISOString(),
+          metadata: { escrowId: e.id }
+        });
+      }
+      return evts;
+    })
+    .sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())
+    .slice(0, 5);
+
+  if (recentEvents.length === 0) {
     return (
       <EmptyState title="No recent activity" size="sm" illustration="default" />
     );
   }
 
-  return <ActivityTimeline events={MOCK_ACTIVITY} />;
+  return <ActivityTimeline events={recentEvents} />;
 }
 
 // ── Welcome Banner ──
 function WelcomeBanner() {
+  const { pendingMilestones } = useDashboardData();
   const hour = new Date().getHours();
   const greeting =
     hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+  const submittedCount = pendingMilestones.filter(m => m.status === "SUBMITTED").length;
 
   return (
     <motion.div
@@ -248,11 +303,11 @@ function WelcomeBanner() {
         </div>
         <div>
           <h2 className="text-base font-bold text-text-primary">
-            {greeting}, Stellar Ventures 👋
+            {greeting} 👋
           </h2>
           <p className="text-sm text-text-secondary mt-0.5">
             You have{" "}
-            <span className="text-yellow-400 font-medium">1 milestone awaiting your review</span>.{" "}
+            <span className="text-yellow-400 font-medium">{submittedCount} milestone(s) awaiting your review</span>.{" "}
             Review and approve to release payment.
           </p>
         </div>
@@ -262,9 +317,11 @@ function WelcomeBanner() {
         <Button size="sm" variant="primary">
           Review Submission
         </Button>
-        <Button size="sm" variant="ghost">
-          View All Milestones
-        </Button>
+        <Link href="/projects">
+          <Button size="sm" variant="ghost">
+            View All Projects
+          </Button>
+        </Link>
       </div>
     </motion.div>
   );

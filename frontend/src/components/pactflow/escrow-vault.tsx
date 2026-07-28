@@ -130,7 +130,7 @@ export function EscrowVault({
         </div>
 
         <Badge variant={visuals.badgeVariant} size="md" className="self-start sm:self-auto font-sans">
-          {escrowStatus.replace("_", " ")}
+          {(escrowStatus || "UNKNOWN").replace("_", " ")}
         </Badge>
       </div>
 

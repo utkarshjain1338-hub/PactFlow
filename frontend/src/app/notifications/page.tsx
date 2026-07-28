@@ -4,27 +4,91 @@
  * PactFlow — Notifications Center Page
  * Manage system alerts, milestone submission reviews, and payment release confirmations.
  */
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, CheckCheck, Trash2, ShieldAlert, Send, Unlock, CheckCircle2, ArrowRight, Clock } from "lucide-react";
+import { Bell, CheckCheck, Trash2, ShieldAlert, Send, Unlock, CheckCircle2, ArrowRight, Clock, Loader2 } from "lucide-react";
 import { DashboardShell, PageHeader, Section } from "@/components/layout/dashboard-shell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { MOCK_NOTIFICATIONS } from "@/lib/mock-data";
 import { timeAgo } from "@/lib/utils";
 import { type Notification, type NotificationType } from "@/types/domain";
+import { useDashboardData } from "@/hooks/use-dashboard-data";
 
 type NotifTab = "ALL" | "UNREAD" | "MILESTONE" | "SYSTEM";
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>(MOCK_NOTIFICATIONS);
+  const { allEscrows, allMilestones, isLoading } = useDashboardData();
   const [activeTab, setActiveTab] = useState<NotifTab>("ALL");
+  const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  // Derive notifications from escrows and milestones
+  const notifications = useMemo(() => {
+    if (isLoading) return [];
+    
+    const derivedNotifs: Notification[] = [];
+    
+    allEscrows.forEach(e => {
+      if (e.fundedAt) {
+        derivedNotifs.push({
+          id: `${e.id}-funded`,
+          notificationType: "MILESTONE_FUNDED",
+          title: "Escrow Funded",
+          body: `Escrow for milestone was successfully funded with ${e.fundedAmount} XLM.`,
+          actionUrl: `/projects/${e.projectId}`,
+          isRead: false,
+          createdAt: e.fundedAt,
+        } as Notification);
+      }
+      if (e.releasedAt) {
+        derivedNotifs.push({
+          id: `${e.id}-released`,
+          notificationType: "MILESTONE_PAID",
+          title: "Payment Released",
+          body: `Payment of ${e.fundedAmount} XLM has been released from escrow.`,
+          actionUrl: `/projects/${e.projectId}`,
+          isRead: false,
+          createdAt: e.releasedAt,
+        } as Notification);
+      }
+    });
 
-  const filteredNotifications = notifications.filter((n) => {
+    allMilestones.forEach(m => {
+      if (m.status === "SUBMITTED") {
+        derivedNotifs.push({
+          id: `${m.id}-submitted`,
+          notificationType: "MILESTONE_SUBMITTED",
+          title: "Milestone Submitted",
+          body: `Milestone "${m.title}" has been submitted for review.`,
+          actionUrl: `/projects/${m.projectId}`,
+          isRead: false,
+          createdAt: m.updatedAt || m.createdAt,
+        } as Notification);
+      }
+    });
+
+    // Sort descending by date
+    return derivedNotifs.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allEscrows, allMilestones, isLoading]);
+
+  if (isLoading) {
+    return (
+      <DashboardShell title="Notifications" breadcrumbs={[{ label: "Notifications" }]}>
+        <div className="flex justify-center p-12"><Loader2 className="animate-spin text-brand-500 w-8 h-8" /></div>
+      </DashboardShell>
+    );
+  }
+
+  // Filter out cleared ones and update read status
+  const currentNotifs = notifications
+    .filter(n => !clearedIds.has(n.id))
+    .map(n => ({ ...n, isRead: n.isRead || readIds.has(n.id) }));
+
+  const unreadCount = currentNotifs.filter((n) => !n.isRead).length;
+
+  const filteredNotifications = currentNotifs.filter((n) => {
     if (activeTab === "UNREAD") return !n.isRead;
     if (activeTab === "MILESTONE") return n.notificationType.startsWith("MILESTONE");
     if (activeTab === "SYSTEM") return !n.notificationType.startsWith("MILESTONE");
@@ -32,17 +96,18 @@ export default function NotificationsPage() {
   });
 
   const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setReadIds(new Set([...readIds, ...currentNotifs.map(n => n.id)]));
   };
 
   const toggleRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: !n.isRead } : n))
-    );
+    const next = new Set(readIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setReadIds(next);
   };
 
   const clearHistory = () => {
-    setNotifications([]);
+    setClearedIds(new Set([...clearedIds, ...currentNotifs.map(n => n.id)]));
   };
 
   const getIcon = (type: NotificationType) => {
@@ -61,17 +126,17 @@ export default function NotificationsPage() {
   };
 
   const tabs: { id: NotifTab; label: string; count: number }[] = [
-    { id: "ALL", label: "All Notifications", count: notifications.length },
+    { id: "ALL", label: "All Notifications", count: currentNotifs.length },
     { id: "UNREAD", label: "Unread", count: unreadCount },
     {
       id: "MILESTONE",
       label: "Milestone Updates",
-      count: notifications.filter((n) => n.notificationType.startsWith("MILESTONE")).length,
+      count: currentNotifs.filter((n) => n.notificationType.startsWith("MILESTONE")).length,
     },
     {
       id: "SYSTEM",
       label: "System & Security",
-      count: notifications.filter((n) => !n.notificationType.startsWith("MILESTONE")).length,
+      count: currentNotifs.filter((n) => !n.notificationType.startsWith("MILESTONE")).length,
     },
   ];
 
@@ -88,7 +153,7 @@ export default function NotificationsPage() {
                 Mark all read
               </Button>
             )}
-            {notifications.length > 0 && (
+            {currentNotifs.length > 0 && (
               <Button size="sm" variant="ghost" onClick={clearHistory} className="text-xs text-text-tertiary hover:text-status-error">
                 <Trash2 size={14} className="mr-1.5" />
                 Clear all
