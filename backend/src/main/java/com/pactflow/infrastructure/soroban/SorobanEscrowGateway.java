@@ -60,12 +60,12 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
     @Override
     public UnsignedTransaction buildFundingTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "deposit", List.of(), "FUND");
+        return buildInvokeTransaction(sourceAccountAddress, "deposit", List.of(Scv.toString(escrow.getId().toString())), "FUND");
     }
 
     @Override
     public UnsignedTransaction buildReleaseTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "approveMilestone", List.of(Scv.toUint32(0)), "RELEASE");
+        return buildInvokeTransaction(sourceAccountAddress, "approveMilestone", List.of(Scv.toString(escrow.getId().toString()), Scv.toUint32(0)), "RELEASE");
     }
 
     /**
@@ -79,10 +79,10 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
      * @param sourceAddress    Account paying the transaction fee (client)
      */
     public UnsignedTransaction buildInitializationTransaction(
+            java.util.UUID escrowId,
             String clientAddress,
             String freelancerAddress,
             java.math.BigDecimal amountXlm,
-            int milestonesTotal,
             String sourceAddress) {
         ensureContractConfigured();
 
@@ -92,11 +92,12 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
                 .toBigIntegerExact();
 
         List<SCVal> params = List.of(
+                Scv.toString(escrowId.toString()),
                 Scv.toAddress(clientAddress),
                 Scv.toAddress(freelancerAddress),
                 Scv.toAddress(xlmTokenId),
                 Scv.toInt128(amountStroops),
-                Scv.toUint32(milestonesTotal)
+                Scv.toUint32(1) // Treat each escrow as a single-milestone escrow
         );
 
         return buildInvokeTransaction(sourceAddress, "initialize", params, "INITIALIZE");
@@ -104,7 +105,7 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
     @Override
     public UnsignedTransaction buildRefundTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "refund", List.of(), "REFUND");
+        return buildInvokeTransaction(sourceAccountAddress, "refund", List.of(Scv.toString(escrow.getId().toString())), "REFUND");
     }
 
     /**

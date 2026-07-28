@@ -86,15 +86,15 @@ public class EscrowService {
                 .orElseThrow(() -> new IllegalStateException("Freelancer wallet not found"))
                 .getStellarPublicKey();
 
-        // Count milestones for this project (use 1 minimum)
-        long milestoneCount = escrowRepository.findByProjectId(escrow.getProjectId()).size();
-        int milestonesTotal = (int) Math.max(1, milestoneCount);
+        // Get the milestone amount for this specific escrow
+        com.pactflow.domain.milestone.Milestone milestone = milestoneRepository.findById(escrow.getMilestoneId())
+                .orElseThrow(() -> new IllegalArgumentException("Milestone not found for escrow"));
 
         return sorobanEscrowGateway.buildInitializationTransaction(
+                escrow.getId(),
                 clientPublicKey,
                 freelancerPublicKey,
-                project.getTotalBudgetXlm(),
-                milestonesTotal,
+                milestone.getAmountXlm(),
                 sourceAccountAddress
         );
     }
@@ -106,23 +106,11 @@ public class EscrowService {
         Escrow escrow = getEscrow(escrowId);
         
         // Ensure state is valid before building transaction
-        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.CREATED && 
-            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
-            throw new IllegalStateException("Escrow is not in a valid state for funding.");
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
+            throw new IllegalStateException("Escrow is not in a valid state for funding. Must be initialized first.");
         }
         
-        // This validates the domain rule (Escrow checks if it's CREATED)
-        if (escrow.getStatus() == com.pactflow.domain.escrow.EscrowStatus.CREATED) {
-            escrow.initiateFunding();
-            escrowRepository.save(escrow);
-        }
-
-        UnsignedTransaction tx = escrowContractGateway.buildFundingTransaction(escrow, sourceAccountAddress);
-        
-        // In a real system, the transaction hash is known only after the user signs,
-        // or we compute the hash of the unsigned XDR. We can store it as pending once submitted.
-        // We will expose submitSignedTransaction for the next step.
-        return tx;
+        return escrowContractGateway.buildFundingTransaction(escrow, sourceAccountAddress);
     }
 
     @Transactional
@@ -148,15 +136,14 @@ public class EscrowService {
 
         switch (tx.getOperation()) {
             case INITIALIZE -> {
-                // Contract is now initialized on-chain; escrow stays CREATED state in DB,
-                // ready for the client to call deposit().
+                // Contract is now initialized on-chain
+                escrow.initiateFunding();
                 eventType = "escrow.initialized";
             }
             case FUND -> { 
-                escrow.markFunded(BigDecimal.ZERO, transactionHash); 
-                eventType = "escrow.funded"; 
-                
-                milestoneRepository.findById(escrow.getMilestoneId()).ifPresent(m -> {
+                com.pactflow.domain.milestone.Milestone m = milestoneRepository.findById(escrow.getMilestoneId()).orElse(null);
+                if (m != null) {
+                    escrow.markFunded(m.getAmountXlm(), transactionHash);
                     if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.DRAFT) {
                         m.markAsFunded();
                         m.markAsInProgress();
@@ -164,7 +151,11 @@ public class EscrowService {
                         m.markAsInProgress();
                     }
                     milestoneRepository.save(m);
-                });
+                } else {
+                    // Fallback just in case milestone is missing, though it shouldn't be
+                    escrow.markFunded(BigDecimal.ONE, transactionHash);
+                }
+                eventType = "escrow.funded"; 
             }
             case RELEASE -> { 
                 escrow.release(transactionHash); 

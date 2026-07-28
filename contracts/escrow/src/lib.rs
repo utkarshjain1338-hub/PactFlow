@@ -13,7 +13,7 @@ pub use types::{
     FundsReleasedEvent, MilestoneApprovedEvent, RefundIssuedEvent,
 };
 
-const ESCROW_KEY: Symbol = symbol_short!("escrow");
+use types::DataKey;
 const MAX_MILESTONES: u32 = 64;
 const TTL_THRESHOLD: u32 = 100;
 const TTL_EXTENSION: u32 = 1000;
@@ -27,13 +27,14 @@ impl PactFlowEscrow {
     /// Creates the escrow record once and records the parties, amount, token, and milestone count.
     pub fn initialize(
         env: Env,
+        escrow_id: soroban_sdk::String,
         client: Address,
         freelancer: Address,
         token: Address,
         amount: i128,
         milestones_total: u32,
     ) -> Result<(), EscrowError> {
-        if env.storage().instance().has(&ESCROW_KEY) {
+        if env.storage().persistent().has(&DataKey::Escrow(escrow_id.clone())) {
             return Err(EscrowError::AlreadyInitialized);
         }
 
@@ -54,8 +55,8 @@ impl PactFlowEscrow {
             created_at,
         };
 
-        Self::save_escrow(&env, &escrow);
-        Self::bump_ttl(&env);
+        Self::save_escrow(&env, &escrow_id, &escrow);
+        Self::bump_ttl(&env, &escrow_id);
         env.events().publish(
             (symbol_short!("pactflow"), symbol_short!("created")),
             EscrowCreatedEvent {
@@ -71,8 +72,8 @@ impl PactFlowEscrow {
     }
 
     /// Transfers the exact escrow amount from the client into the contract.
-    pub fn deposit(env: Env) -> Result<(), EscrowError> {
-        let mut escrow = Self::load_escrow(&env)?;
+    pub fn deposit(env: Env, escrow_id: soroban_sdk::String) -> Result<(), EscrowError> {
+        let mut escrow = Self::load_escrow(&env, &escrow_id)?;
         Self::ensure_status(&escrow, EscrowStatus::Created)?;
         escrow.client.require_auth();
 
@@ -83,8 +84,8 @@ impl PactFlowEscrow {
         );
 
         escrow.status = EscrowStatus::Funded;
-        Self::save_escrow(&env, &escrow);
-        Self::bump_ttl(&env);
+        Self::save_escrow(&env, &escrow_id, &escrow);
+        Self::bump_ttl(&env, &escrow_id);
         env.events().publish(
             (symbol_short!("pactflow"), symbol_short!("deposited")),
             FundsDepositedEvent {
@@ -97,8 +98,8 @@ impl PactFlowEscrow {
     }
 
     /// Marks one milestone as approved and releases the full escrow to the freelancer once all milestones are approved.
-    pub fn approveMilestone(env: Env, milestone_index: u32) -> Result<(), EscrowError> {
-        let mut escrow = Self::load_escrow(&env)?;
+    pub fn approveMilestone(env: Env, escrow_id: soroban_sdk::String, milestone_index: u32) -> Result<(), EscrowError> {
+        let mut escrow = Self::load_escrow(&env, &escrow_id)?;
         Self::ensure_status(&escrow, EscrowStatus::Funded)?;
         escrow.client.require_auth();
 
@@ -130,8 +131,8 @@ impl PactFlowEscrow {
             );
 
             escrow.status = EscrowStatus::Released;
-            Self::save_escrow(&env, &escrow);
-            Self::bump_ttl(&env);
+            Self::save_escrow(&env, &escrow_id, &escrow);
+            Self::bump_ttl(&env, &escrow_id);
             env.events().publish(
                 (symbol_short!("pactflow"), symbol_short!("released")),
                 FundsReleasedEvent {
@@ -142,14 +143,14 @@ impl PactFlowEscrow {
             return Ok(());
         }
 
-        Self::save_escrow(&env, &escrow);
-        Self::bump_ttl(&env);
+        Self::save_escrow(&env, &escrow_id, &escrow);
+        Self::bump_ttl(&env, &escrow_id);
         Ok(())
     }
 
     /// Returns the full escrow snapshot to any caller.
-    pub fn getEscrow(env: Env) -> Result<EscrowView, EscrowError> {
-        let escrow = Self::load_escrow(&env)?;
+    pub fn getEscrow(env: Env, escrow_id: soroban_sdk::String) -> Result<EscrowView, EscrowError> {
+        let escrow = Self::load_escrow(&env, &escrow_id)?;
         Ok(EscrowView {
             client: escrow.client,
             freelancer: escrow.freelancer,
@@ -163,8 +164,8 @@ impl PactFlowEscrow {
     }
 
     /// Returns the full escrow amount to the client and marks the escrow as refunded.
-    pub fn refund(env: Env) -> Result<(), EscrowError> {
-        let mut escrow = Self::load_escrow(&env)?;
+    pub fn refund(env: Env, escrow_id: soroban_sdk::String) -> Result<(), EscrowError> {
+        let mut escrow = Self::load_escrow(&env, &escrow_id)?;
         Self::ensure_status(&escrow, EscrowStatus::Funded)?;
         escrow.client.require_auth();
 
@@ -175,8 +176,8 @@ impl PactFlowEscrow {
         );
 
         escrow.status = EscrowStatus::Refunded;
-        Self::save_escrow(&env, &escrow);
-        Self::bump_ttl(&env);
+        Self::save_escrow(&env, &escrow_id, &escrow);
+        Self::bump_ttl(&env, &escrow_id);
         env.events().publish(
             (symbol_short!("pactflow"), symbol_short!("refunded")),
             RefundIssuedEvent {
@@ -189,32 +190,32 @@ impl PactFlowEscrow {
     }
 
     /// Cancels the escrow before any deposit is made and marks it as cancelled.
-    pub fn cancel(env: Env) -> Result<(), EscrowError> {
-        let mut escrow = Self::load_escrow(&env)?;
+    pub fn cancel(env: Env, escrow_id: soroban_sdk::String) -> Result<(), EscrowError> {
+        let mut escrow = Self::load_escrow(&env, &escrow_id)?;
         Self::ensure_status(&escrow, EscrowStatus::Created)?;
         escrow.client.require_auth();
 
         escrow.status = EscrowStatus::Cancelled;
-        Self::save_escrow(&env, &escrow);
-        Self::bump_ttl(&env);
+        Self::save_escrow(&env, &escrow_id, &escrow);
+        Self::bump_ttl(&env, &escrow_id);
         Ok(())
     }
 
-    fn load_escrow(env: &Env) -> Result<EscrowData, EscrowError> {
+    fn load_escrow(env: &Env, escrow_id: &soroban_sdk::String) -> Result<EscrowData, EscrowError> {
         env.storage()
-            .instance()
-            .get(&ESCROW_KEY)
+            .persistent()
+            .get(&DataKey::Escrow(escrow_id.clone()))
             .ok_or(EscrowError::NotInitialized)
     }
 
-    fn save_escrow(env: &Env, escrow: &EscrowData) {
-        env.storage().instance().set(&ESCROW_KEY, escrow);
+    fn save_escrow(env: &Env, escrow_id: &soroban_sdk::String, escrow: &EscrowData) {
+        env.storage().persistent().set(&DataKey::Escrow(escrow_id.clone()), escrow);
     }
 
-    fn bump_ttl(env: &Env) {
+    fn bump_ttl(env: &Env, escrow_id: &soroban_sdk::String) {
         env.storage()
-            .instance()
-            .extend_ttl(TTL_THRESHOLD, TTL_EXTENSION);
+            .persistent()
+            .extend_ttl(&DataKey::Escrow(escrow_id.clone()), TTL_THRESHOLD, TTL_EXTENSION);
     }
 
     fn ensure_status(escrow: &EscrowData, expected: EscrowStatus) -> Result<(), EscrowError> {
@@ -282,22 +283,22 @@ mod test {
         let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
         assert_eq!(
-            client_contract.try_initialize(&client, &freelancer, &token_id, &1_000_000i128, &2u32),
+            client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &1_000_000i128, &2u32),
             Ok(Ok(()))
         );
 
-        let created = client_contract.try_getEscrow().unwrap().unwrap();
+        let created = client_contract.try_getEscrow(&soroban_sdk::String::from_str(&env, "proj_1")).unwrap().unwrap();
         assert_eq!(created.status, EscrowStatus::Created);
         assert_eq!(created.milestones_total, 2);
 
         assert_eq!(token_client.balance(&client), 1_000_000i128);
-        assert_eq!(client_contract.try_deposit(), Ok(Ok(())));
+        assert_eq!(client_contract.try_deposit(&soroban_sdk::String::from_str(&env, "proj_1")), Ok(Ok(())));
         assert_eq!(token_client.balance(&client), 0);
         assert_eq!(token_client.balance(&contract_id), 1_000_000i128);
-        assert_eq!(client_contract.try_approveMilestone(&0u32), Ok(Ok(())));
-        assert_eq!(client_contract.try_approveMilestone(&1u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &1u32), Ok(Ok(())));
 
-        let escrow = client_contract.try_getEscrow().unwrap().unwrap();
+        let escrow = client_contract.try_getEscrow(&soroban_sdk::String::from_str(&env, "proj_1")).unwrap().unwrap();
         assert_eq!(escrow.status, EscrowStatus::Released);
         assert_eq!(escrow.approved_milestones, 2);
         assert_eq!(token_client.balance(&contract_id), 0);
@@ -319,8 +320,8 @@ mod test {
         let contract_id = env.register(PactFlowEscrow, ());
         let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
-        assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &100i128, &1u32), Ok(Ok(())));
-        assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &100i128, &1u32), Err(Ok(EscrowError::AlreadyInitialized)));
+        assert_eq!(client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &100i128, &1u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &100i128, &1u32), Err(Ok(EscrowError::AlreadyInitialized)));
     }
 
     #[test]
@@ -338,11 +339,11 @@ mod test {
         let contract_id = env.register(PactFlowEscrow, ());
         let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
-        assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &100i128, &1u32), Ok(Ok(())));
-        assert_eq!(client_contract.try_cancel(), Ok(Ok(())));
-        assert_eq!(client_contract.try_deposit(), Err(Ok(EscrowError::InvalidState)));
-        assert_eq!(client_contract.try_refund(), Err(Ok(EscrowError::InvalidState)));
-        assert_eq!(client_contract.try_approveMilestone(&0u32), Err(Ok(EscrowError::InvalidState)));
+        assert_eq!(client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &100i128, &1u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_cancel(&soroban_sdk::String::from_str(&env, "proj_1")), Ok(Ok(())));
+        assert_eq!(client_contract.try_deposit(&soroban_sdk::String::from_str(&env, "proj_1")), Err(Ok(EscrowError::InvalidState)));
+        assert_eq!(client_contract.try_refund(&soroban_sdk::String::from_str(&env, "proj_1")), Err(Ok(EscrowError::InvalidState)));
+        assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Err(Ok(EscrowError::InvalidState)));
     }
 
     #[test]
@@ -361,8 +362,8 @@ mod test {
         let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
         assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &100i128, &2u32), Ok(Ok(())));
-        assert_eq!(client_contract.try_deposit(), Ok(Ok(())));
-        assert_eq!(client_contract.try_approveMilestone(&0u32), Ok(Ok(())));
-        assert_eq!(client_contract.try_approveMilestone(&0u32), Err(Ok(EscrowError::DuplicateOperation)));
+        assert_eq!(client_contract.try_deposit(&soroban_sdk::String::from_str(&env, "proj_1")), Ok(Ok(())));
+        assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Err(Ok(EscrowError::DuplicateOperation)));
     }
 }

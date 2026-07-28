@@ -86,3 +86,9 @@ pub struct RefundIssuedEvent {
     pub client: Address,
     pub amount: i128,
 }
+
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum DataKey {
+    Escrow(soroban_sdk::String),
+}

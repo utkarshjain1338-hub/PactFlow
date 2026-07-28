@@ -21,8 +21,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CreateProjectRequest {
     // Optional during draft
-    @JsonAlias("freelancerUserId")
-    private UUID assigneeId;
+    @JsonAlias("freelancerEmail")
+    @jakarta.validation.constraints.Email(message = "Must be a valid email address")
+    private String assigneeEmail;
 
     @NotBlank(message = "Title is required")
     @Size(min = 5, max = 200, message = "Title must be between 5 and 200 characters")

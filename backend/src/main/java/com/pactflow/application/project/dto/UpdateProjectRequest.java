@@ -17,6 +17,7 @@ public class UpdateProjectRequest {
     private BigDecimal totalBudgetXlm;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate deadline;
-    private UUID freelancerUserId;
+    @jakarta.validation.constraints.Email(message = "Must be a valid email address")
+    private String freelancerEmail;
     private String status;
 }

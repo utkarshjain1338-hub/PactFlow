@@ -15,6 +15,10 @@ import com.pactflow.application.project.dto.UpdateProjectRequest;
 import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.domain.project.ProjectStatus;
+import com.pactflow.domain.user.Email;
+import com.pactflow.domain.user.User;
+import com.pactflow.domain.user.UserRepository;
+import com.pactflow.domain.project.ProjectStatus;
 import com.pactflow.domain.wallet.Wallet;
 import com.pactflow.domain.wallet.WalletRepository;
 
@@ -24,19 +28,28 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final WalletRepository walletRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserRepository userRepository;
 
-    public ProjectService(ProjectRepository projectRepository, WalletRepository walletRepository, ApplicationEventPublisher eventPublisher) {
+    public ProjectService(ProjectRepository projectRepository, WalletRepository walletRepository, ApplicationEventPublisher eventPublisher, UserRepository userRepository) {
         this.projectRepository = projectRepository;
         this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
+        this.userRepository = userRepository;
     }
 
     @Transactional
     public ProjectDto createProject(UUID clientUserId, CreateProjectRequest request) {
+        UUID freelancerId = null;
+        if (request.getAssigneeEmail() != null && !request.getAssigneeEmail().isBlank()) {
+            freelancerId = userRepository.findByEmail(new Email(request.getAssigneeEmail()))
+                    .map(User::getId)
+                    .orElseThrow(() -> new IllegalArgumentException("No user found with email: " + request.getAssigneeEmail()));
+        }
+
         // Validation handled by Project.create and DTO annotations
         Project project = Project.create(
             clientUserId,
-            request.getAssigneeId(),
+            freelancerId,
             request.getTitle(),
             request.getDescription(),
             request.getTotalBudgetXlm(),
@@ -95,7 +108,14 @@ public class ProjectService {
         if (request.getDescription() != null) builder.description(request.getDescription());
         if (request.getTotalBudgetXlm() != null) builder.totalBudgetXlm(request.getTotalBudgetXlm());
         if (request.getDeadline() != null) builder.deadline(request.getDeadline());
-        if (request.getFreelancerUserId() != null) builder.freelancerUserId(request.getFreelancerUserId());
+        
+        if (request.getFreelancerEmail() != null && !request.getFreelancerEmail().isBlank()) {
+            UUID freelancerId = userRepository.findByEmail(new Email(request.getFreelancerEmail()))
+                    .map(User::getId)
+                    .orElseThrow(() -> new IllegalArgumentException("No user found with email: " + request.getFreelancerEmail()));
+            builder.freelancerUserId(freelancerId);
+        }
+        
         if (request.getStatus() != null) builder.status(ProjectStatus.valueOf(request.getStatus()));
 
         Project updatedProject = projectRepository.save(builder.build());
