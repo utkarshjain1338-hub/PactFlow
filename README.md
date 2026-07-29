@@ -9,7 +9,6 @@
 ![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 ![Soroban](https://img.shields.io/badge/Soroban-Rust-orange?logo=rust&logoColor=white)
 ![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-7C3AED)
-![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
@@ -17,8 +16,8 @@
 
 | Service | URL |
 |---------|-----|
-| **Frontend** | [URL](https://pact-flow-phi.vercel.app) |
-| **Backend API** | [URL](https://pactflow-7hlx.onrender.com) |
+| **Frontend** | [URL](<https://pact-flow-phi.vercel.app>) |
+| **Backend API** | [URL](<https://pactflow-7hlx.onrender.com>) |
 | **Network** | Stellar Testnet |
 
 ---
@@ -391,51 +390,44 @@ PactFlow/
 ## 📸 Screenshots
 
 ### 🏠 Landing Page
-<!-- ![Landing Page](./screenshots/landing.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Landing Page](./screenshots/landing.png)
 
 ### 🔐 Auth Page (Login / Register)
-<!-- ![Auth Page](./screenshots/auth.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Auth Page](./screenshots/auth.png) 
 
 ### 📊 Dashboard
-<!-- ![Dashboard](./screenshots/dashboard.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Dashboard](./screenshots/dashboard.png)
+
 
 ### 📁 Projects Page
-<!-- ![Projects](./screenshots/projects.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Projects](./screenshots/projects.png) 
 
 ### ➕ Create Project
-<!-- ![Create Project](./screenshots/create-project.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Create Project](./screenshots/create-project.png) 
 
 ### 🔒 Escrow Vaults
-<!-- ![Escrows](./screenshots/escrows.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Escrows](./screenshots/escrows.png) 
+
 
 ### 💼 Wallet Connection
-<!-- ![Wallet](./screenshots/wallet.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Wallet](./screenshots/wallet.png) 
+
 
 ### 🌙 Light / Dark Mode
-<!-- ![Theme](./screenshots/theme-toggle.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Theme](./screenshots/theme-toggle.png) 
 
 ### ✅ CI Pipeline Passing
-<!-- ![CI](./screenshots/ci-passing.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![CI](./screenshots/ci-passing.png)
 
 ### 🔗 Stellar Explorer — Transaction Hash
-<!-- ![Stellar](./screenshots/stellar-explorer.png) -->
-`<!-- PASTE SCREENSHOT HERE -->`
+![Stellar](./screenshots/stellar-explorer.png)
 
 ---
 
 ## 🎥 Video Demo
 
 <!-- PASTE YOUR VIDEO LINK BELOW -->
-[Video Demo](<!-- PASTE GOOGLE DRIVE / YOUTUBE / LOOM LINK HERE -->)
+[Video Demo](<https://drive.google.com/file/d/1scfuWWi521bReQcC30Zi6cgpNLe50ael/view?usp=sharing>)
 
 ---
 
@@ -471,6 +463,3 @@ PactFlow/
 
 ---
 
-## 📄 License
-
-MIT — see [LICENSE](LICENSE) for details.
