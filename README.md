@@ -112,7 +112,7 @@ Freelancers and companies face a trust deficit in remote work. Clients fear payi
 **PactFlowEscrow Contract**:
 
 ```text
-CCNEVHLKBLN6FJX5YJU44TEDO6MXJBZ4NXKPS7HPAA6UR2WE4BBUEPNH
+CBCXJVSGVYYEQDNMMF3E53SW22VYY2ESW7LNF7HEWLFECVJ27NV4T7AX
 ```
 
 > Deploy your own: see [Deployment](#-deploy-contracts) below.
@@ -124,8 +124,8 @@ CCNEVHLKBLN6FJX5YJU44TEDO6MXJBZ4NXKPS7HPAA6UR2WE4BBUEPNH
 **Escrow Created**
 
 ```text
-Hash: 9b2a7e5d8c4f1a3b6e9d2c5f8a1b4e7c0d3f6a9b2e5c8d1f4a7b0c3e6d9f2a5b
-Explorer: https://stellar.expert/explorer/testnet/tx/9b2a7e5d8c4f1a3b6e9d2c5f8a1b4e7c0d3f6a9b2e5c8d1f4a7b0c3e6d9f2a5b
+Hash: bcfee499ba320730c7a520a260ee80215c25fae35e99316c3c60c70e5446fed1
+Explorer: https://stellar.expert/explorer/testnet/tx/bcfee499ba320730c7a520a260ee80215c25fae35e99316c3c60c70e5446fed1
 ```
 
 ---
