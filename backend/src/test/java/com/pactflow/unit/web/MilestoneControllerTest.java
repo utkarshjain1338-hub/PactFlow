@@ -6,7 +6,7 @@ import com.pactflow.application.milestone.dto.CreateDeliverableRequest;
 import com.pactflow.application.milestone.dto.DeliverableDto;
 import com.pactflow.domain.user.AccountType;
 import com.pactflow.domain.user.Email;
-import com.pactflow.domain.user.User;
+import com.pactflow.application.auth.dto.UserSummaryDto;
 import com.pactflow.infrastructure.web.controller.MilestoneController;
 import com.pactflow.infrastructure.web.exception.GlobalExceptionHandler;
 import com.pactflow.infrastructure.web.security.JwtAuthenticationFilter;
@@ -59,7 +59,7 @@ class MilestoneControllerTest {
     private MilestoneService milestoneService;
 
     private UUID userId;
-    private User testUser;
+    private UserSummaryDto testUser;
     private UUID projectId;
     private UUID milestoneId;
 
@@ -68,7 +68,7 @@ class MilestoneControllerTest {
         userId = UUID.randomUUID();
         projectId = UUID.randomUUID();
         milestoneId = UUID.randomUUID();
-        testUser = new User(userId, new Email("test@pactflow.io"), "hash", AccountType.COMPANY, "Company", "UTC");
+        testUser = new UserSummaryDto(userId, "test@pactflow.io", AccountType.COMPANY, java.util.Collections.singleton(AccountType.COMPANY), "");
 
         // Mock security context
         SecurityContextHolder.getContext().setAuthentication(
@@ -90,7 +90,7 @@ class MilestoneControllerTest {
         when(milestoneService.submitDeliverable(eq(projectId), eq(milestoneId), any(CreateDeliverableRequest.class), eq(userId)))
                 .thenReturn(responseDto);
 
-        mockMvc.perform(post("/projects/{projectId}/milestones/{milestoneId}/submit", projectId, milestoneId)
+        mockMvc.perform(post("/api/v1/projects/{projectId}/milestones/{milestoneId}/submit", projectId, milestoneId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -102,7 +102,7 @@ class MilestoneControllerTest {
     @Test
     @DisplayName("POST /review should return 200 OK")
     void markInReview_Success() throws Exception {
-        mockMvc.perform(post("/projects/{projectId}/milestones/{milestoneId}/review", projectId, milestoneId))
+        mockMvc.perform(post("/api/v1/projects/{projectId}/milestones/{milestoneId}/review", projectId, milestoneId))
                 .andExpect(status().isOk());
 
         verify(milestoneService).markInReview(projectId, milestoneId, userId);
@@ -111,7 +111,7 @@ class MilestoneControllerTest {
     @Test
     @DisplayName("POST /approve should return 200 OK")
     void approveMilestone_Success() throws Exception {
-        mockMvc.perform(post("/projects/{projectId}/milestones/{milestoneId}/approve", projectId, milestoneId))
+        mockMvc.perform(post("/api/v1/projects/{projectId}/milestones/{milestoneId}/approve", projectId, milestoneId))
                 .andExpect(status().isOk());
 
         verify(milestoneService).approveMilestone(projectId, milestoneId, userId);
@@ -120,7 +120,7 @@ class MilestoneControllerTest {
     @Test
     @DisplayName("POST /reject should return 200 OK")
     void rejectMilestone_Success() throws Exception {
-        mockMvc.perform(post("/projects/{projectId}/milestones/{milestoneId}/reject", projectId, milestoneId))
+        mockMvc.perform(post("/api/v1/projects/{projectId}/milestones/{milestoneId}/reject", projectId, milestoneId))
                 .andExpect(status().isOk());
 
         verify(milestoneService).rejectMilestone(projectId, milestoneId, userId);

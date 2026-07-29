@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
-import { Sun, Moon, Monitor } from "lucide-react";
-import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn } from "@/lib/utils";
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
+import { Monitor, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
+import { useState, useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
 
 export function ThemeToggle() {
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  
+  // React 18+ Hydration safe mount check without cascading render warnings
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  
   const { theme, setTheme } = useTheme();
-
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);

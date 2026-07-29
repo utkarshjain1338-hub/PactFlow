@@ -180,6 +180,6 @@ class GlobalExceptionHandlerTest {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getStatus()).isEqualTo(500);
         assertThat(response.getBody().getType().toString()).contains("INTERNAL_ERROR");
-        assertThat(response.getBody().getDetail()).contains("An unexpected error occurred");
+        assertThat(response.getBody().getDetail()).contains("Unexpected error: Null pointer occurred.");
     }
 }

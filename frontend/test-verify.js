@@ -1,9 +1,11 @@
-const { Keypair } = require('@stellar/stellar-sdk');
+import { useSyncExternalStore } from 'react';
 
-const kp = Keypair.random();
-try {
-  kp.verify(Buffer.from("test"), Buffer.alloc(96));
-  console.log("Returned boolean");
-} catch (e) {
-  console.log("Threw:", e.message);
+const emptySubscribe = () => () => {};
+
+export function useIsMounted() {
+    return useSyncExternalStore(
+        emptySubscribe,
+        () => true,
+        () => false
+    );
 }
