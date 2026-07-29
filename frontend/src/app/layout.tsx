@@ -72,6 +72,9 @@ export const viewport: Viewport = {
   maximumScale: 1,
 };
 
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+
 // ── Root Layout ──
 export default function RootLayout({
   children,
@@ -97,6 +100,8 @@ export default function RootLayout({
             {children}
           </AuthGuard>
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

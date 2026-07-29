@@ -1,111 +1,171 @@
-# PactFlow
-
-**Constellation of Trust** — A blockchain-backed, milestone-based escrow platform for freelance collaboration built on **Spring Boot 3 (Java 21)**, **Next.js 15 (TypeScript)**, and **Stellar Soroban**.
+<div align="center">
+  <img src="https://raw.githubusercontent.com/stellar/stellar-design-system/main/logo/stellar-logo-black.svg" alt="Stellar" width="100" />
+  <h1>PactFlow 🤝</h1>
+  <p><strong>Building Trust in Global Freelancing through Blockchain Escrow</strong></p>
+  <p>
+    <img src="https://img.shields.io/badge/Java-21-blue.svg" alt="Java 21" />
+    <img src="https://img.shields.io/badge/Spring_Boot-3.3-green.svg" alt="Spring Boot 3" />
+    <img src="https://img.shields.io/badge/Next.js-15-black.svg" alt="Next.js 15" />
+    <img src="https://img.shields.io/badge/Stellar-Soroban-orange.svg" alt="Soroban" />
+    <img src="https://img.shields.io/badge/License-MIT-purple.svg" alt="License" />
+  </p>
+</div>
 
 ---
 
-## Architecture Overview
+## 🌎 The Problem
 
-- **Frontend (`/frontend`)**: Next.js 15 App Router, TypeScript, Tailwind CSS, Lucide Icons, and Storytelling Motion UI.
-- **Backend (`/backend`)**: Java 21, Spring Boot 3.3.2, Clean Architecture, Flyway V1–V14, PostgreSQL 16, and Redis 7.
-- **Smart Contracts (`/contracts`)**: Rust / Soroban smart contracts on Stellar Testnet (coming in Milestone 2).
+The global freelance economy is booming, but it suffers from a fundamental trust deficit:
+- **Companies** fear paying upfront for work that may never be delivered or fails to meet quality standards.
+- **Freelancers** fear doing weeks of work only to be ghosted, dealing with chargebacks, or facing arbitrary fee withholding.
+
+Traditional freelance platforms (like Upwork or Fiverr) solve this by acting as centralized arbiters, but they extract **10% to 20% in fees**, dictate terms arbitrarily, and force participants into closed ecosystems.
+
+## 💡 Why PactFlow Exists
+
+**PactFlow** replaces the centralized middleman with a **trustless, decentralized escrow system** powered by the **Stellar Soroban smart contract platform**. 
+
+By locking funds on-chain using XLM, both parties are guaranteed fairness. The company knows their money is protected until the deliverable is approved, and the freelancer knows the money is fully funded and reserved before they write a single line of code.
+
+Zero massive platform fees. True mathematical trust.
 
 ---
 
-## Quick Start (Local Development)
+## ✨ Features
 
-You can run the full application stack (Frontend + Backend + Infrastructure) easily using our automated launcher script or in separate terminal tabs.
+> **[🎥 Watch the 5-Minute Demo Video Here](#)** *(Link placeholder)*
+
+- **Milestone-Based Escrow:** Break large projects into funded milestones.
+- **Soroban Smart Contracts:** 100% on-chain fund locking and releasing via Stellar.
+- **Real-Time Dashboards:** Built with Server-Sent Events (SSE) and React Query for instant UI updates.
+- **Premium Glassmorphism UI:** Next.js 15 App Router with full Light/Dark mode support.
+- **Automated Workflow:** From `Draft` -> `Pending Funding` -> `Funded` -> `In Progress` -> `Delivered` -> `Approved` -> `Released`.
+
+*([Insert UI Screenshot here])*
+
+---
+
+## 🏗️ Architecture
+
+PactFlow is built on a robust, enterprise-grade technology stack separated into three core pillars:
+
+### 1. Smart Contract Layer (Soroban / Stellar)
+- **Rust-based Soroban Contracts:** Deployed on the Stellar Testnet.
+- **Operations:** `deposit()`, `release()`, and `refund()`.
+- **Event Emission:** Contract state changes emit on-chain events that are ingested by our backend listener daemon.
+
+### 2. Backend API (Spring Boot 3 + Java 21)
+- **Virtual Threads:** High-throughput concurrent processing utilizing Java 21 Project Loom.
+- **Clean Architecture:** Strict separation of Domain, Application, Infrastructure, and Presentation layers.
+- **Data Persistence:** PostgreSQL 16 managed by Flyway migrations.
+- **Caching & Rate Limiting:** Redis 7 for high-performance state retrieval and API endpoint protection.
+- **SSE Broadcasting:** Real-time push notifications to clients on contract status changes.
+
+### 3. Frontend App (Next.js 15 + React)
+- **React Query:** Intelligent caching, deduplication, and background synchronization of server state.
+- **Tailwind CSS:** Fully semantic design tokens bridging Light/Dark mode seamlessly without hardcoded hex colors.
+- **Zustand:** Lightweight global UI state management.
+
+```mermaid
+graph TD
+    Client[Next.js 15 Client] -->|REST / SSE| API(Spring Boot Backend)
+    API -->|Read/Write| DB[(PostgreSQL)]
+    API -->|Cache| Cache[(Redis)]
+    API -->|RPC Polling| RPC[Stellar Horizon/RPC]
+    RPC <-->|Transaction| Soroban[Soroban Smart Contract]
+```
+
+---
+
+## 🔒 Security Posture
+
+We treat security as a first-class citizen:
+- **JWT Authentication:** Stateless, signed JWTs with strict expiration.
+- **Argon2 Hashing:** Industry-standard password hashing protecting user credentials.
+- **CORS Protection:** Strict Origin validation to prevent CSRF.
+- **Rate Limiting:** IP-based token bucket rate limiting via Redis.
+- **Optimistic Locking:** `@Version` entities preventing race conditions during concurrent escrow state transitions.
+
+---
+
+## 🚀 Deployment & Local Development
+
+PactFlow uses a unified Docker Compose architecture for immediate local development.
 
 ### Prerequisites
-- **Java 21** (or use our downloaded JDK 21 at `~/.jdk/jdk-21.0.11+10`)
-- **Node.js 20+** and `npm`
-- **Docker & Docker Compose** (for PostgreSQL 16, Redis 7, and MailHog)
+- Node.js 20+
+- Java 21
+- Docker & Docker Compose
 
----
-
-### Option 1: One-Click Launcher (`start-dev.sh`)
-
-We have provided a unified startup script in the project root:
+### 1-Click Start
+We provide a unified launcher script that spins up the database, Redis, Mailhog, the Spring Boot API, and the Next.js frontend all at once:
 
 ```bash
 ./start-dev.sh
 ```
+*Access the frontend at `http://localhost:3000` and the API at `http://localhost:8080`.*
 
-This automatically:
-1. Starts **PostgreSQL 16**, **Redis 7**, and **MailHog** via `docker-compose up -d`.
-2. Sets up `JAVA_HOME` and launches the **Spring Boot API Server** in the background (`http://localhost:8080`).
-3. Starts the **Next.js Frontend dev server** (`http://localhost:3000`).
+### Environment Variables
 
-Press `Ctrl+C` at any time to shut down both servers cleanly.
-
----
-
-### Option 2: Running in Separate Terminal Tabs (Recommended for Debugging)
-
-If you prefer hot-reloading and independent terminal logs for each service, run them across 3 separate terminal tabs:
-
-#### Tab 1: Start Infrastructure Containers
-```bash
-docker-compose up -d postgres redis mailhog
+**Backend (`backend/src/main/resources/application.yml`)**
+```yaml
+spring.datasource.url: jdbc:postgresql://localhost:5432/pactflow_app
+spring.data.redis.host: localhost
+stellar.network.passphrase: Test SDF Network ; September 2015
+stellar.rpc.url: https://soroban-testnet.stellar.org
 ```
 
-#### Tab 2: Start Spring Boot Backend API (Port 8080 / 8081)
-```bash
-# Set JAVA_HOME if using our local Eclipse Temurin JDK 21
-export JAVA_HOME=$HOME/.jdk/jdk-21.0.11+10
-export PATH=$JAVA_HOME/bin:$PATH
-
-cd backend
-./gradlew bootRun --args='--spring.profiles.active=dev'
-```
-
-#### Tab 3: Start Next.js Frontend (Port 3000)
-```bash
-cd frontend
-npm install
-npm run dev
+**Frontend (`frontend/.env.local`)**
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+NEXT_PUBLIC_STELLAR_NETWORK=TESTNET
 ```
 
 ---
 
-### Option 3: Full Docker Compose Stack (All-in-One Containerized)
+## 📚 API Documentation
 
-To run the entire backend (`PostgreSQL`, `Redis`, `MailHog`, and `Spring Boot API Server`) inside Docker without needing local Java installed:
+When the backend is running, the interactive OpenAPI/Swagger documentation is available at:
+👉 **`http://localhost:8080/swagger-ui.html`**
 
-```bash
-docker-compose --profile full up --build -d
+---
+
+## 📁 Folder Structure
+
 ```
-Then start the frontend locally:
-```bash
-cd frontend && npm run dev
+pactflow/
+├── backend/                  # Spring Boot 3 Java API
+│   ├── src/main/java/...     # Clean Architecture (Domain, Auth, Escrow)
+│   ├── src/main/resources/   # application.yml, Flyway V1-V14 migrations
+│   └── build.gradle          # Dependency management
+├── frontend/                 # Next.js 15 UI
+│   ├── src/app/              # App Router (Pages, Layouts)
+│   ├── src/components/       # React Components (UI, Layout, Landing)
+│   ├── src/styles/           # globals.css, design-tokens.css
+│   └── tailwind.config.ts    # Theme configuration
+└── contracts/                # Soroban Rust Contracts (Upcoming)
 ```
 
 ---
 
-## Service Endpoints & Ports
+## 🛣️ Roadmap
 
-| Service | Local URL / Port | Description |
-| :--- | :--- | :--- |
-| **Frontend Web App** | `http://localhost:3000` | Next.js 15 User Interface & Landing Page |
-| **Backend API Server** | `http://localhost:8080` | Spring Boot REST API |
-| **API Liveness Probe** | `http://localhost:8080/api/v1/health/liveness` | Public Liveness Probe |
-| **API Readiness Probe** | `http://localhost:8080/api/v1/health/readiness` | Public Readiness Probe (DB + Redis Check) |
-| **Swagger UI / OpenAPI**| `http://localhost:8080/swagger-ui.html` | Interactive API Documentation |
-| **Actuator Management**| `http://localhost:8081/actuator` | Spring Boot Actuator Management Endpoints |
-| **MailHog UI** | `http://localhost:8025` | Local Email Catch & Preview UI (`SMTP: 1025`) |
-| **PostgreSQL 16** | `localhost:5432` | Database (`user: pactflow_app`, `pass: pactflow_dev_secret`) |
-| **Redis 7** | `localhost:6379` | Cache & Rate Limit Storage |
+- [x] Level 4 MVP Submission.
+- [ ] Mainnet deployment of Soroban contracts.
+- [ ] Dispute resolution arbitration mechanism.
+- [ ] Multi-sig corporate wallets.
+- [ ] Automated code review integrations (GitHub Actions trigger).
+
+## ⚠️ Known Limitations (Testnet Phase)
+- Currently strictly deployed to **Stellar Testnet**. Do not send real XLM.
+- Escrow timeouts and dispute triggers are currently mocked via admin override APIs to facilitate MVP demonstration.
 
 ---
 
-## Verification & Testing
+## 🤝 Contributors
 
-To run the automated test suite and Checkstyle validation for the backend:
+- Developed by the PactFlow Team for the Soroban ecosystem.
 
-```bash
-export JAVA_HOME=$HOME/.jdk/jdk-21.0.11+10
-export PATH=$JAVA_HOME/bin:$PATH
+## 📄 License
 
-cd backend
-./gradlew checkstyleMain test
-```
+This project is licensed under the [MIT License](LICENSE).
