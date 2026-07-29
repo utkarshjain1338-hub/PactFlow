@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { BreadcrumbNav } from "./breadcrumb-nav";
 import { SearchBar } from "./search-bar";
 import { NotificationBell } from "./notification-bell";
+import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
 export interface TopNavProps {
@@ -27,8 +28,7 @@ export function TopNav({ title, children, className }: TopNavProps) {
       className={cn(
         "h-16 px-4 sm:px-6",
         "flex items-center justify-between gap-4",
-        "bg-surface-0/85 backdrop-blur-md",
-        "border-b border-border-subtle",
+        "glass border-b-0",
         "sticky top-0 z-sticky select-none",
         className
       )}
@@ -47,6 +47,7 @@ export function TopNav({ title, children, className }: TopNavProps) {
         <SearchBar />
         <div className="h-4 w-px bg-border-subtle hidden sm:block" />
         <NotificationBell />
+        <ThemeToggle />
         <UserMenu />
       </div>
     </header>

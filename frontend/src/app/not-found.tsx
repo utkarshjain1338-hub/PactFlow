@@ -40,7 +40,7 @@ export default function NotFoundPage() {
 
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+          className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-brand-500 text-primary-foreground text-sm font-medium hover:bg-brand-400 transition-colors"
         >
           Go to Dashboard
         </Link>

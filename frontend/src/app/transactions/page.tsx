@@ -119,7 +119,7 @@ export default function TransactionsPage() {
                 onClick={() => setFilter(tab.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                   filter === tab.id
-                    ? "bg-brand-500 text-white shadow-brand-xs"
+                    ? "bg-brand-500 text-primary-foreground shadow-brand-xs"
                     : "bg-surface-2/60 text-text-secondary hover:bg-surface-2 hover:text-text-primary"
                 }`}
               >
@@ -127,7 +127,7 @@ export default function TransactionsPage() {
                 <span
                   className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
                     filter === tab.id
-                      ? "bg-white/20 text-white"
+                      ? "bg-surface-0/20 text-primary-foreground"
                       : "bg-surface-0 text-text-tertiary"
                   }`}
                 >

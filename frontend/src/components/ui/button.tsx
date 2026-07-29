@@ -28,8 +28,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          "bg-brand-500 text-white",
-          "hover:bg-brand-600 hover:shadow-brand",
+          "bg-brand-500 text-primary-foreground",
+          "hover:bg-brand-400 hover:shadow-brand",
           "active:scale-[0.98]",
           "shimmer",
         ],

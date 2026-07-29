@@ -74,7 +74,7 @@ export function NotificationBell() {
           <Bell size={16} aria-hidden />
           {unreadCount > 0 && (
             <span
-              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-status-error text-white text-[9px] font-bold flex items-center justify-center animate-pulse"
+              className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-status-error text-primary-foreground text-[9px] font-bold flex items-center justify-center animate-pulse"
               aria-label={`${unreadCount} unread notifications`}
             >
               {unreadCount}

@@ -203,7 +203,7 @@ function ConfirmDialog({
               "h-9 px-4 text-sm font-medium rounded-lg transition-all",
               variant === "danger"
                 ? "bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30"
-                : "bg-brand-500 text-white hover:bg-brand-600",
+                : "bg-brand-500 text-primary-foreground hover:bg-brand-400",
               "disabled:opacity-50 disabled:cursor-not-allowed"
             )}
           >

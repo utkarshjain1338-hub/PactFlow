@@ -56,7 +56,7 @@ export default function ErrorPage({ error, reset }: ErrorProps) {
         <div className="flex items-center justify-center gap-3 mt-6">
           <button
             onClick={reset}
-            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-brand-500 text-white text-sm font-medium hover:bg-brand-600 transition-colors"
+            className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-brand-500 text-primary-foreground text-sm font-medium hover:bg-brand-400 transition-colors"
           >
             <RefreshCw size={14} aria-hidden />
             Try again

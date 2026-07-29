@@ -71,9 +71,9 @@ export function MilestoneTimeline({
                 className={cn(
                   "w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs z-10 transition-colors shadow-xs",
                   status === "PAID"
-                    ? "bg-status-success text-white"
+                    ? "bg-status-success text-primary-foreground"
                     : status === "SUBMITTED"
-                      ? "bg-brand-500 text-white"
+                      ? "bg-brand-500 text-primary-foreground"
                       : status === "FUNDED" || status === "IN_PROGRESS"
                         ? "bg-brand-500/20 border border-brand-500/50 text-brand-300"
                         : "bg-surface-2 border border-border-default text-text-tertiary"
@@ -226,7 +226,7 @@ export function MilestoneTimeline({
                               e.stopPropagation();
                               onAction(id, "RELEASE");
                             }}
-                            className="text-xs h-8 bg-status-success hover:bg-status-success/90 text-white"
+                            className="text-xs h-8 bg-status-success hover:bg-status-success/90 text-primary-foreground"
                           >
                             <DollarSign size={13} className="mr-1.5" />
                             Verify &amp; Release Payment

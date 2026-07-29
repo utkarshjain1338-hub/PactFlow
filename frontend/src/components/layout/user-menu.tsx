@@ -9,15 +9,11 @@
  */
 import React, { useState } from "react";
 import Link from "next/link";
-import { useTheme } from "next-themes";
 import {
   User,
   Wallet,
   CreditCard,
   Shield,
-  RefreshCw,
-  Sun,
-  Moon,
   LogOut,
   Building2,
   Check,
@@ -32,7 +28,6 @@ import { toast } from "@/components/ui/toast";
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
-  const { theme, setTheme } = useTheme();
   const { activeRole, setRole } = useAppStore();
   const { user, logout, switchRole } = useAuth();
 
@@ -55,20 +50,6 @@ export function UserMenu() {
     await logout();
     toast.info("Signed out of PactFlow session");
     setOpen(false);
-  };
-
-  const toggleTheme = () => {
-    const isDark = theme === "dark";
-    const nextTheme = isDark ? "light" : "dark";
-
-    if (!document.startViewTransition) {
-      setTheme(nextTheme);
-      return;
-    }
-
-    document.startViewTransition(() => {
-      setTheme(nextTheme);
-    });
   };
 
   return (
@@ -220,19 +201,7 @@ export function UserMenu() {
 
           <DropdownMenuPrimitive.Separator className="my-1.5 h-px bg-border-subtle" />
 
-          {/* Theme switcher */}
-          <DropdownMenuPrimitive.Item
-            onClick={toggleTheme}
-            className="flex items-center justify-between px-3 py-2 rounded-lg text-xs text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors outline-none cursor-pointer"
-          >
-            <span className="flex items-center gap-2.5">
-              {theme === "dark" ? <Sun size={14} className="text-yellow-400" /> : <Moon size={14} className="text-brand-400" />}
-              {theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
-            </span>
-            <RefreshCw size={12} className="opacity-40" />
-          </DropdownMenuPrimitive.Item>
 
-          <DropdownMenuPrimitive.Separator className="my-1.5 h-px bg-border-subtle" />
 
           {/* Sign out */}
           <DropdownMenuPrimitive.Item

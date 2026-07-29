@@ -10,6 +10,11 @@
   *::after {
     box-sizing: border-box;
     border-color: var(--color-border-default);
+    transition: background-color var(--duration-normal) var(--ease-default), 
+                color var(--duration-normal) var(--ease-default),
+                border-color var(--duration-normal) var(--ease-default),
+                fill var(--duration-normal) var(--ease-default),
+                stroke var(--duration-normal) var(--ease-default);
   }
 
   html {
@@ -20,7 +25,9 @@
   }
 
   body {
+    background-image: var(--bg-gradient, none);
     background-color: var(--color-surface-ground);
+    background-attachment: fixed;
     color: var(--color-text-primary);
     font-family: var(--font-sans);
     font-size: var(--text-base);
@@ -168,14 +175,17 @@
     box-shadow: var(--shadow-md);
   }
 
-  /* ── Brand gradient background ── */
-  .bg-brand-gradient {
-    background: linear-gradient(
-      135deg,
-      hsl(240 84% 60% / 0.15) 0%,
-      hsl(270 70% 60% / 0.08) 50%,
-      transparent 100%
-    );
+  /* ── Gradients ── */
+  .bg-primary-gradient {
+    background: linear-gradient(135deg, #2563EB, #3B82F6);
+  }
+  
+  .dark .bg-primary-gradient {
+    background: linear-gradient(135deg, #3B82F6, #60A5FA);
+  }
+
+  .bg-success-gradient {
+    background: linear-gradient(135deg, #16A34A, #22C55E);
   }
 
   /* ── Sidebar ── */
@@ -329,35 +339,4 @@
   }
 }
 
-/* ─────────────────────────────────────────
- * THEME TRANSITION ANIMATIONS (View Transitions API)
- * ───────────────────────────────────────── */
-::view-transition-old(root),
-::view-transition-new(root) {
-  animation: none;
-  mix-blend-mode: normal;
-}
 
-.dark::view-transition-old(root) {
-  z-index: 1;
-}
-.dark::view-transition-new(root) {
-  z-index: 2;
-  animation: curtain-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.light::view-transition-old(root) {
-  z-index: 2;
-  animation: curtain-reveal 0.4s cubic-bezier(0.4, 0, 0.2, 1) reverse;
-}
-.light::view-transition-new(root) {
-  z-index: 1;
-}
-
-@keyframes curtain-reveal {
-  0% {
-    clip-path: circle(0% at 50% 0%);
-  }
-  100% {
-    clip-path: circle(150% at 50% 0%);
-  }
-}

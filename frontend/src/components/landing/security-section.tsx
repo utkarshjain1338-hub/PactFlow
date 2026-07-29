@@ -115,16 +115,16 @@ export function SecuritySection() {
                 transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0 pointer-events-none"
               >
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-7 h-7 rounded-full bg-brand-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-white font-mono text-[10px] font-bold">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-7 h-7 rounded-full bg-brand-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-primary-foreground font-mono text-[10px] font-bold">
                   1
                 </div>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 w-7 h-7 rounded-full bg-cyan-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-white font-mono text-[10px] font-bold">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-2 w-7 h-7 rounded-full bg-cyan-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-primary-foreground font-mono text-[10px] font-bold">
                   2
                 </div>
-                <div className="absolute left-0 top-1/2 -translate-x-2 -translate-y-1/2 w-7 h-7 rounded-full bg-status-success border-2 border-surface-0 shadow-lg flex items-center justify-center text-white font-mono text-[10px] font-bold">
+                <div className="absolute left-0 top-1/2 -translate-x-2 -translate-y-1/2 w-7 h-7 rounded-full bg-status-success border-2 border-surface-0 shadow-lg flex items-center justify-center text-primary-foreground font-mono text-[10px] font-bold">
                   3
                 </div>
-                <div className="absolute right-0 top-1/2 translate-x-2 -translate-y-1/2 w-7 h-7 rounded-full bg-purple-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-white font-mono text-[10px] font-bold">
+                <div className="absolute right-0 top-1/2 translate-x-2 -translate-y-1/2 w-7 h-7 rounded-full bg-purple-500 border-2 border-surface-0 shadow-lg flex items-center justify-center text-primary-foreground font-mono text-[10px] font-bold">
                   4
                 </div>
               </motion.div>

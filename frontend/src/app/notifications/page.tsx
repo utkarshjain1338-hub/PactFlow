@@ -172,14 +172,14 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5 ${
                 activeTab === tab.id
-                  ? "bg-brand-500 text-white shadow-brand-xs"
+                  ? "bg-brand-500 text-primary-foreground shadow-brand-xs"
                   : "bg-surface-1 text-text-secondary hover:text-text-primary"
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
-                  activeTab === tab.id ? "bg-white/20 text-white" : "bg-surface-2 text-text-tertiary"
+                  activeTab === tab.id ? "bg-surface-0/20 text-primary-foreground" : "bg-surface-2 text-text-tertiary"
                 }`}
               >
                 {tab.count}

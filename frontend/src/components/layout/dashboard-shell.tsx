@@ -43,7 +43,7 @@ export function DashboardShell({
       {/* Skip to main content link for screen reader accessibility */}
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-toast focus:bg-brand-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-semibold shadow-2xl"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-toast focus:bg-brand-500 focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-xl focus:text-sm focus:font-semibold shadow-2xl"
       >
         Skip to main content
       </a>

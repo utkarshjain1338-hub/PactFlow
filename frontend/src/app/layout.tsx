@@ -91,7 +91,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
       </head>
-      <body className="dark min-h-screen antialiased">
+      <body className="min-h-screen antialiased">
         <Providers>
           <AuthGuard>
             {children}

@@ -28,7 +28,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group toast group-[.toaster]:bg-surface-2 group-[.toaster]:text-text-primary group-[.toaster]:border-border-strong group-[.toaster]:shadow-xl group-[.toaster]:rounded-xl font-sans",
           description: "group-[.toast]:text-text-secondary text-xs",
           actionButton:
-            "group-[.toast]:bg-brand-500 group-[.toast]:text-white font-medium text-xs px-3 py-1.5 rounded-lg transition-all hover:group-[.toast]:bg-brand-600",
+            "group-[.toast]:bg-brand-500 group-[.toast]:text-primary-foreground font-medium text-xs px-3 py-1.5 rounded-lg transition-all hover:group-[.toast]:bg-brand-600",
           cancelButton:
             "group-[.toast]:bg-surface-1 group-[.toast]:text-text-secondary text-xs px-3 py-1.5 rounded-lg transition-all hover:group-[.toast]:text-text-primary",
           success: "group-[.toaster]:!border-status-success-border group-[.toaster]:!bg-status-success-bg/95",
@@ -83,7 +83,7 @@ const ToastCard = React.forwardRef<HTMLDivElement, ToastCardProps>(
           <div className="mt-2 flex justify-end">
             <button
               onClick={action.onClick}
-              className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white transition-all hover:bg-brand-600 active:scale-[0.98]"
+              className="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-primary-foreground transition-all hover:bg-brand-400 active:scale-[0.98]"
             >
               {action.label}
             </button>

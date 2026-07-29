@@ -128,14 +128,14 @@ export function HowItWorks() {
               onClick={() => setActiveStep(s.step)}
               className={`flex-1 w-full sm:w-auto py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
                 activeStep === s.step
-                  ? "bg-brand-500 text-white shadow-brand-xs scale-[1.02]"
+                  ? "bg-brand-500 text-primary-foreground shadow-brand-xs scale-[1.02]"
                   : activeStep > s.step
                   ? "bg-surface-2/80 text-status-success hover:bg-surface-2"
                   : "bg-transparent text-text-tertiary hover:text-text-primary hover:bg-surface-2/40"
               }`}
             >
               <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-[11px] ${
-                activeStep === s.step ? "bg-white text-brand-700" : activeStep > s.step ? "bg-status-success/20 text-status-success" : "bg-surface-3 text-text-tertiary"
+                activeStep === s.step ? "bg-surface-0 text-brand-700" : activeStep > s.step ? "bg-status-success/20 text-status-success" : "bg-surface-3 text-text-tertiary"
               }`}>
                 {activeStep > s.step ? "✓" : s.step}
               </span>

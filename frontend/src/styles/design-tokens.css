@@ -21,17 +21,17 @@
 :root,
 .dark {
   /* ── Color Palette: Brand Primary — Electric Indigo ── */
-  --color-brand-50: hsl(239 100% 96%);
-  --color-brand-100: hsl(238 96% 91%);
-  --color-brand-200: hsl(239 94% 84%);
-  --color-brand-300: hsl(239 90% 74%);
-  --color-brand-400: hsl(240 87% 66%);
-  --color-brand-500: hsl(240 84% 60%);   /* Core Brand Primary */
-  --color-brand-600: hsl(241 76% 52%);
-  --color-brand-700: hsl(243 72% 44%);
-  --color-brand-800: hsl(244 67% 36%);
-  --color-brand-900: hsl(246 62% 29%);
-  --color-brand-950: hsl(246 70% 18%);
+  --color-brand-50: hsl(214 100% 96%);
+  --color-brand-100: hsl(214 100% 91%);
+  --color-brand-200: hsl(214 97% 84%);
+  --color-brand-300: hsl(214 97% 74%);
+  --color-brand-400: hsl(214 97% 68%);   /* Primary Hover */
+  --color-brand-500: hsl(217 91% 60%);   /* Core Brand Primary */
+  --color-brand-600: hsl(221 83% 53%);
+  --color-brand-700: hsl(224 76% 48%);
+  --color-brand-800: hsl(226 71% 40%);
+  --color-brand-900: hsl(226 70% 30%);
+  --color-brand-950: hsl(226 70% 20%);
 
   /* ── Color Palette: Accent — Stellar Emerald (Trust / Escrow Secured) ── */
   --color-accent-50: hsl(152 81% 96%);
@@ -46,32 +46,35 @@
   --color-accent-900: hsl(164 86% 16%);
   --color-accent-950: hsl(164 90% 10%);
 
-  /* ── Color Palette: Surfaces — Space Dark Mode (Void & Nebula) ── */
-  --color-surface-ground: hsl(222 84% 4%);     /* Deep space background */
-  --color-surface-0: hsl(222 47% 7%);          /* Base surface */
-  --color-surface-1: hsl(222 40% 10%);         /* Card / container level 1 */
-  --color-surface-2: hsl(220 33% 14%);         /* Elevated card / hover state */
-  --color-surface-3: hsl(218 28% 18%);         /* Popover / top elevation */
-  --color-surface-overlay: hsl(222 47% 7% / 0.85); /* Backdrop overlay */
+  /* ── Color Palette: Surfaces — Zinc Neutral Dark ── */
+  --color-surface-ground: hsl(240 10% 4%);     /* #09090B */
+  --color-surface-0: hsl(240 10% 4%);          /* #09090B */
+  --color-surface-1: hsl(240 6% 10%);          /* #18181B */
+  --color-surface-2: hsl(240 5% 16%);          /* #27272A */
+  --color-surface-3: hsl(240 5% 20%);          /* Elevated popover */
+  --color-surface-overlay: hsl(240 10% 4% / 0.85); 
 
   /* ── Color Palette: Text Scale ── */
-  --color-text-primary: hsl(210 40% 98%);      /* Starlight high emphasis */
-  --color-text-secondary: hsl(215 20% 70%);    /* Nebula medium emphasis */
-  --color-text-tertiary: hsl(215 15% 50%);     /* Cosmic dust low emphasis */
-  --color-text-disabled: hsl(215 10% 35%);     /* Disabled / inactive text */
-  --color-text-inverse: hsl(222 84% 5%);       /* Text on bright badges/buttons */
+  --color-text-primary: hsl(240 5% 96%);       /* #F4F4F5 */
+  --color-text-secondary: hsl(240 5% 84%);
+  --color-text-tertiary: hsl(240 5% 65%);      /* #A1A1AA */
+  --color-text-disabled: hsl(240 5% 45%);
+  --color-text-inverse: hsl(240 10% 4%);
+
+  /* ── Background Gradients ── */
+  --bg-gradient: linear-gradient(to bottom, #09090B, #18181B);
 
   /* ── Color Palette: Borders ── */
-  --color-border-subtle: hsl(220 25% 16%);     /* Hairline structural border */
-  --color-border-default: hsl(220 22% 22%);    /* Standard component border */
-  --color-border-strong: hsl(220 20% 32%);     /* Emphasized / active border */
+  --color-border-subtle: hsl(240 5% 20%);
+  --color-border-default: hsl(240 5% 26%);     /* #3F3F46 */
+  --color-border-strong: hsl(240 5% 36%);
   --color-border-brand: hsl(240 84% 60%);      /* Brand focus border */
   --color-border-focus: hsl(240 84% 70%);      /* Keyboard navigation outline */
 
   /* ── Color Palette: Status & Feedback ── */
-  --color-status-success: hsl(158 64% 52%);
-  --color-status-success-bg: hsl(158 64% 10%);
-  --color-status-success-border: hsl(158 64% 25%);
+  --color-status-success: hsl(142 71% 45%);
+  --color-status-success-bg: hsl(142 71% 10%);
+  --color-status-success-border: hsl(142 71% 25%);
 
   --color-status-warning: hsl(38 92% 50%);
   --color-status-warning-bg: hsl(38 92% 8%);
@@ -81,9 +84,9 @@
   --color-status-error-bg: hsl(0 84% 9%);
   --color-status-error-border: hsl(0 84% 22%);
 
-  --color-status-info: hsl(210 90% 62%);
-  --color-status-info-bg: hsl(210 90% 9%);
-  --color-status-info-border: hsl(210 90% 22%);
+  --color-status-info: hsl(217 91% 60%);
+  --color-status-info-bg: hsl(217 91% 10%);
+  --color-status-info-border: hsl(217 91% 25%);
 
   /* ── Color Palette: Domain Milestone States ── */
   --color-ms-draft: hsl(215 20% 65%);
@@ -96,25 +99,25 @@
   /* ─────────────────────────────────────────────────────────────────────────
    * shadcn/ui Semantic Variables Bridge (Dark Mode)
    * ───────────────────────────────────────────────────────────────────────── */
-  --background: 222 84% 4%;
-  --foreground: 210 40% 98%;
-  --card: 222 40% 10%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 40% 10%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 240 84% 60%;
+  --background: 240 10% 4%;
+  --foreground: 240 5% 96%;
+  --card: 240 6% 10%;
+  --card-foreground: 240 5% 96%;
+  --popover: 240 6% 10%;
+  --popover-foreground: 240 5% 96%;
+  --primary: 217 91% 60%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 220 33% 14%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 220 33% 14%;
-  --muted-foreground: 215 20% 70%;
+  --secondary: 240 5% 16%;
+  --secondary-foreground: 240 5% 96%;
+  --muted: 240 5% 16%;
+  --muted-foreground: 240 5% 65%;
   --accent: 158 64% 52%;
-  --accent-foreground: 222 84% 4%;
+  --accent-foreground: 240 10% 4%;
   --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 220 22% 22%;
-  --input: 220 22% 22%;
-  --ring: 240 84% 60%;
+  --destructive-foreground: 240 5% 96%;
+  --border: 240 5% 26%;
+  --input: 240 5% 26%;
+  --ring: 217 91% 60%;
   --radius: 0.75rem;
 
   /* ─────────────────────────────────────────────────────────────────────────
@@ -253,8 +256,8 @@
   /* ─────────────────────────────────────────────────────────────────────────
    * 8. GLASSMORPHISM & CONSTELLATION DECORATIONS
    * ───────────────────────────────────────────────────────────────────────── */
-  --glass-bg: hsl(222 47% 7% / 0.6);
-  --glass-border: hsl(220 25% 16% / 0.8);
+  --glass-bg: rgba(24, 24, 27, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-blur: blur(12px);
   --glass-blur-heavy: blur(24px);
 
@@ -274,43 +277,54 @@
  * 10. LIGHT THEME OVERRIDES (Optional Fallback / Contrast Mode)
  * ───────────────────────────────────────────────────────────────────────────── */
 .light {
-  --color-surface-ground: hsl(210 40% 98%);
+  --color-surface-ground: hsl(240 20% 98%);
   --color-surface-0: hsl(0 0% 100%);
-  --color-surface-1: hsl(210 30% 96%);
-  --color-surface-2: hsl(210 25% 92%);
-  --color-surface-3: hsl(210 20% 86%);
-  --color-surface-overlay: hsl(222 47% 7% / 0.5);
+  --color-surface-1: hsl(0 0% 100%);
+  --color-surface-2: hsl(240 5% 96%);
+  --color-surface-3: hsl(240 5% 90%);
+  --color-surface-overlay: hsl(240 10% 4% / 0.5);
 
-  --color-text-primary: hsl(222 84% 5%);
-  --color-text-secondary: hsl(215 25% 30%);
-  --color-text-tertiary: hsl(215 20% 45%);
-  --color-text-disabled: hsl(215 15% 65%);
+  --color-text-primary: hsl(240 6% 10%);
+  --color-text-secondary: hsl(240 5% 46%);
+  --color-text-tertiary: hsl(240 5% 65%);
+  --color-text-disabled: hsl(240 5% 75%);
   --color-text-inverse: hsl(0 0% 100%);
 
-  --color-border-subtle: hsl(220 15% 88%);
-  --color-border-default: hsl(220 15% 82%);
-  --color-border-strong: hsl(220 15% 70%);
+  /* ── Background Gradients ── */
+  --bg-gradient: linear-gradient(to bottom, #FFFFFF, #F4F4F5);
+
+  --color-border-subtle: hsl(240 5% 90%);
+  --color-border-default: hsl(240 5% 90%);
+  --color-border-strong: hsl(240 5% 82%);
+  
+  --color-status-success: hsl(142 76% 36%);
+  --color-status-warning: hsl(38 92% 44%);
+  --color-status-error: hsl(0 72% 51%);
 
   /* shadcn/ui Light Theme Bridge */
-  --background: 0 0% 100%;
-  --foreground: 222 84% 5%;
+  --background: 240 20% 98%;
+  --foreground: 240 6% 10%;
   --card: 0 0% 100%;
-  --card-foreground: 222 84% 5%;
+  --card-foreground: 240 6% 10%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 84% 5%;
-  --primary: 240 84% 60%;
+  --popover-foreground: 240 6% 10%;
+  --primary: 221 83% 53%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 210 30% 96%;
-  --secondary-foreground: 222 84% 5%;
-  --muted: 210 30% 96%;
-  --muted-foreground: 215 20% 45%;
-  --accent: 158 64% 52%;
-  --accent-foreground: 222 84% 5%;
-  --destructive: 0 84% 60%;
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 5% 46%;
+  --accent: 142 76% 36%;
+  --accent-foreground: 240 6% 10%;
+  --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 15% 82%;
-  --input: 220 15% 82%;
-  --ring: 240 84% 60%;
+  --border: 240 5% 90%;
+  --input: 240 5% 90%;
+  --ring: 221 83% 53%;
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────

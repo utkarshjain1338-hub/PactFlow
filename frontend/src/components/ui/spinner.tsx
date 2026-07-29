@@ -24,7 +24,7 @@ const spinnerVariants = cva("animate-spin shrink-0", {
       brand: "text-brand-400",
       accent: "text-accent-400",
       muted: "text-text-tertiary",
-      white: "text-white",
+      white: "text-primary-foreground",
       current: "text-current",
     },
   },
