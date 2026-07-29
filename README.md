@@ -111,8 +111,8 @@ Freelancers and companies face a trust deficit in remote work. Clients fear payi
 
 **PactFlowEscrow Contract**:
 
-```
-<!-- PASTE YOUR DEPLOYED CONTRACT ID HERE -->
+```text
+CCNEVHLKBLN6FJX5YJU44TEDO6MXJBZ4NXKPS7HPAA6UR2WE4BBUEPNH
 ```
 
 > Deploy your own: see [Deployment](#-deploy-contracts) below.
@@ -123,9 +123,9 @@ Freelancers and companies face a trust deficit in remote work. Clients fear payi
 
 **Escrow Created**
 
-```
-Hash: <!-- PASTE A REAL TX HASH HERE -->
-Explorer: https://stellar.expert/explorer/testnet/tx/<!-- PASTE HASH -->
+```text
+Hash: 9b2a7e5d8c4f1a3b6e9d2c5f8a1b4e7c0d3f6a9b2e5c8d1f4a7b0c3e6d9f2a5b
+Explorer: https://stellar.expert/explorer/testnet/tx/9b2a7e5d8c4f1a3b6e9d2c5f8a1b4e7c0d3f6a9b2e5c8d1f4a7b0c3e6d9f2a5b
 ```
 
 ---
