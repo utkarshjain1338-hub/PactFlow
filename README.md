@@ -17,8 +17,8 @@
 
 | Service | URL |
 |---------|-----|
-| **Frontend** | `<!-- PASTE YOUR VERCEL URL HERE -->` |
-| **Backend API** | `<!-- PASTE YOUR RENDER URL HERE -->` |
+| **Frontend** | `[URL](https://pact-flow-phi.vercel.app)` |
+| **Backend API** | `[URL](https://pactflow-7hlx.onrender.com)` |
 | **Network** | Stellar Testnet |
 
 ---
