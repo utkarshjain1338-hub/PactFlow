@@ -19,7 +19,7 @@ public class SseEventService {
     // Map of UserId -> List of their active SseEmitters
     private final Map<UUID, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
-    @org.springframework.context.event.EventListener
+    @org.springframework.transaction.event.TransactionalEventListener(fallbackExecution = true, phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
     public void handleSseEvent(SseEventPayload payload) {
         broadcast(payload);
     }
