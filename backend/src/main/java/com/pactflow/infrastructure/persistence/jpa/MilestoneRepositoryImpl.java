@@ -22,7 +22,9 @@ public class MilestoneRepositoryImpl implements MilestoneRepository {
 
     @Override
     public Milestone save(Milestone milestone) {
-        MilestoneJpaEntity entity = toEntity(milestone);
+        MilestoneJpaEntity entity = jpaMilestoneRepository.findById(milestone.getId())
+                .orElseGet(MilestoneJpaEntity::new);
+        updateEntity(entity, milestone);
         MilestoneJpaEntity savedEntity = jpaMilestoneRepository.save(entity);
         return toDomain(savedEntity);
     }
@@ -39,8 +41,7 @@ public class MilestoneRepositoryImpl implements MilestoneRepository {
                 .collect(Collectors.toList());
     }
 
-    private MilestoneJpaEntity toEntity(Milestone domain) {
-        MilestoneJpaEntity entity = new MilestoneJpaEntity();
+    private void updateEntity(MilestoneJpaEntity entity, Milestone domain) {
         entity.setId(domain.getId());
         entity.setProjectId(domain.getProjectId());
         entity.setTitle(domain.getTitle());
@@ -52,7 +53,6 @@ public class MilestoneRepositoryImpl implements MilestoneRepository {
         entity.setDueDate(domain.getDueDate());
         entity.setStrictDeadline(domain.isStrictDeadline());
         entity.setDeleted(domain.isDeleted());
-        return entity;
     }
 
     private Milestone toDomain(MilestoneJpaEntity entity) {
