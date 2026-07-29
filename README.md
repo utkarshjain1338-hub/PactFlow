@@ -1,171 +1,476 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/stellar/stellar-design-system/main/logo/stellar-logo-black.svg" alt="Stellar" width="100" />
-  <h1>PactFlow 🤝</h1>
-  <p><strong>Building Trust in Global Freelancing through Blockchain Escrow</strong></p>
-  <p>
-    <img src="https://img.shields.io/badge/Java-21-blue.svg" alt="Java 21" />
-    <img src="https://img.shields.io/badge/Spring_Boot-3.3-green.svg" alt="Spring Boot 3" />
-    <img src="https://img.shields.io/badge/Next.js-15-black.svg" alt="Next.js 15" />
-    <img src="https://img.shields.io/badge/Stellar-Soroban-orange.svg" alt="Soroban" />
-    <img src="https://img.shields.io/badge/License-MIT-purple.svg" alt="License" />
-  </p>
-</div>
+# PactFlow — Milestone-Based Escrow Platform on Stellar Soroban
+
+> A production-grade, full-stack escrow dApp where companies and freelancers transact through milestone-gated Soroban smart contracts. Built for the Stellar Build Better certification.
+
+[![CI — Build, Lint, Test](https://github.com/utkarshjain1338-hub/PactFlow/actions/workflows/ci.yml/badge.svg)](https://github.com/utkarshjain1338-hub/PactFlow/actions/workflows/ci.yml)
+![Java 21](https://img.shields.io/badge/Java-21-blue?logo=openjdk&logoColor=white)
+![Spring Boot 3](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F?logo=springboot&logoColor=white)
+![Next.js 16](https://img.shields.io/badge/Next.js-16-000?logo=next.js&logoColor=white)
+![React 19](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![Soroban](https://img.shields.io/badge/Soroban-Rust-orange?logo=rust&logoColor=white)
+![Stellar Testnet](https://img.shields.io/badge/Network-Stellar%20Testnet-7C3AED)
+![License: MIT](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## 🌎 The Problem
+## 🌐 Live Demo
 
-The global freelance economy is booming, but it suffers from a fundamental trust deficit:
-- **Companies** fear paying upfront for work that may never be delivered or fails to meet quality standards.
-- **Freelancers** fear doing weeks of work only to be ghosted, dealing with chargebacks, or facing arbitrary fee withholding.
+| Service | URL |
+|---------|-----|
+| **Frontend** | `<!-- PASTE YOUR VERCEL URL HERE -->` |
+| **Backend API** | `<!-- PASTE YOUR RENDER URL HERE -->` |
+| **Network** | Stellar Testnet |
 
-Traditional freelance platforms (like Upwork or Fiverr) solve this by acting as centralized arbiters, but they extract **10% to 20% in fees**, dictate terms arbitrarily, and force participants into closed ecosystems.
+---
 
-## 💡 Why PactFlow Exists
+## 💡 Problem Statement
 
-**PactFlow** replaces the centralized middleman with a **trustless, decentralized escrow system** powered by the **Stellar Soroban smart contract platform**. 
+Freelancers and companies face a trust deficit in remote work. Clients fear paying for undelivered work; freelancers fear completing work and never getting paid. Traditional escrow services are slow, expensive, and opaque.
 
-By locking funds on-chain using XLM, both parties are guaranteed fairness. The company knows their money is protected until the deliverable is approved, and the freelancer knows the money is fully funded and reserved before they write a single line of code.
-
-Zero massive platform fees. True mathematical trust.
+**PactFlow solves this** by locking funds in a Soroban smart contract on the Stellar blockchain. Funds are released only when milestones are approved — cryptographically enforced, transparent, and irreversible. No middleman. No trust required.
 
 ---
 
 ## ✨ Features
 
-> **[🎥 Watch the 5-Minute Demo Video Here](#)** *(Link placeholder)*
+### Smart Contract (Rust / Soroban SDK)
 
-- **Milestone-Based Escrow:** Break large projects into funded milestones.
-- **Soroban Smart Contracts:** 100% on-chain fund locking and releasing via Stellar.
-- **Real-Time Dashboards:** Built with Server-Sent Events (SSE) and React Query for instant UI updates.
-- **Premium Glassmorphism UI:** Next.js 15 App Router with full Light/Dark mode support.
-- **Automated Workflow:** From `Draft` -> `Pending Funding` -> `Funded` -> `In Progress` -> `Delivered` -> `Approved` -> `Released`.
+| Function | Description |
+|----------|-------------|
+| `initialize` | Creates the escrow: records parties, token, amount, and milestone count |
+| `deposit` | Transfers the exact escrow amount from client into the contract |
+| `approveMilestone` | Approves a milestone (bitmap-based). Releases funds when all approved |
+| `refund` | Returns the full amount to the client (only while funded) |
+| `cancel` | Cancels the escrow before any deposit is made |
+| `getEscrow` | Returns the full escrow snapshot to any caller |
 
-*([Insert UI Screenshot here])*
+**On-chain events**: `pactflow/created` · `pactflow/deposited` · `pactflow/approved` · `pactflow/released` · `pactflow/refunded`
+
+### Backend (Spring Boot 3.4 / Java 21)
+
+- **RESTful API** — 40+ endpoints across 8 controllers (Auth, Projects, Milestones, Escrows, Wallets, Users, Transactions, Health)
+- **JWT Authentication** — Argon2id password hashing, access + refresh token rotation, session management
+- **Rate Limiting** — Bucket4j-based: 300 req/min reads, 60 req/min writes, 3 req/hr password reset
+- **Soroban Integration** — `SorobanEscrowGateway` builds unsigned XDRs, simulates via Soroban RPC, and broadcasts signed transactions
+- **Domain-Driven Design** — Hexagonal architecture: domain → application → infrastructure
+- **Observability** — Structured JSON logging, Spring Actuator health probes, JaCoCo coverage, OWASP dependency scanning
+- **128 unit + integration tests** across 15 test suites
+
+### Frontend (Next.js 16 / React 19 / TypeScript)
+
+- **Stellar Wallets Kit** — Connect via Freighter, Albedo, LOBSTR, or WalletConnect
+- **Real-time Dashboard** — Live project stats, escrow summaries, and milestone tracking
+- **Light / Dark Mode** — System-aware theme toggle with semantic design tokens
+- **Framer Motion Animations** — Smooth page transitions, card hover effects, and micro-interactions
+- **TanStack Query** — Automatic cache invalidation, optimistic updates, and retry logic
+- **Zustand State Management** — Minimal, performant global state for UI preferences
+- **Vercel Analytics + PostHog** — Production monitoring and product analytics
+- **Sentry Error Tracking** — Automated error capture with source maps
 
 ---
 
 ## 🏗️ Architecture
 
-PactFlow is built on a robust, enterprise-grade technology stack separated into three core pillars:
-
-### 1. Smart Contract Layer (Soroban / Stellar)
-- **Rust-based Soroban Contracts:** Deployed on the Stellar Testnet.
-- **Operations:** `deposit()`, `release()`, and `refund()`.
-- **Event Emission:** Contract state changes emit on-chain events that are ingested by our backend listener daemon.
-
-### 2. Backend API (Spring Boot 3 + Java 21)
-- **Virtual Threads:** High-throughput concurrent processing utilizing Java 21 Project Loom.
-- **Clean Architecture:** Strict separation of Domain, Application, Infrastructure, and Presentation layers.
-- **Data Persistence:** PostgreSQL 16 managed by Flyway migrations.
-- **Caching & Rate Limiting:** Redis 7 for high-performance state retrieval and API endpoint protection.
-- **SSE Broadcasting:** Real-time push notifications to clients on contract status changes.
-
-### 3. Frontend App (Next.js 15 + React)
-- **React Query:** Intelligent caching, deduplication, and background synchronization of server state.
-- **Tailwind CSS:** Fully semantic design tokens bridging Light/Dark mode seamlessly without hardcoded hex colors.
-- **Zustand:** Lightweight global UI state management.
-
-```mermaid
-graph TD
-    Client[Next.js 15 Client] -->|REST / SSE| API(Spring Boot Backend)
-    API -->|Read/Write| DB[(PostgreSQL)]
-    API -->|Cache| Cache[(Redis)]
-    API -->|RPC Polling| RPC[Stellar Horizon/RPC]
-    RPC <-->|Transaction| Soroban[Soroban Smart Contract]
+```
+┌─────────────┐     JWT Bearer      ┌──────────────────────────────────────────┐
+│  Next.js 16 │◄───────────────────►│         Spring Boot 3.4 API              │
+│  React 19   │     REST / SSE      │  ┌──────────┐  ┌─────────────────────┐   │
+│  Tailwind 4 │                     │  │ Auth     │  │ Project / Milestone │   │
+│  Zustand    │                     │  │ Service  │  │ Service             │   │
+│  TanStack Q │                     │  └──────────┘  └─────────────────────┘   │
+└──────┬──────┘                     │  ┌──────────┐  ┌─────────────────────┐   │
+       │                            │  │ Escrow   │  │ Wallet Service      │   │
+       │  Freighter                 │  │ Service  │  │ (Signature Verify)  │   │
+       │  Signs XDR                 │  └────┬─────┘  └─────────────────────┘   │
+       ▼                            │       │                                   │
+┌─────────────┐                     │       ▼                                   │
+│  Freighter  │                     │  ┌──────────────────────┐                 │
+│  Wallet     │                     │  │ SorobanEscrowGateway │                 │
+└─────────────┘                     │  │ (Stellar Java SDK)   │                 │
+                                    │  └──────────┬───────────┘                 │
+                                    │             │                             │
+                                    └─────────────┼─────────────────────────────┘
+                                                  │ Simulate + Broadcast
+                                                  ▼
+                                    ┌─────────────────────────┐
+                                    │  Stellar Soroban Testnet │
+                                    │  PactFlowEscrow Contract │
+                                    └────────────┬────────────┘
+                                                 │
+                              ┌──────────────────┼──────────────────┐
+                              ▼                  ▼                  ▼
+                        ┌───────────┐    ┌──────────────┐   ┌────────────┐
+                        │PostgreSQL │    │    Redis      │   │  MailHog   │
+                        │  16       │    │    7          │   │  (SMTP)    │
+                        └───────────┘    └──────────────┘   └────────────┘
 ```
 
 ---
 
-## 🔒 Security Posture
+## 📜 Contract Address (Testnet)
 
-We treat security as a first-class citizen:
-- **JWT Authentication:** Stateless, signed JWTs with strict expiration.
-- **Argon2 Hashing:** Industry-standard password hashing protecting user credentials.
-- **CORS Protection:** Strict Origin validation to prevent CSRF.
-- **Rate Limiting:** IP-based token bucket rate limiting via Redis.
-- **Optimistic Locking:** `@Version` entities preventing race conditions during concurrent escrow state transitions.
+**PactFlowEscrow Contract**:
+
+```
+<!-- PASTE YOUR DEPLOYED CONTRACT ID HERE -->
+```
+
+> Deploy your own: see [Deployment](#-deploy-contracts) below.
 
 ---
 
-## 🚀 Deployment & Local Development
+## 🧾 Sample Transaction
 
-PactFlow uses a unified Docker Compose architecture for immediate local development.
+**Escrow Created**
+
+```
+Hash: <!-- PASTE A REAL TX HASH HERE -->
+Explorer: https://stellar.expert/explorer/testnet/tx/<!-- PASTE HASH -->
+```
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+
-- Java 21
-- Docker & Docker Compose
 
-### 1-Click Start
-We provide a unified launcher script that spins up the database, Redis, Mailhog, the Spring Boot API, and the Next.js frontend all at once:
+- Java 21 (Temurin recommended)
+- Node.js 20+ with npm
+- Docker & Docker Compose
+- Rust + `wasm32-unknown-unknown` target (for contract development)
+- [Stellar CLI](https://developers.stellar.org/docs/tools/stellar-cli)
+
+### 1. Clone & Install
 
 ```bash
-./start-dev.sh
-```
-*Access the frontend at `http://localhost:3000` and the API at `http://localhost:8080`.*
-
-### Environment Variables
-
-**Backend (`backend/src/main/resources/application.yml`)**
-```yaml
-spring.datasource.url: jdbc:postgresql://localhost:5432/pactflow_app
-spring.data.redis.host: localhost
-stellar.network.passphrase: Test SDF Network ; September 2015
-stellar.rpc.url: https://soroban-testnet.stellar.org
+git clone https://github.com/utkarshjain1338-hub/PactFlow.git
+cd PactFlow
 ```
 
-**Frontend (`frontend/.env.local`)**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
-NEXT_PUBLIC_STELLAR_NETWORK=TESTNET
+### 2. Start Infrastructure
+
+```bash
+docker-compose up -d postgres redis mailhog
+```
+
+### 3. Run Backend
+
+```bash
+cd backend
+./gradlew bootRun --args='--spring.profiles.active=dev'
+```
+
+The API will be available at `http://localhost:8080`.
+
+### 4. Run Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) and register an account.
+
+### 5. Deploy Contracts
+
+```bash
+cd contracts
+
+# Build the WASM
+cargo build --release --target wasm32-unknown-unknown
+
+# Deploy to Testnet
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/pactflow_escrow.wasm \
+  --source <YOUR_SECRET_KEY> \
+  --network testnet
 ```
 
 ---
 
-## 📚 API Documentation
+## 🧪 Tests
 
-When the backend is running, the interactive OpenAPI/Swagger documentation is available at:
-👉 **`http://localhost:8080/swagger-ui.html`**
+### Backend (128 tests)
 
----
-
-## 📁 Folder Structure
-
-```
-pactflow/
-├── backend/                  # Spring Boot 3 Java API
-│   ├── src/main/java/...     # Clean Architecture (Domain, Auth, Escrow)
-│   ├── src/main/resources/   # application.yml, Flyway V1-V14 migrations
-│   └── build.gradle          # Dependency management
-├── frontend/                 # Next.js 15 UI
-│   ├── src/app/              # App Router (Pages, Layouts)
-│   ├── src/components/       # React Components (UI, Layout, Landing)
-│   ├── src/styles/           # globals.css, design-tokens.css
-│   └── tailwind.config.ts    # Theme configuration
-└── contracts/                # Soroban Rust Contracts (Upcoming)
+```bash
+cd backend
+./gradlew test
 ```
 
+| Suite | Tests | Coverage |
+|-------|-------|----------|
+| Domain model (User, Project, Escrow, Email) | 24 | State machines, invariants |
+| Controller WebMvc (Auth, Escrow, Milestone, User, Wallet, Health) | 56 | HTTP verbs, status codes, validation |
+| Security (JWT, Rate Limiting) | 16 | Token generation, AT-04, bucket limits |
+| Integration (Persistence, Optimistic Locking) | 12 | Repository round-trips |
+| Exception Handler (RFC 7807) | 12 | All exception → ProblemDetail mappings |
+| Scheduled Jobs (Account Anonymization) | 4 | GDPR batch processing |
+
+### Smart Contract (4 tests)
+
+```bash
+cd contracts
+cargo test --all
+```
+
+- `initialize_deposit_and_release_happy_path` — Full lifecycle from creation to fund release
+- `cannot_initialize_twice` — Prevents duplicate escrow creation
+- `wrong_state_transitions_fail` — Rejects deposit/refund/approve on cancelled escrows
+- `duplicate_milestone_approval_is_rejected` — Prevents double-approval of same milestone
+
 ---
 
-## 🛣️ Roadmap
+## 🔐 Security
 
-- [x] Level 4 MVP Submission.
-- [ ] Mainnet deployment of Soroban contracts.
-- [ ] Dispute resolution arbitration mechanism.
-- [ ] Multi-sig corporate wallets.
-- [ ] Automated code review integrations (GitHub Actions trigger).
-
-## ⚠️ Known Limitations (Testnet Phase)
-- Currently strictly deployed to **Stellar Testnet**. Do not send real XLM.
-- Escrow timeouts and dispute triggers are currently mocked via admin override APIs to facilitate MVP demonstration.
+| Layer | Implementation |
+|-------|---------------|
+| **Password Hashing** | Argon2id (memory-hard, GPU-resistant) |
+| **JWT Tokens** | HS256, 256-bit secret, 15-min access + 7-day refresh with rotation |
+| **Rate Limiting** | Bucket4j per-IP: 300/min reads, 60/min writes, 3/hr password reset |
+| **CORS** | Strict allowlist via `CORS_ALLOWED_ORIGINS` |
+| **Contract Auth** | `require_auth()` on every write function (Soroban native) |
+| **No Private Keys** | Backend and frontend never handle or store private keys |
+| **Container Security** | Non-root Docker user, JRE-only runtime (200MB vs 600MB JDK) |
+| **OWASP Scanning** | Automated dependency-check in CI pipeline |
+| **GDPR Compliance** | Scheduled account anonymization job with batch processing |
 
 ---
 
-## 🤝 Contributors
+## 📡 API Documentation
 
-- Developed by the PactFlow Team for the Soroban ecosystem.
+### Auth (`/api/v1/auth`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/register` | Create account (Argon2id hash) |
+| POST | `/login` | Authenticate, receive JWT + refresh token |
+| POST | `/refresh` | Rotate tokens |
+| POST | `/logout` | Revoke session |
+| POST | `/forgot-password` | Send reset email |
+| POST | `/reset-password` | Complete password reset |
+| POST | `/verify-email` | Verify email address |
+| GET | `/me` | Current user profile |
+
+### Projects (`/api/v1/projects`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/` | Create project |
+| GET | `/` | List user's projects |
+| GET | `/{id}` | Get project details |
+| PATCH | `/{id}` | Update project |
+| DELETE | `/{id}` | Delete project |
+| POST | `/{id}/link-client-wallet` | Link client Stellar wallet |
+| POST | `/{id}/link-freelancer-wallet` | Link freelancer Stellar wallet |
+| POST | `/{id}/activate` | Activate project |
+| POST | `/{id}/archive` | Archive project |
+| GET | `/me` | List my projects |
+
+### Milestones (`/api/v1/projects/{projectId}/milestones`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/` | Create milestone |
+| GET | `/` | List project milestones |
+| PUT | `/{milestoneId}` | Update milestone |
+| DELETE | `/{milestoneId}` | Delete milestone |
+| POST | `/{milestoneId}/submit` | Submit deliverable |
+| POST | `/{milestoneId}/review` | Mark as in-review |
+| POST | `/{milestoneId}/approve` | Approve milestone |
+| POST | `/{milestoneId}/reject` | Reject milestone |
+
+### Escrows (`/api/v1/escrows`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/` | Create escrow |
+| GET | `/` | List escrows by project |
+| GET | `/{id}` | Get escrow details |
+| POST | `/{id}/initialization-transaction` | Build Soroban `initialize()` XDR |
+| POST | `/{id}/funding-transaction` | Build Soroban `deposit()` XDR |
+| POST | `/{id}/release` | Build Soroban `approveMilestone()` XDR |
+| POST | `/{id}/refund` | Build Soroban `refund()` XDR |
+
+### Transactions (`/api/v1/transactions`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/` | Submit signed XDR → broadcast to Stellar |
+| GET | `/{id}` | Get transaction by ID |
+
+### Wallets (`/api/v1/users/me/wallets`)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/` | Link Stellar wallet |
+| GET | `/` | List user wallets |
+| POST | `/{id}/challenge` | Generate signature challenge |
+| POST | `/{id}/verify` | Verify wallet ownership |
+| PATCH | `/{id}/primary` | Set as primary wallet |
+| DELETE | `/{id}` | Remove wallet |
+
+---
+
+## 🛠 CI/CD
+
+GitHub Actions pipeline in `.github/workflows/ci.yml`:
+
+| Job | Steps |
+|-----|-------|
+| **lint-backend** | Checkstyle (Google Java Style Guide) |
+| **lint-frontend** | TypeScript type-check + ESLint |
+| **test-backend-unit** | Gradle test + JaCoCo coverage report |
+| **build-frontend** | Next.js production build |
+| **security-scan** | OWASP dependency-check (main branch only) |
+| **ci-complete** | All-green gate |
+
+---
+
+## 📁 Project Structure
+
+```
+PactFlow/
+├── .github/workflows/ci.yml       # CI pipeline
+├── contracts/
+│   └── escrow/
+│       ├── src/
+│       │   ├── lib.rs              # PactFlowEscrow contract (6 functions, 4 tests)
+│       │   └── types.rs            # EscrowData, EscrowStatus, Events, Errors
+│       ├── tests/escrow.rs         # Integration tests
+│       └── Cargo.toml
+├── backend/
+│   ├── Dockerfile                  # Multi-stage JDK 21 build
+│   ├── build.gradle
+│   └── src/
+│       ├── main/java/com/pactflow/
+│       │   ├── domain/             # Entities: User, Project, Milestone, Escrow, Wallet
+│       │   ├── application/        # Services: Auth, Project, Milestone, Escrow, Wallet
+│       │   └── infrastructure/
+│       │       ├── web/controller/  # 8 REST controllers
+│       │       ├── soroban/         # SorobanEscrowGateway (Stellar SDK)
+│       │       ├── persistence/     # JPA repositories + Redis cache
+│       │       └── config/          # Security, CORS, Rate Limiting
+│       └── test/                   # 128 unit + integration tests
+├── frontend/
+│   ├── src/
+│   │   ├── app/                    # Next.js 16 pages (App Router)
+│   │   ├── components/
+│   │   │   ├── layout/             # DashboardShell, Sidebar, Navbar, ThemeToggle
+│   │   │   ├── pactflow/           # ProjectCard, EscrowVault, MilestoneTimeline
+│   │   │   └── ui/                 # Button, Input, Dialog, EmptyState (shadcn/ui)
+│   │   ├── contexts/               # AuthContext (JWT session management)
+│   │   ├── hooks/                  # useDashboardData (TanStack Query)
+│   │   ├── store/                  # Zustand UI store
+│   │   └── lib/                    # API client, utils, mock data
+│   └── package.json
+├── docker-compose.yml              # PostgreSQL 16, Redis 7, MailHog
+└── README.md
+```
+
+---
+
+## 🧰 Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| **Smart Contract** | Rust, Soroban SDK, `contracttype` / `contracterror` macros |
+| **Backend** | Java 21, Spring Boot 3.4, Spring Security, Spring Data JPA |
+| **Database** | PostgreSQL 16 (Hibernate/JPA), Redis 7 (session cache, rate limits) |
+| **Frontend** | Next.js 16, React 19, TypeScript 5, Tailwind CSS 4 |
+| **UI Components** | shadcn/ui, Radix UI, Lucide Icons, Framer Motion |
+| **State** | Zustand (UI), TanStack React Query (server state) |
+| **Wallet** | Stellar Wallets Kit (Freighter, Albedo, LOBSTR, WalletConnect) |
+| **Auth** | JWT (HS256) + Argon2id + Refresh Token Rotation |
+| **Observability** | Vercel Analytics, PostHog, Sentry, Spring Actuator |
+| **CI/CD** | GitHub Actions (Checkstyle, ESLint, JUnit, OWASP) |
+| **Infra** | Docker, Docker Compose, Vercel (frontend), Render (backend) |
+
+---
+
+## 📸 Screenshots
+
+### 🏠 Landing Page
+<!-- ![Landing Page](./screenshots/landing.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 🔐 Auth Page (Login / Register)
+<!-- ![Auth Page](./screenshots/auth.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 📊 Dashboard
+<!-- ![Dashboard](./screenshots/dashboard.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 📁 Projects Page
+<!-- ![Projects](./screenshots/projects.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### ➕ Create Project
+<!-- ![Create Project](./screenshots/create-project.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 🔒 Escrow Vaults
+<!-- ![Escrows](./screenshots/escrows.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 💼 Wallet Connection
+<!-- ![Wallet](./screenshots/wallet.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 🌙 Light / Dark Mode
+<!-- ![Theme](./screenshots/theme-toggle.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### ✅ CI Pipeline Passing
+<!-- ![CI](./screenshots/ci-passing.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+### 🔗 Stellar Explorer — Transaction Hash
+<!-- ![Stellar](./screenshots/stellar-explorer.png) -->
+`<!-- PASTE SCREENSHOT HERE -->`
+
+---
+
+## 🎥 Video Demo
+
+<!-- PASTE YOUR VIDEO LINK BELOW -->
+[Video Demo](<!-- PASTE GOOGLE DRIVE / YOUTUBE / LOOM LINK HERE -->)
+
+---
+
+## 🗺️ Roadmap
+
+- [x] Soroban escrow smart contract with milestone-gated release
+- [x] Full-stack Spring Boot + Next.js application
+- [x] JWT authentication with refresh token rotation
+- [x] Freighter wallet integration for transaction signing
+- [x] Light / Dark mode with semantic design tokens
+- [x] CI/CD with Checkstyle, ESLint, JUnit, and OWASP
+- [x] Docker Compose local development environment
+- [ ] Real-time notifications via Server-Sent Events
+- [ ] Dispute resolution with arbiter multisig
+- [ ] Mainnet deployment with production KYC
+- [ ] Mobile-responsive PWA
+
+---
+
+## ⚠️ Known Limitations
+
+- **Testnet Only** — Contract is deployed on Stellar Testnet. Testnet tokens have no monetary value.
+- **Single-Milestone Escrow** — The backend currently treats each escrow as a single-milestone contract. Multi-milestone support exists in the smart contract but is not fully wired in the UI.
+- **No Real Email Delivery** — Email verification uses MailHog in development. Production deployment requires configuring an SMTP provider.
+
+---
+
+## 👨‍💻 Contributors
+
+| Name | Role |
+|------|------|
+| **Utkarsh Jain** | Full-Stack Developer |
+
+---
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+MIT — see [LICENSE](LICENSE) for details.
