@@ -220,7 +220,7 @@ pactflow:
     network-passphrase: ${STELLAR_NETWORK_PASSPHRASE:Test SDF Network ; September 2015}
     horizon-url: ${HORIZON_URL:https://horizon-testnet.stellar.org}
     soroban-rpc-url: ${SOROBAN_RPC_URL:https://soroban-testnet.stellar.org}
-    contract-id: ${PACTFLOW_CONTRACT_ID:CCNEVHLKBLN6FJX5YJU44TEDO6MXJBZ4NXKPS7HPAA6UR2WE4BBUEPNH}
+    contract-id: ${PACTFLOW_CONTRACT_ID:CBCXJVSGVYYEQDNMMF3E53SW22VYY2ESW7LNF7HEWLFECVJ27NV4T7AX}
     xlm-token-id: ${XLM_TOKEN_ID:CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC}
   security:
     jwt:
