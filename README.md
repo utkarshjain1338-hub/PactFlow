@@ -403,7 +403,7 @@ PactFlow/
 ![Projects](./screenshots/projects.png) 
 
 ### ➕ Create Project
-![Create Project](./screenshots/create-project.png) 
+![Create Project](./screenshots/create-projects.png) 
 
 ### 🔒 Escrow Vaults
 ![Escrows](./screenshots/escrows.png) 
@@ -414,7 +414,10 @@ PactFlow/
 
 
 ### 🌙 Light / Dark Mode
-![Theme](./screenshots/theme-toggle.png) 
+![Theme](./screenshots/dark-theme-toggle.png) 
+
+###  Dark Mode
+![Theme](./screenshots/light-theme-toggle.png) 
 
 ### ✅ CI Pipeline Passing
 ![CI](./screenshots/ci-passing.png)
