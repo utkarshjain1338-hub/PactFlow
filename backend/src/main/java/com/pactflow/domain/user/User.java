@@ -102,7 +102,8 @@ public class User extends AuditableEntity implements SoftDeletable {
         this.email = email;
         this.passwordHash = passwordHash;
         this.accountType = Objects.requireNonNull(accountType, "accountType must not be null");
-        this.allowedRoles = allowedRoles != null ? new java.util.HashSet<>(allowedRoles) : new java.util.HashSet<>(java.util.Collections.singleton(accountType));
+        this.allowedRoles = allowedRoles != null ? new java.util.HashSet<>(allowedRoles)
+                : new java.util.HashSet<>(java.util.Collections.singleton(accountType));
         this.displayName = displayName;
         this.avatarUrl = avatarUrl;
         this.timezone = timezone != null && !timezone.isBlank() ? timezone : "UTC";

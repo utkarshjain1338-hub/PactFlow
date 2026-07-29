@@ -102,7 +102,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 final AccountType accountType = AccountType.valueOf(accountTypeStr);
 
                 final UserSummaryDto principal = new UserSummaryDto(
-                        userId, email != null ? email : "", accountType, java.util.Collections.singleton(accountType), "");
+                        userId, 
+                        email != null ? email : "", 
+                        accountType, 
+                        java.util.Collections.singleton(accountType), 
+                        "");
 
                 final UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         principal,

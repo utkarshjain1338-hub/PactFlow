@@ -27,6 +27,13 @@ public class Escrow {
     private Instant refundedAt;
     private String transactionReferences; // stored as JSON or CSV string for now
 
+    /**
+     * Creates a new escrow.
+     *
+     * @param projectId the project ID
+     * @param milestoneId the milestone ID
+     * @return the new escrow
+     */
     public static Escrow create(UUID projectId, UUID milestoneId) {
         if (projectId == null) {
             throw new IllegalArgumentException("Project ID is required.");
@@ -44,6 +51,9 @@ public class Escrow {
                 .build();
     }
 
+    /**
+     * Initiates funding for the escrow.
+     */
     public void initiateFunding() {
         if (this.status != EscrowStatus.CREATED) {
             throw new IllegalStateException("Cannot initiate funding from status " + this.status);
@@ -51,6 +61,12 @@ public class Escrow {
         this.status = EscrowStatus.PENDING_FUNDING;
     }
 
+    /**
+     * Marks the escrow as funded.
+     *
+     * @param amount the funded amount
+     * @param txRef the transaction reference
+     */
     public void markFunded(BigDecimal amount, String txRef) {
         if (this.status != EscrowStatus.PENDING_FUNDING) {
             throw new IllegalStateException("Cannot mark as funded from status " + this.status);
@@ -64,6 +80,9 @@ public class Escrow {
         addTransactionReference(txRef);
     }
 
+    /**
+     * Submits the work for review.
+     */
     public void submitWork() {
         if (this.status != EscrowStatus.FUNDED) {
             throw new IllegalStateException("Cannot submit work from status " + this.status);
@@ -71,6 +90,9 @@ public class Escrow {
         this.status = EscrowStatus.SUBMITTED;
     }
 
+    /**
+     * Starts the review process.
+     */
     public void startReview() {
         if (this.status != EscrowStatus.SUBMITTED) {
             throw new IllegalStateException("Cannot start review from status " + this.status);
@@ -78,6 +100,9 @@ public class Escrow {
         this.status = EscrowStatus.UNDER_REVIEW;
     }
 
+    /**
+     * Approves the submitted work.
+     */
     public void approve() {
         if (this.status != EscrowStatus.UNDER_REVIEW) {
             throw new IllegalStateException("Cannot approve from status " + this.status);
@@ -85,6 +110,9 @@ public class Escrow {
         this.status = EscrowStatus.APPROVED;
     }
 
+    /**
+     * Disputes the submitted work.
+     */
     public void dispute() {
         if (this.status != EscrowStatus.UNDER_REVIEW) {
             throw new IllegalStateException("Cannot dispute from status " + this.status);
@@ -92,6 +120,11 @@ public class Escrow {
         this.status = EscrowStatus.DISPUTED;
     }
 
+    /**
+     * Releases funds to the freelancer.
+     *
+     * @param txRef the transaction reference
+     */
     public void release(String txRef) {
         if (this.status != EscrowStatus.APPROVED && this.status != EscrowStatus.DISPUTED) {
             throw new IllegalStateException("Cannot release funds from status " + this.status);
@@ -101,6 +134,11 @@ public class Escrow {
         addTransactionReference(txRef);
     }
 
+    /**
+     * Refunds the escrow to the client.
+     *
+     * @param txRef the transaction reference
+     */
     public void refund(String txRef) {
         if (this.status != EscrowStatus.FUNDED && this.status != EscrowStatus.DISPUTED) {
             throw new IllegalStateException("Cannot refund from status " + this.status);
@@ -110,6 +148,9 @@ public class Escrow {
         addTransactionReference(txRef);
     }
     
+    /**
+     * Marks the escrow as failed.
+     */
     public void markFailed() {
         if (this.status == EscrowStatus.RELEASED || this.status == EscrowStatus.REFUNDED) {
             throw new IllegalStateException("Cannot fail an escrow that has already been resolved.");
@@ -118,7 +159,9 @@ public class Escrow {
     }
 
     private void addTransactionReference(String txRef) {
-        if (txRef == null || txRef.isBlank()) return;
+        if (txRef == null || txRef.isBlank()) {
+            return;
+        }
         
         if (this.transactionReferences == null || this.transactionReferences.isBlank()) {
             this.transactionReferences = txRef;

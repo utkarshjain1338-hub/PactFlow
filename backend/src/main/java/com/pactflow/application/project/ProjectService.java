@@ -18,7 +18,7 @@ import com.pactflow.domain.project.ProjectStatus;
 import com.pactflow.domain.user.Email;
 import com.pactflow.domain.user.User;
 import com.pactflow.domain.user.UserRepository;
-import com.pactflow.domain.project.ProjectStatus;
+
 import com.pactflow.domain.wallet.Wallet;
 import com.pactflow.domain.wallet.WalletRepository;
 
@@ -30,20 +30,32 @@ public class ProjectService {
     private final ApplicationEventPublisher eventPublisher;
     private final UserRepository userRepository;
 
-    public ProjectService(ProjectRepository projectRepository, WalletRepository walletRepository, ApplicationEventPublisher eventPublisher, UserRepository userRepository) {
+    public ProjectService(
+            ProjectRepository projectRepository, 
+            WalletRepository walletRepository, 
+            ApplicationEventPublisher eventPublisher, 
+            UserRepository userRepository) {
         this.projectRepository = projectRepository;
         this.walletRepository = walletRepository;
         this.eventPublisher = eventPublisher;
         this.userRepository = userRepository;
     }
 
+    /**
+     * Creates a project.
+     *
+     * @param clientUserId the client user ID
+     * @param request      the request
+     * @return the project DTO
+     */
     @Transactional
     public ProjectDto createProject(UUID clientUserId, CreateProjectRequest request) {
         UUID freelancerId = null;
         if (request.getAssigneeEmail() != null && !request.getAssigneeEmail().isBlank()) {
             freelancerId = userRepository.findByEmail(new Email(request.getAssigneeEmail()))
                     .map(User::getId)
-                    .orElseThrow(() -> new IllegalArgumentException("No user found with email: " + request.getAssigneeEmail()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No user found with email: " + request.getAssigneeEmail()));
         }
 
         // Validation handled by Project.create and DTO annotations
@@ -61,6 +73,13 @@ public class ProjectService {
         return toDto(savedProject);
     }
 
+    /**
+     * Gets a project.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @return the project DTO
+     */
     @Transactional(readOnly = true)
     public ProjectDto getProject(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -75,6 +94,12 @@ public class ProjectService {
         return toDto(project);
     }
 
+    /**
+     * Gets projects for a client.
+     *
+     * @param clientUserId the client user ID
+     * @return list of projects
+     */
     @Transactional(readOnly = true)
     public List<ProjectDto> getProjectsForClient(UUID clientUserId) {
         return projectRepository.findByClientUserId(clientUserId).stream()
@@ -83,6 +108,12 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Gets projects for an assignee.
+     *
+     * @param freelancerUserId the freelancer user ID
+     * @return list of projects
+     */
     @Transactional(readOnly = true)
     public List<ProjectDto> getProjectsForAssignee(UUID freelancerUserId) {
         return projectRepository.findByFreelancerUserId(freelancerUserId).stream()
@@ -91,6 +122,14 @@ public class ProjectService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Updates a project.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @param request     the request
+     * @return the project DTO
+     */
     @Transactional
     public ProjectDto updateProject(UUID projectId, UUID requesterId, UpdateProjectRequest request) {
         Project project = projectRepository.findById(projectId)
@@ -104,24 +143,41 @@ public class ProjectService {
         // We use toBuilder to cleanly apply updates to the aggregate
         Project.ProjectBuilder builder = project.toBuilder();
         
-        if (request.getTitle() != null) builder.title(request.getTitle());
-        if (request.getDescription() != null) builder.description(request.getDescription());
-        if (request.getTotalBudgetXlm() != null) builder.totalBudgetXlm(request.getTotalBudgetXlm());
-        if (request.getDeadline() != null) builder.deadline(request.getDeadline());
+        if (request.getTitle() != null) {
+            builder.title(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            builder.description(request.getDescription());
+        }
+        if (request.getTotalBudgetXlm() != null) {
+            builder.totalBudgetXlm(request.getTotalBudgetXlm());
+        }
+        if (request.getDeadline() != null) {
+            builder.deadline(request.getDeadline());
+        }
         
         if (request.getFreelancerEmail() != null && !request.getFreelancerEmail().isBlank()) {
             UUID freelancerId = userRepository.findByEmail(new Email(request.getFreelancerEmail()))
                     .map(User::getId)
-                    .orElseThrow(() -> new IllegalArgumentException("No user found with email: " + request.getFreelancerEmail()));
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "No user found with email: " + request.getFreelancerEmail()));
             builder.freelancerUserId(freelancerId);
         }
         
-        if (request.getStatus() != null) builder.status(ProjectStatus.valueOf(request.getStatus()));
+        if (request.getStatus() != null) {
+            builder.status(ProjectStatus.valueOf(request.getStatus()));
+        }
 
         Project updatedProject = projectRepository.save(builder.build());
         return toDto(updatedProject);
     }
 
+    /**
+     * Deletes a project.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void deleteProject(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -135,6 +191,13 @@ public class ProjectService {
         projectRepository.save(project);
     }
     
+    /**
+     * Archives a project.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @return the project DTO
+     */
     @Transactional
     public ProjectDto archiveProject(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -149,6 +212,14 @@ public class ProjectService {
         return toDto(savedProject);
     }
     
+    /**
+     * Links a client wallet.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @param walletId    the wallet ID
+     * @return the project DTO
+     */
     @Transactional
     public ProjectDto linkClientWallet(UUID projectId, UUID requesterId, UUID walletId) {
         Project project = projectRepository.findById(projectId)
@@ -170,6 +241,12 @@ public class ProjectService {
         return toDto(savedProject);
     }
     
+    /**
+     * Unlinks a client wallet.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void unlinkClientWallet(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -183,6 +260,14 @@ public class ProjectService {
         projectRepository.save(project);
     }
     
+    /**
+     * Links a freelancer wallet.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @param walletId    the wallet ID
+     * @return the project DTO
+     */
     @Transactional
     public ProjectDto linkFreelancerWallet(UUID projectId, UUID requesterId, UUID walletId) {
         Project project = projectRepository.findById(projectId)
@@ -204,6 +289,12 @@ public class ProjectService {
         return toDto(savedProject);
     }
     
+    /**
+     * Unlinks a freelancer wallet.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void unlinkFreelancerWallet(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -221,11 +312,13 @@ public class ProjectService {
         boolean isEscrowReady = project.isStructurallyReady();
         
         if (isEscrowReady) {
-            boolean clientVerified = walletRepository.findByIdAndUserId(project.getClientWalletId(), project.getClientUserId())
+            boolean clientVerified = walletRepository
+                .findByIdAndUserId(project.getClientWalletId(), project.getClientUserId())
                 .map(Wallet::isVerified)
                 .orElse(false);
                 
-            boolean freelancerVerified = walletRepository.findByIdAndUserId(project.getFreelancerWalletId(), project.getFreelancerUserId())
+            boolean freelancerVerified = walletRepository
+                .findByIdAndUserId(project.getFreelancerWalletId(), project.getFreelancerUserId())
                 .map(Wallet::isVerified)
                 .orElse(false);
                 

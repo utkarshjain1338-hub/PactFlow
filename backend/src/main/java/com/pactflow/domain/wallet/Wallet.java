@@ -2,7 +2,8 @@ package com.pactflow.domain.wallet;
 
 import com.pactflow.domain.shared.AuditableEntity;
 import com.pactflow.domain.shared.SoftDeletable;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Instant;
 import java.util.Objects;

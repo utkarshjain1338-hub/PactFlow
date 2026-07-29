@@ -19,11 +19,20 @@ public class SseEventService {
     // Map of UserId -> List of their active SseEmitters
     private final Map<UUID, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
 
-    @org.springframework.transaction.event.TransactionalEventListener(fallbackExecution = true, phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
+    @org.springframework.transaction.event.TransactionalEventListener(
+            fallbackExecution = true, 
+            phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
     public void handleSseEvent(SseEventPayload payload) {
         broadcast(payload);
     }
 
+    /**
+     * Subscribes a user to SSE events.
+     *
+     * @param userId      the user ID
+     * @param lastEventId the last event ID
+     * @return the SSE emitter
+     */
     public SseEmitter subscribe(UUID userId, String lastEventId) {
         // Create an emitter with a longer timeout (e.g., 30 minutes)
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
@@ -46,6 +55,12 @@ public class SseEventService {
         return emitter;
     }
 
+    /**
+     * Emits an SSE event to a specific user.
+     *
+     * @param userId  the user ID
+     * @param payload the event payload
+     */
     public void emitToUser(UUID userId, SseEventPayload payload) {
         List<SseEmitter> userEmitters = emitters.get(userId);
         if (userEmitters == null || userEmitters.isEmpty()) {

@@ -96,7 +96,8 @@ public class WalletService {
         wallet.softDelete();
         walletRepository.save(wallet);
         
-        eventPublisher.publishEvent(new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), false));
+        eventPublisher.publishEvent(
+                new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), false));
 
         // If the primary wallet was deleted, promote the oldest remaining wallet
         if (wallet.isPrimary()) {
@@ -278,7 +279,8 @@ public class WalletService {
         wallet.verify();
         walletRepository.save(wallet);
         
-        eventPublisher.publishEvent(new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), true));
+        eventPublisher.publishEvent(
+                new com.pactflow.domain.wallet.event.WalletVerificationChanged(userId, wallet.getId(), true));
     }
 
     private void promoteOldestWallet(final UUID userId) {

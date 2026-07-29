@@ -11,7 +11,7 @@ import com.pactflow.domain.project.Project;
 import com.pactflow.domain.project.ProjectRepository;
 import com.pactflow.application.wallet.WalletService;
 import com.pactflow.infrastructure.soroban.SorobanEscrowGateway;
-import com.pactflow.infrastructure.persistence.WalletRepositoryImpl;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +51,13 @@ public class EscrowService {
         this.milestoneRepository = milestoneRepository;
     }
 
+    /**
+     * Creates an escrow.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @return the escrow
+     */
     @Transactional
     public Escrow createEscrow(UUID projectId, UUID milestoneId) {
         Project project = projectRepository.findById(projectId)
@@ -68,6 +75,13 @@ public class EscrowService {
         return escrowRepository.save(escrow);
     }
 
+    /**
+     * Builds an initialization transaction.
+     *
+     * @param escrowId the escrow ID
+     * @param userId   the user ID
+     * @return the unsigned transaction
+     */
     @Transactional
     public UnsignedTransaction buildInitializationTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
@@ -99,6 +113,13 @@ public class EscrowService {
         );
     }
 
+    /**
+     * Builds a funding transaction.
+     *
+     * @param escrowId the escrow ID
+     * @param userId   the user ID
+     * @return the unsigned transaction
+     */
     @Transactional
     public UnsignedTransaction buildFundingTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
@@ -113,6 +134,13 @@ public class EscrowService {
         return escrowContractGateway.buildFundingTransaction(escrow, sourceAccountAddress);
     }
 
+    /**
+     * Submits a signed transaction.
+     *
+     * @param escrowId        the escrow ID
+     * @param transactionHash the transaction hash
+     * @param operation       the blockchain operation
+     */
     @Transactional
     public void submitSignedTransaction(UUID escrowId, String transactionHash, BlockchainOperation operation) {
         // Called by the frontend after signing and broadcasting to the Stellar network.
@@ -122,6 +150,14 @@ public class EscrowService {
     }
 
     // These are called by the SorobanEventListener once the blockchain confirms the transaction
+    /**
+     * Handles transaction confirmed.
+     *
+     * @param transactionHash the transaction hash
+     * @param ledger          the ledger
+     * @param confirmedAt     the confirmed time
+     * @return the escrow
+     */
     @Transactional
     public Escrow handleTransactionConfirmed(String transactionHash, Long ledger, OffsetDateTime confirmedAt) {
         BlockchainTransaction tx = blockchainTransactionRepository.findByTransactionHash(transactionHash)
@@ -141,7 +177,8 @@ public class EscrowService {
                 eventType = "escrow.initialized";
             }
             case FUND -> { 
-                com.pactflow.domain.milestone.Milestone m = milestoneRepository.findById(escrow.getMilestoneId()).orElse(null);
+                com.pactflow.domain.milestone.Milestone m = milestoneRepository
+                        .findById(escrow.getMilestoneId()).orElse(null);
                 if (m != null) {
                     escrow.markFunded(m.getAmountXlm(), transactionHash);
                     if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.DRAFT) {
@@ -181,6 +218,13 @@ public class EscrowService {
         return escrow;
     }
 
+    /**
+     * Builds a release transaction.
+     *
+     * @param escrowId the escrow ID
+     * @param userId   the user ID
+     * @return the unsigned transaction
+     */
     @Transactional
     public UnsignedTransaction buildReleaseTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
@@ -193,6 +237,13 @@ public class EscrowService {
         return escrowContractGateway.buildReleaseTransaction(escrow, sourceAccountAddress);
     }
 
+    /**
+     * Builds a refund transaction.
+     *
+     * @param escrowId the escrow ID
+     * @param userId   the user ID
+     * @return the unsigned transaction
+     */
     @Transactional
     public UnsignedTransaction buildRefundTransaction(UUID escrowId, UUID userId) {
         walletService.assertVerifiedPrimaryWallet(userId);
@@ -205,6 +256,12 @@ public class EscrowService {
         return escrowContractGateway.buildRefundTransaction(escrow, sourceAccountAddress);
     }
 
+    /**
+     * Handles transaction failed.
+     *
+     * @param transactionHash the transaction hash
+     * @param failureReason   the failure reason
+     */
     @Transactional
     public void handleTransactionFailed(String transactionHash, String failureReason) {
         BlockchainTransaction tx = blockchainTransactionRepository.findByTransactionHash(transactionHash)

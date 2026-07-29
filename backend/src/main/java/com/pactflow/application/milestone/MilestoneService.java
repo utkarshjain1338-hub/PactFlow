@@ -30,13 +30,24 @@ public class MilestoneService {
     private final EscrowRepository escrowRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public MilestoneService(ProjectRepository projectRepository, DeliverableRepository deliverableRepository, EscrowRepository escrowRepository, ApplicationEventPublisher eventPublisher) {
+    public MilestoneService(ProjectRepository projectRepository, 
+                            DeliverableRepository deliverableRepository, 
+                            EscrowRepository escrowRepository, 
+                            ApplicationEventPublisher eventPublisher) {
         this.projectRepository = projectRepository;
         this.deliverableRepository = deliverableRepository;
         this.escrowRepository = escrowRepository;
         this.eventPublisher = eventPublisher;
     }
 
+    /**
+     * Creates a milestone.
+     *
+     * @param projectId   the project ID
+     * @param request     the create milestone request
+     * @param requesterId the requester ID
+     * @return the milestone DTO
+     */
     @Transactional
     public MilestoneDto createMilestone(UUID projectId, CreateMilestoneRequest request, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -71,6 +82,13 @@ public class MilestoneService {
         return toDto(savedMilestone);
     }
 
+    /**
+     * Gets milestones for a project.
+     *
+     * @param projectId   the project ID
+     * @param requesterId the requester ID
+     * @return the list of milestone DTOs
+     */
     @Transactional(readOnly = true)
     public List<MilestoneDto> getMilestonesForProject(UUID projectId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -88,8 +106,18 @@ public class MilestoneService {
     }
 
 
+    /**
+     * Updates a milestone.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param request     the update request
+     * @param requesterId the requester ID
+     * @return the updated milestone DTO
+     */
     @Transactional
-    public MilestoneDto updateMilestone(UUID projectId, UUID milestoneId, UpdateMilestoneRequest request, UUID requesterId) {
+    public MilestoneDto updateMilestone(
+            UUID projectId, UUID milestoneId, UpdateMilestoneRequest request, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new IllegalArgumentException("Project not found"));
                 
@@ -111,12 +139,24 @@ public class MilestoneService {
         mutableMilestones.remove(milestone);
         
         Milestone.MilestoneBuilder builder = milestone.toBuilder();
-        if (request.getTitle() != null) builder.title(request.getTitle());
-        if (request.getDescription() != null) builder.description(request.getDescription());
-        if (request.getAmountXlm() != null) builder.amountXlm(request.getAmountXlm());
-        if (request.getSequenceOrder() != null) builder.sequenceOrder(request.getSequenceOrder());
-        if (request.getDueDate() != null) builder.dueDate(request.getDueDate());
-        if (request.getStrictDeadline() != null) builder.isStrictDeadline(request.getStrictDeadline());
+        if (request.getTitle() != null) {
+            builder.title(request.getTitle());
+        }
+        if (request.getDescription() != null) {
+            builder.description(request.getDescription());
+        }
+        if (request.getAmountXlm() != null) {
+            builder.amountXlm(request.getAmountXlm());
+        }
+        if (request.getSequenceOrder() != null) {
+            builder.sequenceOrder(request.getSequenceOrder());
+        }
+        if (request.getDueDate() != null) {
+            builder.dueDate(request.getDueDate());
+        }
+        if (request.getStrictDeadline() != null) {
+            builder.isStrictDeadline(request.getStrictDeadline());
+        }
         
         Milestone updatedMilestone = builder.build();
         
@@ -129,6 +169,13 @@ public class MilestoneService {
         return toDto(updatedMilestone);
     }
     
+    /**
+     * Deletes a milestone.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void deleteMilestone(UUID projectId, UUID milestoneId, UUID requesterId) {
         Project project = projectRepository.findById(projectId)
@@ -157,8 +204,18 @@ public class MilestoneService {
         projectRepository.save(project.toBuilder().milestones(mutableMilestones).build());
     }
 
+    /**
+     * Submits a deliverable.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param request     the create deliverable request
+     * @param requesterId the requester ID
+     * @return the deliverable DTO
+     */
     @Transactional
-    public DeliverableDto submitDeliverable(UUID projectId, UUID milestoneId, CreateDeliverableRequest request, UUID requesterId) {
+    public DeliverableDto submitDeliverable(
+            UUID projectId, UUID milestoneId, CreateDeliverableRequest request, UUID requesterId) {
         Project project = getProject(projectId);
         if (project.getFreelancerUserId() == null || !requesterId.equals(project.getFreelancerUserId())) {
             throw new AccessDeniedException("Only the assigned freelancer can submit deliverables.");
@@ -185,6 +242,13 @@ public class MilestoneService {
         return toDeliverableDto(deliverable);
     }
 
+    /**
+     * Marks a milestone in review.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void markInReview(UUID projectId, UUID milestoneId, UUID requesterId) {
         Project project = getProject(projectId);
@@ -203,6 +267,13 @@ public class MilestoneService {
         updateMilestoneInProject(project, milestone);
     }
 
+    /**
+     * Approves a milestone.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void approveMilestone(UUID projectId, UUID milestoneId, UUID requesterId) {
         Project project = getProject(projectId);
@@ -228,6 +299,13 @@ public class MilestoneService {
         updateMilestoneInProject(project, milestone);
     }
 
+    /**
+     * Rejects a milestone.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     * @param requesterId the requester ID
+     */
     @Transactional
     public void rejectMilestone(UUID projectId, UUID milestoneId, UUID requesterId) {
         Project project = getProject(projectId);
@@ -248,6 +326,12 @@ public class MilestoneService {
         updateMilestoneInProject(project, milestone);
     }
 
+    /**
+     * Completes a milestone.
+     *
+     * @param projectId   the project ID
+     * @param milestoneId the milestone ID
+     */
     @Transactional
     public void completeMilestone(UUID projectId, UUID milestoneId) {
         Project project = getProject(projectId);

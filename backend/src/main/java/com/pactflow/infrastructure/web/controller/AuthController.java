@@ -62,6 +62,14 @@ public class AuthController {
                 req.getHeader("User-Agent")));
     }
 
+    /**
+     * Switches the active role for the user.
+     *
+     * @param request the switch role request
+     * @param principal the authenticated principal
+     * @param req the HTTP request
+     * @return the new auth response
+     */
     @PostMapping("/switch-role")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AuthResponse> switchRole(

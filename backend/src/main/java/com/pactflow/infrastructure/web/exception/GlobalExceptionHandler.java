@@ -1,6 +1,20 @@
 package com.pactflow.infrastructure.web.exception;
 
-import com.pactflow.application.exception.*;
+import com.pactflow.application.exception.AccountDeactivatedException;
+import com.pactflow.application.exception.AccountLockedException;
+import com.pactflow.application.exception.AuthorizationException;
+import com.pactflow.application.exception.BlockchainCommunicationException;
+import com.pactflow.application.exception.BusinessRuleViolationException;
+import com.pactflow.application.exception.DuplicateResourceException;
+import com.pactflow.application.exception.EntityNotFoundException;
+import com.pactflow.application.exception.ExternalServiceException;
+import com.pactflow.application.exception.InvalidCredentialsException;
+import com.pactflow.application.exception.InvalidStateTransitionException;
+import com.pactflow.application.exception.PactFlowException;
+import com.pactflow.application.exception.TokenExpiredException;
+import com.pactflow.application.exception.TokenReplayException;
+import com.pactflow.application.exception.ValidationException;
+import com.pactflow.application.exception.WeakPasswordException;
 import com.pactflow.application.user.exception.ActiveMilestonesPreventErasureException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -230,7 +244,8 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         }
         
         return respond(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR",
-                "Unexpected error: " + ex.getMessage() + " | Root cause: " + root.getMessage() + " | Ref: " + traceId, req);
+                "Unexpected error: " + ex.getMessage() + " | Root cause: " + root.getMessage() + " | Ref: " + traceId,
+                req);
     }
 
     private ResponseEntity<ProblemDetail> respond(

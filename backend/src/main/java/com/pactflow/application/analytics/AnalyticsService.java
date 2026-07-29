@@ -1,6 +1,11 @@
 package com.pactflow.application.analytics;
 
-import com.pactflow.application.analytics.dto.*;
+import com.pactflow.application.analytics.dto.AnalyticsPeriod;
+import com.pactflow.application.analytics.dto.CompanyAnalyticsResponse;
+import com.pactflow.application.analytics.dto.CompanySummary;
+import com.pactflow.application.analytics.dto.FreelancerAnalyticsResponse;
+import com.pactflow.application.analytics.dto.FreelancerSummary;
+import com.pactflow.application.analytics.dto.TrendData;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -8,6 +13,13 @@ import java.util.List;
 @Service
 public class AnalyticsService {
 
+    /**
+     * Gets the analytics for the current user.
+     *
+     * @param dateFrom the start date
+     * @param dateTo the end date
+     * @return the analytics object
+     */
     public Object getMyAnalytics(String dateFrom, String dateTo) {
         String userId = "mock-user-id";
         String accountType = "COMPANY"; // Mocked to fix compilation

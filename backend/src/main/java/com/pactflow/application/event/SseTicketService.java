@@ -14,6 +14,12 @@ public class SseTicketService {
     private final Map<String, UUID> activeTickets = new ConcurrentHashMap<>();
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
+    /**
+     * Generates a ticket for the user.
+     *
+     * @param userId the user ID
+     * @return the ticket
+     */
     public String generateTicket(UUID userId) {
         String ticket = UUID.randomUUID().toString();
         activeTickets.put(ticket, userId);
@@ -24,6 +30,12 @@ public class SseTicketService {
         return ticket;
     }
 
+    /**
+     * Validates and consumes a ticket.
+     *
+     * @param ticket the ticket
+     * @return the user ID
+     */
     public UUID validateAndConsumeTicket(String ticket) {
         return activeTickets.remove(ticket);
     }

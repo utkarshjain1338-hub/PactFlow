@@ -28,7 +28,7 @@ import com.pactflow.application.exception.InvalidCredentialsException;
 import com.pactflow.application.exception.TokenExpiredException;
 import com.pactflow.application.exception.TokenReplayException;
 
-import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -297,7 +297,8 @@ public class AuthService {
      * @return confirmation message response
      */
     @Transactional
-    public MessageResponse updatePassword(final com.pactflow.application.auth.dto.UpdatePasswordRequest request, final UUID userId) {
+    public MessageResponse updatePassword(
+            final com.pactflow.application.auth.dto.UpdatePasswordRequest request, final UUID userId) {
         final User user = findUserOrThrow(userId);
         
         if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {

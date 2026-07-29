@@ -43,7 +43,24 @@ public class Project implements SoftDeletable {
     @Builder.Default
     private List<Milestone> milestones = new ArrayList<>();
 
-    public static Project create(UUID clientUserId, UUID freelancerUserId, String title, String description, BigDecimal totalBudgetXlm, LocalDate deadline) {
+    /**
+     * Creates a new project.
+     *
+     * @param clientUserId the client user ID
+     * @param freelancerUserId the freelancer user ID
+     * @param title the project title
+     * @param description the project description
+     * @param totalBudgetXlm the total budget in XLM
+     * @param deadline the project deadline
+     * @return the created project
+     */
+    public static Project create(
+            UUID clientUserId, 
+            UUID freelancerUserId, 
+            String title, 
+            String description, 
+            BigDecimal totalBudgetXlm, 
+            LocalDate deadline) {
         if (clientUserId == null) {
             throw new IllegalArgumentException("Client User ID is required.");
         }
@@ -72,6 +89,11 @@ public class Project implements SoftDeletable {
                 .build();
     }
 
+    /**
+     * Adds a milestone to the project.
+     *
+     * @param milestone the milestone to add
+     */
     public void addMilestone(Milestone milestone) {
         if (!milestone.getProjectId().equals(this.id)) {
             throw new IllegalArgumentException("Milestone does not belong to this project.");
@@ -89,6 +111,11 @@ public class Project implements SoftDeletable {
         this.milestones.add(milestone);
     }
     
+    /**
+     * Assigns a freelancer to the project.
+     *
+     * @param freelancerUserId the freelancer user ID
+     */
     public void assignFreelancer(UUID freelancerUserId) {
         if (this.clientUserId.equals(freelancerUserId)) {
             throw new IllegalArgumentException("Client and freelancer must be distinct.");
@@ -96,30 +123,50 @@ public class Project implements SoftDeletable {
         this.freelancerUserId = freelancerUserId;
     }
     
+    /**
+     * Links a client wallet to the project.
+     *
+     * @param walletId the wallet ID
+     */
     public void linkClientWallet(UUID walletId) {
         if (!isWalletMutable()) {
-            throw new IllegalStateException("Cannot link client wallet after escrow funding has occurred or project is closed.");
+            throw new IllegalStateException(
+                    "Cannot link client wallet after escrow funding has occurred or project is closed.");
         }
         this.clientWalletId = walletId;
     }
     
+    /**
+     * Unlinks the client wallet from the project.
+     */
     public void unlinkClientWallet() {
         if (!isWalletMutable()) {
-            throw new IllegalStateException("Cannot unlink client wallet after escrow funding has occurred or project is closed.");
+            throw new IllegalStateException(
+                    "Cannot unlink client wallet after escrow funding has occurred or project is closed.");
         }
         this.clientWalletId = null;
     }
     
+    /**
+     * Links a freelancer wallet to the project.
+     *
+     * @param walletId the wallet ID
+     */
     public void linkFreelancerWallet(UUID walletId) {
         if (!isWalletMutable()) {
-            throw new IllegalStateException("Cannot link freelancer wallet after escrow funding has occurred or project is closed.");
+            throw new IllegalStateException(
+                    "Cannot link freelancer wallet after escrow funding has occurred or project is closed.");
         }
         this.freelancerWalletId = walletId;
     }
     
+    /**
+     * Unlinks the freelancer wallet from the project.
+     */
     public void unlinkFreelancerWallet() {
         if (!isWalletMutable()) {
-            throw new IllegalStateException("Cannot unlink freelancer wallet after escrow funding has occurred or project is closed.");
+            throw new IllegalStateException(
+                    "Cannot unlink freelancer wallet after escrow funding has occurred or project is closed.");
         }
         this.freelancerWalletId = null;
     }
@@ -132,12 +179,18 @@ public class Project implements SoftDeletable {
         this.isDeleted = true;
     }
     
+    /**
+     * Checks if the wallet is mutable.
+     *
+     * @return true if mutable, false otherwise
+     */
     public boolean isWalletMutable() {
         if (this.status == ProjectStatus.ARCHIVED || this.status == ProjectStatus.CANCELLED) {
             return false;
         }
         return this.milestones.stream()
-                .noneMatch(m -> !m.isDeleted() && m.getStatus() != MilestoneStatus.DRAFT && m.getStatus() != MilestoneStatus.CANCELLED);
+                .noneMatch(m -> !m.isDeleted() && m.getStatus() != MilestoneStatus.DRAFT 
+                        && m.getStatus() != MilestoneStatus.CANCELLED);
     }
     
     public boolean isStructurallyReady() {
@@ -146,6 +199,9 @@ public class Project implements SoftDeletable {
                this.status == ProjectStatus.ACTIVE;
     }
     
+    /**
+     * Archives the project.
+     */
     public void archive() {
         if (this.status == ProjectStatus.ARCHIVED) {
             throw new IllegalStateException("Project is already archived.");

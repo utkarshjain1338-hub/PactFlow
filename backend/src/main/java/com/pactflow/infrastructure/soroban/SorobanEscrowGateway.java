@@ -60,12 +60,17 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
     @Override
     public UnsignedTransaction buildFundingTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "deposit", List.of(Scv.toString(escrow.getId().toString())), "FUND");
+        return buildInvokeTransaction(
+                sourceAccountAddress, "deposit", List.of(Scv.toString(escrow.getId().toString())), "FUND");
     }
 
     @Override
     public UnsignedTransaction buildReleaseTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "approveMilestone", List.of(Scv.toString(escrow.getId().toString()), Scv.toUint32(0)), "RELEASE");
+        return buildInvokeTransaction(
+                sourceAccountAddress, 
+                "approveMilestone", 
+                List.of(Scv.toString(escrow.getId().toString()), Scv.toUint32(0)), 
+                "RELEASE");
     }
 
     /**
@@ -105,7 +110,8 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
     @Override
     public UnsignedTransaction buildRefundTransaction(Escrow escrow, String sourceAccountAddress) {
-        return buildInvokeTransaction(sourceAccountAddress, "refund", List.of(Scv.toString(escrow.getId().toString())), "REFUND");
+        return buildInvokeTransaction(
+                sourceAccountAddress, "refund", List.of(Scv.toString(escrow.getId().toString())), "REFUND");
     }
 
     /**
@@ -116,11 +122,14 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
      * @return the transaction hash from the network
      */
     public String broadcastTransaction(String signedXdr) {
-        Transaction transaction = (Transaction) AbstractTransaction.fromEnvelopeXdr(signedXdr, new Network(networkPassphrase));
+        Transaction transaction = (Transaction) AbstractTransaction.fromEnvelopeXdr(
+                signedXdr, new Network(networkPassphrase));
         SendTransactionResponse response = sorobanServer.sendTransaction(transaction);
 
-        if (response.getStatus().equals("ERROR") || (response.getStatus().equals("DUPLICATE") && response.getHash() == null)) {
-            throw new IllegalStateException("Soroban network rejected transaction. Status: " + response.getStatus()
+        if (response.getStatus().equals("ERROR") || 
+                (response.getStatus().equals("DUPLICATE") && response.getHash() == null)) {
+            throw new IllegalStateException(
+                    "Soroban network rejected transaction. Status: " + response.getStatus()
                     + ", Error: " + response.getErrorResultXdr());
         }
 
@@ -140,11 +149,16 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
         );
     }
 
+    /**
+     * Closes the gateway and its resources.
+     */
     @PreDestroy
     public void close() {
         try {
             sorobanServer.close();
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // Ignored
+        }
     }
 
     private UnsignedTransaction buildInvokeTransaction(
@@ -180,7 +194,8 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
             preparedTransaction = sorobanServer.prepareTransaction(transaction, simulation);
         } catch (Exception e) {
-            throw new IllegalStateException("Failed to simulate Soroban transaction [" + functionName + "]: " + e.getMessage(), e);
+            throw new IllegalStateException(
+                    "Failed to simulate Soroban transaction [" + functionName + "]: " + e.getMessage(), e);
         }
 
         return new UnsignedTransaction(

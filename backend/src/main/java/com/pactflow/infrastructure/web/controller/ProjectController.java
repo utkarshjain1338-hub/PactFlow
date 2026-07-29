@@ -10,7 +10,14 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
@@ -34,6 +41,13 @@ public class ProjectController {
         return ResponseEntity.status(HttpStatus.CREATED).body(project);
     }
 
+    /**
+     * Gets a project by ID.
+     *
+     * @param user the authenticated user
+     * @param id the project ID
+     * @return the project DTO
+     */
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDto> getProject(
             @AuthenticationPrincipal UserSummaryDto user,
@@ -43,6 +57,12 @@ public class ProjectController {
         return ResponseEntity.ok(project);
     }
 
+    /**
+     * Gets all projects for the current user.
+     *
+     * @param user the authenticated user
+     * @return the list of projects
+     */
     @GetMapping
     public ResponseEntity<List<ProjectDto>> getMyProjects(@AuthenticationPrincipal UserSummaryDto user) {
         List<ProjectDto> asClient = projectService.getProjectsForClient(user.id());

@@ -42,7 +42,9 @@ public class AccountAnonymizationJob {
      * Scheduled job to process a batch of soft-deleted accounts and null out their PII.
      * Runs periodically as defined by pactflow.scheduling.anonymization-interval-ms.
      */
-    @Scheduled(fixedDelayString = "${pactflow.scheduling.anonymization-interval-ms:3600000}", initialDelayString = "30000")
+    @Scheduled(
+            fixedDelayString = "${pactflow.scheduling.anonymization-interval-ms:3600000}", 
+            initialDelayString = "30000")
     @Transactional
     public void runAnonymizationBatch() {
         LOG.debug("Starting scheduled account anonymization batch cycle...");

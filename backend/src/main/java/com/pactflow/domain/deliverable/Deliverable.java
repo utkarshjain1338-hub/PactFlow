@@ -25,7 +25,26 @@ public class Deliverable {
     private OffsetDateTime submittedAt;
     private DeliverableStatus status;
 
-    public static Deliverable submit(UUID milestoneId, UUID submittedBy, String title, String description, String fileUrl, String repositoryUrl, String commitHash) {
+    /**
+     * Submits a deliverable.
+     *
+     * @param milestoneId the milestone ID
+     * @param submittedBy the user submitting the work
+     * @param title the deliverable title
+     * @param description the deliverable description
+     * @param fileUrl the file URL
+     * @param repositoryUrl the repository URL
+     * @param commitHash the commit hash
+     * @return the created deliverable
+     */
+    public static Deliverable submit(
+            UUID milestoneId, 
+            UUID submittedBy, 
+            String title, 
+            String description, 
+            String fileUrl, 
+            String repositoryUrl, 
+            String commitHash) {
         if (milestoneId == null || submittedBy == null) {
             throw new IllegalArgumentException("Milestone ID and Submitted By are required.");
         }
@@ -47,6 +66,9 @@ public class Deliverable {
                 .build();
     }
     
+    /**
+     * Accepts the deliverable.
+     */
     public void accept() {
         if (this.status != DeliverableStatus.SUBMITTED) {
             throw new IllegalStateException("Only submitted deliverables can be accepted.");
@@ -54,6 +76,9 @@ public class Deliverable {
         this.status = DeliverableStatus.ACCEPTED;
     }
     
+    /**
+     * Rejects the deliverable.
+     */
     public void reject() {
         if (this.status != DeliverableStatus.SUBMITTED) {
             throw new IllegalStateException("Only submitted deliverables can be rejected.");

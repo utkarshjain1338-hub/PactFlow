@@ -20,6 +20,14 @@ public class BlockchainTransaction {
     private final OffsetDateTime confirmedAt;
     private final Long version;
 
+    /**
+     * Creates a new blockchain transaction.
+     *
+     * @param escrowId the escrow ID
+     * @param transactionHash the transaction hash
+     * @param operation the blockchain operation
+     * @return the created transaction
+     */
     public static BlockchainTransaction create(UUID escrowId, String transactionHash, BlockchainOperation operation) {
         if (escrowId == null) {
             throw new IllegalArgumentException("escrowId cannot be null");
@@ -41,6 +49,13 @@ public class BlockchainTransaction {
                 .build();
     }
 
+    /**
+     * Marks the transaction as successful.
+     *
+     * @param ledger the ledger number
+     * @param confirmedAt the confirmation time
+     * @return the updated transaction
+     */
     public BlockchainTransaction markSuccess(Long ledger, OffsetDateTime confirmedAt) {
         if (this.status != BlockchainTransactionStatus.PENDING) {
             throw new IllegalStateException("Transaction is not pending");
@@ -52,6 +67,12 @@ public class BlockchainTransaction {
                 .build();
     }
 
+    /**
+     * Marks the transaction as failed.
+     *
+     * @param failureReason the failure reason
+     * @return the updated transaction
+     */
     public BlockchainTransaction markFailed(String failureReason) {
         if (this.status != BlockchainTransactionStatus.PENDING) {
             throw new IllegalStateException("Transaction is not pending");

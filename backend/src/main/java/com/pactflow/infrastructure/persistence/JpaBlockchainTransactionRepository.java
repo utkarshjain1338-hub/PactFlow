@@ -12,5 +12,6 @@ import java.util.UUID;
 public interface JpaBlockchainTransactionRepository extends JpaRepository<BlockchainTransactionJpaEntity, UUID> {
     Optional<BlockchainTransactionJpaEntity> findByTransactionHash(String transactionHash);
     List<BlockchainTransactionJpaEntity> findByEscrowId(UUID escrowId);
-    List<BlockchainTransactionJpaEntity> findByStatus(com.pactflow.domain.blockchain.BlockchainTransactionStatus status);
+    List<BlockchainTransactionJpaEntity> findByStatus(
+            com.pactflow.domain.blockchain.BlockchainTransactionStatus status);
 }
