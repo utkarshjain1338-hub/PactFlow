@@ -141,17 +141,17 @@ export function SearchBar() {
    <button
     onClick={() => setOpen(true)}
     className={cn(
-     "flex items-center gap-2.5",
-     "h-9 px-3.5 rounded-lg",
+     "flex items-center justify-center sm:justify-start gap-2.5",
+     "h-9 w-9 sm:w-64 lg:w-72 sm:px-3.5 rounded-lg",
      "bg-surface-1 border border-border-subtle",
      "text-text-tertiary text-sm",
      "hover:border-border-default hover:text-text-secondary hover:bg-surface-2",
-     "transition-all duration-150 select-none w-64 lg:w-72"
+     "transition-all duration-150 select-none shrink-0"
     )}
     aria-label="Open search command palette"
    >
     <Search size={15} className="text-text-tertiary shrink-0" />
-    <span className="truncate flex-1 text-left">Search projects, escrow…</span>
+    <span className="hidden sm:block truncate flex-1 text-left">Search projects, escrow…</span>
     <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] font-mono px-1.5 py-0.5 bg-surface-2 rounded border border-border-default text-text-disabled shrink-0">
      ⌘K
     </kbd>

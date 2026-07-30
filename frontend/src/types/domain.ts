@@ -108,6 +108,7 @@ export interface EscrowContract {
   fundedAt: string | null;
   releasedAt: string | null;
   refundedAt: string | null;
+  transactionReferences?: string | null;
   createdAt: string;
   updatedAt: string;
 }

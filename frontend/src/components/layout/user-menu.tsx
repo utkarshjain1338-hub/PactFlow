@@ -57,7 +57,7 @@ export function UserMenu() {
       <DropdownMenuPrimitive.Trigger asChild>
         <button
           className={cn(
-            "flex items-center gap-2.5 pl-1.5 pr-3 h-9 rounded-lg select-none",
+            "flex items-center gap-2.5 pl-1.5 pr-1.5 md:pr-3 h-9 rounded-full select-none",
             "bg-surface-1 border border-border-subtle",
             "hover:border-border-default hover:bg-surface-2",
             "transition-all duration-150",
@@ -177,27 +177,7 @@ export function UserMenu() {
             </Link>
           </DropdownMenuPrimitive.Item>
 
-          <DropdownMenuPrimitive.Item asChild>
-            <Link
-              href="/settings/billing"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors outline-none cursor-pointer"
-            >
-              <CreditCard size={14} className="text-text-tertiary" />
-              Billing &amp; Payouts
-            </Link>
-          </DropdownMenuPrimitive.Item>
 
-          <DropdownMenuPrimitive.Item asChild>
-            <Link
-              href="/settings/security"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-text-secondary hover:text-text-primary hover:bg-surface-3 transition-colors outline-none cursor-pointer"
-            >
-              <Shield size={14} className="text-text-tertiary" />
-              Security &amp; MFA
-            </Link>
-          </DropdownMenuPrimitive.Item>
 
           <DropdownMenuPrimitive.Separator className="my-1.5 h-px bg-border-subtle" />
 

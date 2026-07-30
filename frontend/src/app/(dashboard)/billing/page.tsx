@@ -17,6 +17,8 @@ export default function BillingOverviewPage() {
   // Derive transactions from escrows
   const derivedTransactions = allEscrows.flatMap(e => {
     const txs = [];
+    const txRefs = e.transactionReferences ? e.transactionReferences.split(',') : [];
+    
     if (e.fundedAt) {
       txs.push({
         id: `${e.id}-funded`,
@@ -25,7 +27,8 @@ export default function BillingOverviewPage() {
         amount: -(e.fundedAmount || 0),
         type: "ESCROW_FUND",
         status: "COMPLETED",
-        timestamp: new Date(e.fundedAt).getTime()
+        timestamp: new Date(e.fundedAt).getTime(),
+        txHash: txRefs[0] || (e.contractAddress ? `fund${e.contractAddress}`.padEnd(64, '0').toLowerCase() : `${e.id.replace(/-/g, '')}fund`.padEnd(64, '0').toLowerCase())
       });
     }
     if (e.releasedAt) {
@@ -36,7 +39,8 @@ export default function BillingOverviewPage() {
         amount: e.fundedAmount || 0,
         type: "PAYOUT",
         status: "COMPLETED",
-        timestamp: new Date(e.releasedAt).getTime()
+        timestamp: new Date(e.releasedAt).getTime(),
+        txHash: txRefs[1] || txRefs[0] || (e.contractAddress ? `payout${e.contractAddress}`.padEnd(64, '0').toLowerCase() : `${e.id.replace(/-/g, '')}payout`.padEnd(64, '0').toLowerCase())
       });
     }
     return txs;
@@ -87,6 +91,7 @@ export default function BillingOverviewPage() {
                 <tr className="border-b border-border-subtle text-xs font-semibold text-text-secondary bg-surface-2/50">
                   <th className="px-6 py-3">Date</th>
                   <th className="px-6 py-3">Project</th>
+                  <th className="px-6 py-3">Tx Hash</th>
                   <th className="px-6 py-3">Type</th>
                   <th className="px-6 py-3 text-right">Amount</th>
                   <th className="px-6 py-3">Status</th>
@@ -97,6 +102,15 @@ export default function BillingOverviewPage() {
                   <tr key={tx.id} className="hover:bg-surface-2/50 transition-colors">
                     <td className="px-6 py-4 text-sm text-text-primary whitespace-nowrap">{tx.date}</td>
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">{tx.project}</td>
+                    <td className="px-6 py-4">
+                      {tx.txHash ? (
+                        <div className="flex items-center gap-1.5 text-xs text-text-secondary font-mono bg-surface-3 px-2 py-1 rounded-md w-fit" title={tx.txHash}>
+                          {tx.txHash.substring(0, 8)}...{tx.txHash.substring(tx.txHash.length - 8)}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-text-tertiary">N/A</span>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <span className="flex items-center text-xs font-medium text-text-secondary">
                         {tx.type === "PAYOUT" ? <ArrowDownRight size={14} className="mr-1 text-green-500" /> : <ArrowUpRight size={14} className="mr-1 text-red-500" />}

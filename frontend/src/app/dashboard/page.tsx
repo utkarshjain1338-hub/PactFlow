@@ -313,13 +313,10 @@ function WelcomeBanner() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 mt-4">
-        <Button size="sm" variant="primary">
-          Review Submission
-        </Button>
+      <div className="flex items-center gap-3 mt-4 flex-wrap">
         <Link href="/projects">
-          <Button size="sm" variant="ghost">
-            View All Projects
+          <Button size="md" variant="primary">
+            Review Submission
           </Button>
         </Link>
       </div>
