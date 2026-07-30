@@ -129,6 +129,16 @@ Explorer: https://stellar.expert/explorer/testnet/tx/bcfee499ba320730c7a520a260e
 
 ---
 
+## 💬 User Reviews
+
+| User | Address | Transaction Hash | Review |
+|------|---------|------------------|--------|
+| Utkarsh Jain | `GCQ3LHNUDBGBY4KFLYANHQ7AE7SM2XLRM4DFNBYK2YGNTTASC3EO7CZ5` | `68c1757716af3f8e83d07e1be85a8d3317515650177531199a969326c821210e` | The wallet connected quickly and the escrow creation process was easy to follow. Overall, the experience was smooth. |
+| Aksh | `GBOFBMWOABDO3PEP76DROOEAWNL7RLOUI2PTSL5EGLOW7DYIWD73XD44` | `cdb35bfc4c10fb673aaa0df4028072e1ff816d8070bf0b8d74d54e94805e6f1d` | I was able to connect my wallet and complete the transaction without any issues. The interface was clean and intuitive. |
+| Krishna Singh | `GBFW3V57S66ICKXHFS7RDHKRL7UAUN2GCUPGBZGCMTGHHGUHPEDXQ6AB` | `a0c6dc196d17a06ebdc4cf35fefeba172ef6a3d8902695b7fcf47dc97a00c114` | Connecting my wallet was straightforward and creating an escrow took only a few steps. Displaying the transaction details more clearly after submission would be helpful. |
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
