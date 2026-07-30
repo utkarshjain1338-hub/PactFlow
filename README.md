@@ -463,10 +463,6 @@ PactFlow/
 - [x] Light / Dark mode with semantic design tokens
 - [x] CI/CD with Checkstyle, ESLint, JUnit, and OWASP
 - [x] Docker Compose local development environment
-- [ ] Real-time notifications via Server-Sent Events
-- [ ] Dispute resolution with arbiter multisig
-- [ ] Mainnet deployment with production KYC
-- [ ] Mobile-responsive PWA
 
 ---
 
