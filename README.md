@@ -153,7 +153,7 @@ Explorer: https://stellar.expert/explorer/testnet/tx/bcfee499ba320730c7a520a260e
 - Java 21 (Temurin recommended)
 - Node.js 20+ with npm
 - Docker & Docker Compose
-- Rust + `wasm32-unknown-unknown` target (for contract development)
+- Rust + `wasm32v1-none` target (for contract development)
 - [Stellar CLI](https://developers.stellar.org/docs/tools/stellar-cli)
 
 ### 1. Clone & Install
@@ -194,11 +194,11 @@ Open [http://localhost:3000](http://localhost:3000) and register an account.
 cd contracts
 
 # Build the WASM
-cargo build --release --target wasm32-unknown-unknown
+cargo build --release --target wasm32v1-none
 
 # Deploy to Testnet
 stellar contract deploy \
-  --wasm target/wasm32-unknown-unknown/release/pactflow_escrow.wasm \
+  --wasm target/wasm32v1-none/release/pactflow_escrow.wasm \
   --source <YOUR_SECRET_KEY> \
   --network testnet
 ```
