@@ -216,11 +216,10 @@ jobs:
     needs: ci-complete
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy Frontend (Mock)
+      - name: Deploy Frontend
         working-directory: frontend
-        run: |
-          echo "Deploying frontend to Vercel..."
-          # npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
+        continue-on-error: true
+        run: npx vercel --prod --token ${{ secrets.VERCEL_TOKEN }}
 
   deploy-smart-contract:
     name: "Smart Contract — Deploy"
@@ -228,8 +227,7 @@ jobs:
     needs: ci-complete
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Deploy Smart Contract (Mock)
+      - name: Deploy Smart Contract
         working-directory: contracts
-        run: |
-          echo "Deploying smart contract to Stellar testnet..."
-          # stellar contract deploy --wasm target/wasm32v1-none/release/pactflow_escrow.wasm --source ${{ secrets.STELLAR_SECRET }} --network testnet
+        continue-on-error: true
+        run: stellar contract deploy --wasm target/wasm32v1-none/release/pactflow_escrow.wasm --source ${{ secrets.STELLAR_SECRET }} --network testnet
