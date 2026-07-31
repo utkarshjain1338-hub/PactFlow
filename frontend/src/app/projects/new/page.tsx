@@ -121,7 +121,7 @@ export default function NewProjectPage() {
   } catch (error: any) {
    console.error(error);
    if (error instanceof ApiClientError) {
-    const fieldErrors = error.problem?.errors?.map((e: any) => `${e.field}: ${e.message}`).join(", ");
+    const fieldErrors = (error as any).problem?.errors?.map((e: any) => `${e.field}: ${e.message}`).join(", ");
     toast.error("Failed to create project", {
      description: fieldErrors || error.message,
     });

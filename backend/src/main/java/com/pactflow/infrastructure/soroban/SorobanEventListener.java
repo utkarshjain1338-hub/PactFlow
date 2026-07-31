@@ -48,8 +48,10 @@ public class SorobanEventListener {
         for (var tx : pendingTxs) {
             try {
                 if (java.time.OffsetDateTime.now().minusMinutes(10).isAfter(tx.getCreatedAt())) {
-                    log.warn("Transaction {} has been pending for >= 10 minutes. Marking as FAILED.", tx.getTransactionHash());
-                    escrowService.handleTransactionFailed(tx.getTransactionHash(), "Transaction timed out after 10 minutes");
+                    log.warn("Transaction {} has been pending for >= 10 minutes. " +
+                             "Marking as FAILED.", tx.getTransactionHash());
+                    escrowService.handleTransactionFailed(tx.getTransactionHash(), 
+                            "Transaction timed out after 10 minutes");
                     continue;
                 }
 

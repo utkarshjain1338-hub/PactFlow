@@ -143,7 +143,8 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
 
         if (response.getErrorResultXdr() != null && !response.getErrorResultXdr().isBlank()) {
             try {
-                org.stellar.sdk.xdr.TransactionResult result = org.stellar.sdk.xdr.TransactionResult.fromXdrBase64(response.getErrorResultXdr());
+                org.stellar.sdk.xdr.TransactionResult result = 
+                        org.stellar.sdk.xdr.TransactionResult.fromXdrBase64(response.getErrorResultXdr());
                 log.info("Decoded TransactionResult code: {}", result.getResult().getDiscriminant().name());
                 if (result.getResult().getResults() != null && result.getResult().getResults().length > 0) {
                     for (int i = 0; i < result.getResult().getResults().length; i++) {

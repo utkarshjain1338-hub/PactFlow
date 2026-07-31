@@ -170,60 +170,7 @@ public class EscrowService {
 
         Escrow escrow = getEscrow(tx.getEscrowId());
 
-        String eventType = "transaction.confirmed";
-
-        switch (tx.getOperation()) {
-            case INITIALIZE -> {
-                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.CREATED) {
-                    log.info("Escrow {} is already past CREATED status, skipping INITIALIZE event as duplicate", escrow.getId());
-                    return escrow;
-                }
-                // Contract is now initialized on-chain
-                escrow.initiateFunding();
-                eventType = "escrow.initialized";
-            }
-            case FUND -> { 
-                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
-                    log.info("Escrow {} is already past PENDING_FUNDING status, skipping FUND event as duplicate", escrow.getId());
-                    return escrow;
-                }
-                com.pactflow.domain.milestone.Milestone m = milestoneRepository
-                        .findById(escrow.getMilestoneId()).orElse(null);
-                if (m != null) {
-                    escrow.markFunded(m.getAmountXlm(), transactionHash);
-                    if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.DRAFT) {
-                        m.markAsFunded();
-                        m.markAsInProgress();
-                    } else if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.FUNDED) {
-                        m.markAsInProgress();
-                    }
-                    milestoneRepository.save(m);
-                } else {
-                    // Fallback just in case milestone is missing, though it shouldn't be
-                    escrow.markFunded(BigDecimal.ONE, transactionHash);
-                }
-                eventType = "escrow.funded"; 
-            }
-            case RELEASE -> { 
-                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED && 
-                    escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
-                    log.info("Escrow {} is not in APPROVED or DISPUTED status, skipping RELEASE event as duplicate", escrow.getId());
-                    return escrow;
-                }
-                escrow.release(transactionHash); 
-                eventType = "escrow.released"; 
-            }
-            case REFUND -> { 
-                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED && 
-                    escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
-                    log.info("Escrow {} is not in FUNDED or DISPUTED status, skipping REFUND event as duplicate", escrow.getId());
-                    return escrow;
-                }
-                escrow.refund(transactionHash); 
-                eventType = "escrow.refunded"; 
-            }
-            default -> throw new IllegalStateException("Unsupported operation: " + tx.getOperation());
-        }
+        String eventType = applyConfirmedOperation(escrow, tx, transactionHash);
 
         escrow = escrowRepository.save(escrow);
 
@@ -236,6 +183,79 @@ public class EscrowService {
                 .build());
 
         return escrow;
+    }
+
+    private String applyConfirmedOperation(Escrow escrow, BlockchainTransaction tx, String transactionHash) {
+        switch (tx.getOperation()) {
+            case INITIALIZE -> {
+                return handleInitialize(escrow);
+            }
+            case FUND -> {
+                return handleFund(escrow, transactionHash);
+            }
+            case RELEASE -> {
+                return handleRelease(escrow, transactionHash);
+            }
+            case REFUND -> {
+                return handleRefund(escrow, transactionHash);
+            }
+            default -> throw new IllegalStateException("Unsupported operation: " + tx.getOperation());
+        }
+    }
+
+    private String handleInitialize(Escrow escrow) {
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.CREATED) {
+            log.info("Escrow {} is already past CREATED status, " +
+                     "skipping INITIALIZE event as duplicate", escrow.getId());
+            return "transaction.confirmed";
+        }
+        escrow.initiateFunding();
+        return "escrow.initialized";
+    }
+
+    private String handleFund(Escrow escrow, String transactionHash) {
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
+            log.info("Escrow {} is already past PENDING_FUNDING status, " +
+                     "skipping FUND event as duplicate", escrow.getId());
+            return "transaction.confirmed";
+        }
+        com.pactflow.domain.milestone.Milestone m = milestoneRepository
+                .findById(escrow.getMilestoneId()).orElse(null);
+        if (m != null) {
+            escrow.markFunded(m.getAmountXlm(), transactionHash);
+            if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.DRAFT) {
+                m.markAsFunded();
+                m.markAsInProgress();
+            } else if (m.getStatus() == com.pactflow.domain.milestone.MilestoneStatus.FUNDED) {
+                m.markAsInProgress();
+            }
+            milestoneRepository.save(m);
+        } else {
+            escrow.markFunded(BigDecimal.ONE, transactionHash);
+        }
+        return "escrow.funded";
+    }
+
+    private String handleRelease(Escrow escrow, String transactionHash) {
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED &&
+            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+            log.info("Escrow {} is not in APPROVED or DISPUTED status, " +
+                     "skipping RELEASE event as duplicate", escrow.getId());
+            return "transaction.confirmed";
+        }
+        escrow.release(transactionHash);
+        return "escrow.released";
+    }
+
+    private String handleRefund(Escrow escrow, String transactionHash) {
+        if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED &&
+            escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+            log.info("Escrow {} is not in FUNDED or DISPUTED status, " +
+                     "skipping REFUND event as duplicate", escrow.getId());
+            return "transaction.confirmed";
+        }
+        escrow.refund(transactionHash);
+        return "escrow.refunded";
     }
 
     /**
