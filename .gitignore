@@ -4,3 +4,4 @@ bin/
 gradle.properties
 
 *.class
+node_modules/

@@ -18,7 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 public class EscrowService {
 
@@ -172,11 +174,19 @@ public class EscrowService {
 
         switch (tx.getOperation()) {
             case INITIALIZE -> {
+                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.CREATED) {
+                    log.info("Escrow {} is already past CREATED status, skipping INITIALIZE event as duplicate", escrow.getId());
+                    return escrow;
+                }
                 // Contract is now initialized on-chain
                 escrow.initiateFunding();
                 eventType = "escrow.initialized";
             }
             case FUND -> { 
+                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.PENDING_FUNDING) {
+                    log.info("Escrow {} is already past PENDING_FUNDING status, skipping FUND event as duplicate", escrow.getId());
+                    return escrow;
+                }
                 com.pactflow.domain.milestone.Milestone m = milestoneRepository
                         .findById(escrow.getMilestoneId()).orElse(null);
                 if (m != null) {
@@ -195,10 +205,20 @@ public class EscrowService {
                 eventType = "escrow.funded"; 
             }
             case RELEASE -> { 
+                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.APPROVED && 
+                    escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+                    log.info("Escrow {} is not in APPROVED or DISPUTED status, skipping RELEASE event as duplicate", escrow.getId());
+                    return escrow;
+                }
                 escrow.release(transactionHash); 
                 eventType = "escrow.released"; 
             }
             case REFUND -> { 
+                if (escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.FUNDED && 
+                    escrow.getStatus() != com.pactflow.domain.escrow.EscrowStatus.DISPUTED) {
+                    log.info("Escrow {} is not in FUNDED or DISPUTED status, skipping REFUND event as duplicate", escrow.getId());
+                    return escrow;
+                }
                 escrow.refund(transactionHash); 
                 eventType = "escrow.refunded"; 
             }

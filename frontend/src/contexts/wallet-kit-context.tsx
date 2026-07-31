@@ -146,7 +146,7 @@ export function WalletKitProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signTransaction = useCallback(async (xdr: string) => {
-    const response = await StellarWalletsKit.signTransaction(xdr);
+    const response = await StellarWalletsKit.signTransaction(xdr, { network: wallet.network });
     return response.signedTxXdr;
   }, []);
 

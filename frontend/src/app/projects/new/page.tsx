@@ -25,18 +25,26 @@ import { toast } from "sonner";
 import * as z from "zod";
 
 // ── Validation Schemas ──
+const dateIsFutureOrPresent = (val: string) => {
+  if (!val) return false;
+  const selectedDate = new Date(val);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return selectedDate >= today;
+};
+
 const milestoneSchema = z.object({
  title: z.string().min(3, "Title must be at least 3 characters").max(200),
  description: z.string().max(3000).optional(),
  amountXlm: z.preprocess((val) => Number(val), z.number().min(0.0000001, "Amount must be positive")),
- dueDate: z.string().min(1, "Due date is required"),
+ dueDate: z.string().min(1, "Due date is required").refine(dateIsFutureOrPresent, "Due date must be today or in the future"),
 });
 
 const projectSchema = z.object({
  title: z.string().min(5, "Title must be at least 5 characters").max(200),
  description: z.string().max(5000).optional(),
  totalBudgetXlm: z.preprocess((val) => Number(val), z.number().min(0.0000001, "Budget must be positive")),
- deadline: z.string().min(1, "Deadline is required"),
+ deadline: z.string().min(1, "Deadline is required").refine(dateIsFutureOrPresent, "Deadline must be today or in the future"),
  assigneeEmail: z.string().email("Must be a valid email").optional().or(z.literal('')),
  milestones: z.array(milestoneSchema).min(1, "At least one milestone is required"),
 });
@@ -110,14 +118,17 @@ export default function NewProjectPage() {
     description: "Your escrow contract is being staged.",
    });
    router.push(`/projects/${project.id}`);
-  } catch (error) {
+  } catch (error: any) {
    console.error(error);
    if (error instanceof ApiClientError) {
+    const fieldErrors = error.problem?.errors?.map((e: any) => `${e.field}: ${e.message}`).join(", ");
     toast.error("Failed to create project", {
-     description: error.message,
+     description: fieldErrors || error.message,
     });
    } else {
-    toast.error("An unexpected error occurred");
+    toast.error("An unexpected error occurred", {
+     description: error?.message || "Unknown error",
+    });
    }
   } finally {
    setIsSubmitting(false);

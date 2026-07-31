@@ -361,7 +361,7 @@ mod test {
         let contract_id = env.register(PactFlowEscrow, ());
         let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
-        assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &100i128, &2u32), Ok(Ok(())));
+        assert_eq!(client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &100i128, &2u32), Ok(Ok(())));
         assert_eq!(client_contract.try_deposit(&soroban_sdk::String::from_str(&env, "proj_1")), Ok(Ok(())));
         assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Ok(Ok(())));
         assert_eq!(client_contract.try_approveMilestone(&soroban_sdk::String::from_str(&env, "proj_1"), &0u32), Err(Ok(EscrowError::DuplicateOperation)));

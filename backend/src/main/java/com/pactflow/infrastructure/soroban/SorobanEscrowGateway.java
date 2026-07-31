@@ -7,6 +7,7 @@ import com.pactflow.application.escrow.port.UnsignedTransaction;
 import com.pactflow.domain.escrow.Escrow;
 import com.pactflow.infrastructure.config.PactFlowProperties;
 import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.stellar.sdk.AbstractTransaction;
 import org.stellar.sdk.Network;
@@ -29,6 +30,7 @@ import java.util.List;
  * It contains NO business logic.
  */
 @Component
+@Slf4j
 public class SorobanEscrowGateway implements EscrowContractGateway {
 
     private final String network;
@@ -124,7 +126,35 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
     public String broadcastTransaction(String signedXdr) {
         Transaction transaction = (Transaction) AbstractTransaction.fromEnvelopeXdr(
                 signedXdr, new Network(networkPassphrase));
+
+        log.info("Preparing to broadcast transaction...");
+        log.info("Network: {}", networkPassphrase);
+        log.info("Source Account: {}", transaction.getSourceAccount());
+        log.info("Sequence: {}", transaction.getSequenceNumber());
+        log.info("Signatures: {}", transaction.getSignatures().size());
+        log.info("Envelope XDR: {}", transaction.toEnvelopeXdrBase64());
+
         SendTransactionResponse response = sorobanServer.sendTransaction(transaction);
+
+        log.info("broadcastTransaction hash={} status={} error={}",
+                response.getHash(),
+                response.getStatus(),
+                response.getErrorResultXdr());
+
+        if (response.getErrorResultXdr() != null && !response.getErrorResultXdr().isBlank()) {
+            try {
+                org.stellar.sdk.xdr.TransactionResult result = org.stellar.sdk.xdr.TransactionResult.fromXdrBase64(response.getErrorResultXdr());
+                log.info("Decoded TransactionResult code: {}", result.getResult().getDiscriminant().name());
+                if (result.getResult().getResults() != null && result.getResult().getResults().length > 0) {
+                    for (int i = 0; i < result.getResult().getResults().length; i++) {
+                        org.stellar.sdk.xdr.OperationResult opRes = result.getResult().getResults()[i];
+                        log.info("Operation {} Result code: {}", i, opRes.getTr().getDiscriminant().name());
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Could not decode error XDR: {}", e.getMessage());
+            }
+        }
 
         if (response.getStatus().equals("ERROR") || 
                 (response.getStatus().equals("DUPLICATE") && response.getHash() == null)) {
@@ -177,8 +207,11 @@ public class SorobanEscrowGateway implements EscrowContractGateway {
                         parameters)
                         .build())
                 .setBaseFee(100L)
-                .setTimeout(BigInteger.valueOf(300L))
+                .setTimeout(300L)
                 .build();
+
+        org.stellar.sdk.TimeBounds tb = transaction.getPreconditions().getTimeBounds();
+        log.info("minTime={}, maxTime={}", tb.getMinTime(), tb.getMaxTime());
 
         // Simulate the transaction to get the resource footprint so Freighter can sign it
         SimulateTransactionResponse simulation;

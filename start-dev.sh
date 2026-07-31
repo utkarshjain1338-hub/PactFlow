@@ -13,7 +13,17 @@ echo "=============================================="
 echo "      Starting PactFlow Dev Stack             "
 echo "=============================================="
 
-
+# 1. Start Infrastructure via Docker Compose
+if command -v docker-compose &> /dev/null || docker compose version &> /dev/null; then
+    echo "[1/3] Starting infrastructure containers (PostgreSQL 16, Redis 7, MailHog)..."
+    if command -v docker-compose &> /dev/null; then
+        docker-compose up -d postgres redis mailhog
+    else
+        docker compose up -d postgres redis mailhog
+    fi
+else
+    echo "[WARNING] Docker / docker-compose not found. Assuming PostgreSQL (5432) and Redis (6379) are running locally."
+fi
 # 2. Check & Set JAVA_HOME for JDK 21
 if [ -d "/home/uzumaki/.jdk/jdk-21.0.11+10" ]; then
     export JAVA_HOME="/home/uzumaki/.jdk/jdk-21.0.11+10"

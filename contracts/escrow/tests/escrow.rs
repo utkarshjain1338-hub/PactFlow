@@ -21,8 +21,8 @@ fn smoke_test_cancellation_and_query() {
     let contract_id = env.register(PactFlowEscrow, ());
     let client_contract = PactFlowEscrowClient::new(&env, &contract_id);
 
-    assert_eq!(client_contract.try_initialize(&client, &freelancer, &token_id, &42i128, &1u32), Ok(Ok(())));
-    let view = client_contract.try_getEscrow().unwrap().unwrap();
+    assert_eq!(client_contract.try_initialize(&soroban_sdk::String::from_str(&env, "proj_1"), &client, &freelancer, &token_id, &42i128, &1u32), Ok(Ok(())));
+    let view = client_contract.try_getEscrow(&soroban_sdk::String::from_str(&env, "proj_1")).unwrap().unwrap();
     assert_eq!(view.status, EscrowStatus::Created);
-    assert_eq!(client_contract.try_cancel(), Ok(Ok(())));
+    assert_eq!(client_contract.try_cancel(&soroban_sdk::String::from_str(&env, "proj_1")), Ok(Ok(())));
 }
